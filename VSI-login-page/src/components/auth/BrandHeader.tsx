@@ -7,7 +7,7 @@ export const BrandHeader: React.FC = () => {
       {/* Golden VG logo container */}
       <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.35)] shrink-0 border border-amber-300/40 p-0.5 overflow-hidden">
         <img
-          src={vgLogo}
+          src={typeof vgLogo === 'string' ? vgLogo : (vgLogo as { src: string }).src}
           alt="VG Logo"
           className="w-full h-full object-cover rounded-full"
         />
