@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Next.js & Vite build artifacts
+.next/
+**/.next/
+dist/
+**/dist/
+.output/
+**/.output/
+.tanstack/
+**/.tanstack/
+
+# Environment files
+.env.local
+.env.production.local
+.env.development.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System & IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #050505;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Custom Grid Pattern Background */
+.bg-cyber-grid {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.bg-radial-red-glow-1 {
+  background: radial-gradient(circle at 15% 20%, rgba(255, 43, 43, 0.12) 0%, rgba(5, 5, 5, 0) 50%);
+}
+
+.bg-radial-red-glow-2 {
+  background: radial-gradient(circle at 85% 75%, rgba(239, 43, 43, 0.15) 0%, rgba(5, 5, 5, 0) 55%);
+}
+
+/* Glassmorphism card styles */
+.glass-panel {
+  background: rgba(15, 15, 18, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 43, 43, 0.28);
+}
+
+.glass-panel-subtle {
+  background: rgba(12, 12, 16, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.text-gradient-red {
+  background: linear-gradient(135deg, #ff4d4d 0%, #ef2b2b 50%, #c91818 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Button & Card glow effects */
+.btn-red-gradient {
+  background: linear-gradient(135deg, #ff2b2b 0%, #d61c1c 100%);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 20px rgba(255, 43, 43, 0.35);
+}
+
+.btn-red-gradient:hover {
+  background: linear-gradient(135deg, #ff4545 0%, #e62222 100%);
+  box-shadow: 0 0 30px rgba(255, 43, 43, 0.55);
+  transform: translateY(-1px);
+}
+
+.btn-red-gradient:active {
+  transform: translateY(0px) scale(0.99);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #080808;
+}
+::-webkit-scrollbar-thumb {
+  background: #262626;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ef2b2b;
+}
+
