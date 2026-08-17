@@ -72,7 +72,7 @@ async function fetchOrganicResults(keyword: string, loc: typeof LOCATIONS[Locati
   // Primary / Fallback to SerpAPI
   const serpApiKey = process.env.SERPAPI_KEY || process.env.SERPAPI_API_KEY || key;
   if (!serpApiKey || !serpApiKey.trim()) {
-    throw new Error("Search service API key (SERPAPI_KEY) is missing in server environment variables");
+    throw new Error("Search service API key is not configured.");
   }
 
   const searchParams = new URLSearchParams({
@@ -125,7 +125,7 @@ export async function fetchBulkRanks(
   location: Location
 ): Promise<DomainRank[]> {
   const key = process.env.SERPAPI_KEY || process.env.SERPAPI_API_KEY || process.env.SERPER_API_KEY;
-  if (!key) throw new Error("Search service API key (SERPAPI_KEY) is missing in server environment variables");
+  if (!key) throw new Error("Search service API key is not configured.");
 
   const loc = LOCATIONS[location];
   const raw = await fetchOrganicResults(keyword, loc, key);
@@ -152,7 +152,7 @@ export async function fetchRank(
   _brand: string = ""
 ): Promise<SerpResult> {
   const key = process.env.SERPAPI_KEY || process.env.SERPAPI_API_KEY || process.env.SERPER_API_KEY;
-  if (!key) throw new Error("Search service API key (SERPAPI_KEY) is missing in server environment variables");
+  if (!key) throw new Error("Search service API key is not configured.");
 
   const loc = LOCATIONS[location];
   const raw = await fetchOrganicResults(keyword, loc, key);

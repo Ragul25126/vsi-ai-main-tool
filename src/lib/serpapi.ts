@@ -215,7 +215,7 @@ export async function fetchAIO(
   location: Location
 ): Promise<AIOResult> {
   const key = process.env.SERPAPI_KEY || process.env.SERPAPI_API_KEY;
-  if (!key) throw new Error("AI Mode service unavailable - Missing SERPAPI_KEY");
+  if (!key) throw new Error("Search service API key is not configured.");
 
   const loc = LOCATIONS[location];
   const cleanDomain = (domain ?? "")

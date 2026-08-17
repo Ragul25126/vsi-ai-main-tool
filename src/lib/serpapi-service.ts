@@ -35,7 +35,7 @@ export async function searchSerpApi(
   const apiKey = process.env.SERPAPI_KEY || process.env.SERPAPI_API_KEY;
 
   if (!apiKey || !apiKey.trim()) {
-    throw new SerpApiError("SerpAPI API key is missing in server environment variables.", 500);
+    throw new SerpApiError("Search service API key is not configured.", 500);
   }
 
   const { engine = "google", gl = "us", hl = "en", num = 10 } = options;
