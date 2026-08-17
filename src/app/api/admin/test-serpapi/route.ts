@@ -64,8 +64,8 @@ async function runAIMode(keyword: string, gl: string, hl: string, apiKey: string
 
 export async function POST(req: NextRequest) {
  await requireSuperAdmin();
- const apiKey = process.env.SERPAPI_API_KEY;
- if (!apiKey) return NextResponse.json({ error: "SERPAPI_API_KEY missing" }, { status: 503 });
+ const apiKey = process.env.SERPAPI_KEY || process.env.SERPAPI_API_KEY;
+ if (!apiKey) return NextResponse.json({ error: "SERPAPI_KEY missing" }, { status: 503 });
 
  const { keyword, gl = "ae", hl = "en" } = (await req.json()) as { keyword?: string; gl?: string; hl?: string };
  if (!keyword) return NextResponse.json({ error: "keyword required" }, { status: 400 });
