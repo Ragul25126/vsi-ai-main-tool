@@ -20,8 +20,9 @@ const nextConfig: NextConfig = {
   // Disable Next.js's "X-Powered-By: Next.js" header
   poweredByHeader: false,
 
-  // Standalone output produces a minimal, portable server bundle suitable for Docker
-  output: "standalone",
+  // Standalone output produces a minimal, portable server bundle suitable for Docker.
+  // On Vercel, omit standalone so Vercel can build standard Serverless Functions.
+  output: process.env.VERCEL ? undefined : (process.env.BUILD_STANDALONE ? "standalone" : undefined),
 
   // Disable production source maps so client JS is not easily readable
   productionBrowserSourceMaps: false,
