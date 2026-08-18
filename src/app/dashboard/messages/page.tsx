@@ -116,7 +116,7 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-slate-950 dark:bg-[#121217] overflow-hidden relative">
+    <div className="flex h-[calc(100vh-64px)] bg-background text-foreground overflow-hidden relative">
       {/* Toast Notification Banner */}
       <AnimatePresence>
         {toastMessage && (
@@ -141,7 +141,7 @@ export default function MessagesPage() {
       </AnimatePresence>
 
       {/* Sidebar Navigation */}
-      <aside className="w-64 border-r border-slate-800 dark:border-border/50 hidden md:flex flex-col bg-slate-900/50 dark:bg-[#1E1E23]/30">
+      <aside className="w-64 border-r border-border hidden md:flex flex-col bg-card/60">
         <div className="p-4">
           <button 
             onClick={handleOpenNewCompose}
@@ -163,16 +163,16 @@ export default function MessagesPage() {
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
                   isActive 
                     ? "bg-[#FF6B00]/10 text-[#FF6B00]" 
-                    : "text-slate-400 hover:bg-slate-800 dark:hover:bg-card hover:text-white dark:hover:text-foreground"
+                    : "text-muted-foreground hover:bg-muted-bg hover:text-foreground"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon size={18} className={isActive ? "text-[#FF6B00]" : "text-slate-400"} />
+                  <Icon size={18} className={isActive ? "text-[#FF6B00]" : "text-muted-foreground"} />
                   {folder.label}
                 </div>
                 {folder.badge !== undefined && folder.badge > 0 && (
                   <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                    isActive ? "bg-[#FF6B00] text-white" : "bg-slate-800 dark:bg-card text-slate-300 dark:text-muted-foreground"
+                    isActive ? "bg-[#FF6B00] text-white" : "bg-muted-bg text-muted-foreground border border-border/50"
                   }`}>
                     {folder.badge}
                   </span>
@@ -186,15 +186,15 @@ export default function MessagesPage() {
       {/* Main Message List */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Header Toolbar */}
-        <div className="h-16 border-b border-slate-800 dark:border-border/50 flex items-center px-4 sm:px-6 justify-between shrink-0 bg-slate-900/80 dark:bg-[#121217]/80 backdrop-blur-md gap-3">
+        <div className="h-16 border-b border-border flex items-center px-4 sm:px-6 justify-between shrink-0 bg-card/80 backdrop-blur-md gap-3">
           <div className="flex-1 max-w-md relative">
-            <SearchIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-muted-foreground" />
+            <SearchIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input 
               type="text" 
               placeholder={`Search in ${activeFolder}...`} 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-900 dark:bg-[#1E1E23] border border-slate-800 dark:border-border/50 rounded-full pl-9 pr-4 py-2 text-sm text-foreground outline-none focus:border-[#FF6B00]/50 transition-colors"
+              className="w-full bg-muted-bg/60 border border-border rounded-full pl-9 pr-4 py-2 text-sm text-foreground outline-none focus:border-[#FF6B00]/50 transition-colors"
             />
           </div>
 
@@ -202,7 +202,7 @@ export default function MessagesPage() {
             {/* Sort Toggle */}
             <button
               onClick={() => setSortBy(prev => prev === "newest" ? "oldest" : "newest")}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-900 dark:bg-[#1E1E23] border border-slate-800 dark:border-border/50 text-xs font-semibold text-slate-300 dark:text-muted-foreground hover:text-white dark:hover:text-foreground transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted-bg/60 border border-border text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
               title="Toggle Sort Order"
             >
               <ArrowUpDown size={14} />
@@ -213,7 +213,7 @@ export default function MessagesPage() {
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className="bg-slate-900 dark:bg-[#1E1E23] border border-slate-800 dark:border-border/50 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-300 dark:text-muted-foreground outline-none cursor-pointer"
+              className="bg-muted-bg/60 border border-border rounded-full px-3 py-1.5 text-xs font-semibold text-muted-foreground outline-none cursor-pointer"
             >
               <option value="all">All Priority</option>
               <option value="high">High Priority</option>
@@ -227,7 +227,7 @@ export default function MessagesPage() {
               className={`p-2 rounded-full border transition-colors ${
                 filterUnread 
                   ? 'bg-[#FF6B00]/10 border-[#FF6B00]/50 text-[#FF6B00]' 
-                  : 'bg-slate-900 dark:bg-[#1E1E23] border-slate-800 dark:border-border/50 text-slate-400 hover:text-white'
+                  : 'bg-muted-bg/60 border-border text-muted-foreground hover:text-foreground'
               }`}
               title="Filter unread"
             >
@@ -247,7 +247,7 @@ export default function MessagesPage() {
               // Loading Skeleton
               <div className="space-y-3">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-20 rounded-[20px] bg-slate-900/60 dark:bg-[#1E1E23]/60 border border-slate-800 dark:border-border/40 animate-pulse p-4" />
+                  <div key={i} className="h-20 rounded-[20px] bg-card border border-border animate-pulse p-4" />
                 ))}
               </div>
             ) : (
@@ -256,13 +256,13 @@ export default function MessagesPage() {
                   // Custom Empty States for Drafts, Archived, and standard folders
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                    className="flex flex-col items-center justify-center py-24 text-center text-slate-400 dark:text-muted-foreground"
+                    className="flex flex-col items-center justify-center py-24 text-center text-muted-foreground"
                   >
                     {activeFolder === "drafts" ? (
                       <>
                         <div className="text-5xl mb-4 select-none">📝</div>
                         <h3 className="text-xl font-bold text-foreground mb-1">No Drafts</h3>
-                        <p className="text-sm text-slate-400 dark:text-muted-foreground max-w-sm">
+                        <p className="text-sm text-muted-foreground max-w-sm">
                           Your saved drafts will appear here.
                         </p>
                       </>
@@ -270,7 +270,7 @@ export default function MessagesPage() {
                       <>
                         <div className="text-5xl mb-4 select-none">📦</div>
                         <h3 className="text-xl font-bold text-foreground mb-1">No Archived Messages</h3>
-                        <p className="text-sm text-slate-400 dark:text-muted-foreground max-w-sm">
+                        <p className="text-sm text-muted-foreground max-w-sm">
                           Archived conversations will appear here.
                         </p>
                       </>
@@ -278,7 +278,7 @@ export default function MessagesPage() {
                       <>
                         <div className="text-5xl mb-4 select-none">📨</div>
                         <h3 className="text-xl font-bold text-foreground mb-1">No Sent Messages</h3>
-                        <p className="text-sm text-slate-400 dark:text-muted-foreground max-w-sm">
+                        <p className="text-sm text-muted-foreground max-w-sm">
                           Messages you compose and send will appear here.
                         </p>
                       </>
@@ -286,8 +286,8 @@ export default function MessagesPage() {
                       <>
                         <div className="text-5xl mb-4 select-none">📥</div>
                         <h3 className="text-xl font-bold text-foreground mb-1">No Messages Found</h3>
-                        <p className="text-sm text-slate-400 dark:text-muted-foreground max-w-sm">
-                          You're all caught up in {activeFolder}.
+                        <p className="text-sm text-muted-foreground max-w-sm">
+                          You&apos;re all caught up in {activeFolder}.
                         </p>
                       </>
                     )}
@@ -317,10 +317,10 @@ export default function MessagesPage() {
                           key={msg.id}
                           variants={itemVariants}
                           onClick={() => handleMessageClick(msg)}
-                          className={`group relative flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-[20px] border cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20 ${
+                          className={`group relative flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-[20px] border cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 ${
                             msg.status === "unread" 
-                              ? "bg-slate-900 dark:bg-[#1E1E23] border-[#FF6B00]/30 shadow-md" 
-                              : "bg-slate-900/60 dark:bg-[#1E1E23]/60 border-slate-800 dark:border-border/40 hover:bg-slate-900 dark:hover:bg-[#1E1E23] hover:border-slate-700 dark:hover:border-border/80"
+                              ? "bg-card border-[#FF6B00]/50 shadow-md" 
+                              : "bg-card/70 border-border hover:bg-card hover:border-border/80"
                           }`}
                         >
                           {/* Unread Bar Indicator */}
@@ -335,12 +335,12 @@ export default function MessagesPage() {
                               className={`p-1 rounded-full transition-colors ${
                                 msg.isStarred 
                                   ? 'text-amber-400 hover:text-amber-500' 
-                                  : 'text-slate-500 dark:text-muted-foreground hover:text-amber-400 hover:bg-amber-400/10'
+                                  : 'text-muted-foreground hover:text-amber-400 hover:bg-amber-400/10'
                               }`}
                             >
                               <Star size={18} fill={msg.isStarred ? "currentColor" : "none"} />
                             </button>
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-800 to-slate-700 dark:from-muted-bg dark:to-card border border-slate-700 dark:border-border flex items-center justify-center shrink-0 overflow-hidden text-sm font-bold text-slate-300 dark:text-muted-foreground">
+                            <div className="w-10 h-10 rounded-full bg-muted-bg border border-border flex items-center justify-center shrink-0 overflow-hidden text-sm font-bold text-muted-foreground">
                               {displayUser?.avatar ? (
                                 <img src={displayUser.avatar} alt={displayUser.name} className="w-full h-full object-cover" />
                               ) : (
@@ -374,28 +374,28 @@ export default function MessagesPage() {
                                 )}
                               </div>
 
-                              <span className={`text-xs whitespace-nowrap ml-2 flex items-center gap-1 ${msg.status === "unread" ? 'font-bold text-[#FF6B00]' : 'text-slate-400 dark:text-muted-foreground'}`}>
+                              <span className={`text-xs whitespace-nowrap ml-2 flex items-center gap-1 ${msg.status === "unread" ? 'font-bold text-[#FF6B00]' : 'text-muted-foreground'}`}>
                                 <Clock size={12} className="opacity-70" />
                                 {formattedDate} {formattedTime}
                               </span>
                             </div>
 
                             <div className="flex items-baseline gap-2">
-                              <span className={`text-sm font-semibold truncate ${msg.status === "unread" ? 'text-foreground' : 'text-slate-300 dark:text-foreground/90'}`}>
+                              <span className={`text-sm font-semibold truncate ${msg.status === "unread" ? 'text-foreground' : 'text-foreground/90'}`}>
                                 {msg.subject || "(No Subject)"}
                               </span>
-                              <span className="hidden sm:inline text-xs text-slate-400 dark:text-muted-foreground truncate flex-1">
+                              <span className="hidden sm:inline text-xs text-muted-foreground truncate flex-1">
                                 — {msg.preview || "(No content)"}
                               </span>
                             </div>
-                            <span className="sm:hidden text-xs text-slate-400 dark:text-muted-foreground truncate block mt-1">
+                            <span className="sm:hidden text-xs text-muted-foreground truncate block mt-1">
                               {msg.preview || "(No content)"}
                             </span>
                           </div>
 
                           {/* Attachment Icon */}
                           {msg.attachments && msg.attachments.length > 0 && (
-                            <div className="absolute right-4 bottom-4 sm:static flex items-center justify-center p-1.5 rounded-full bg-slate-800 dark:bg-card border border-slate-700 dark:border-border text-slate-400 dark:text-muted-foreground" title={`${msg.attachments.length} attachment(s)`}>
+                            <div className="absolute right-4 bottom-4 sm:static flex items-center justify-center p-1.5 rounded-full bg-muted-bg border border-border text-muted-foreground" title={`${msg.attachments.length} attachment(s)`}>
                               <Paperclip size={14} />
                             </div>
                           )}

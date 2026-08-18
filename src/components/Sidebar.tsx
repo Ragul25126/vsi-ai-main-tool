@@ -71,6 +71,8 @@ export default function Sidebar({
   const [open, setOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [currentUserEmail, setCurrentUserEmail] = useState(userEmail);
+  const [localLogoUrl, setLocalLogoUrl] = useState<string | null>(null);
+  const [localAgencyName, setLocalAgencyName] = useState<string | null>(null);
   const { resolvedTheme, toggleTheme } = useTheme();
 
   useEffect(() => { setOpen(false); }, [pathname]);
@@ -83,6 +85,19 @@ export default function Sidebar({
       setCurrentUserEmail(userEmail);
     }
   }, [userEmail]);
+
+  // Read agency logo and name from localStorage (set by Settings page)
+  useEffect(() => {
+    const readBranding = () => {
+      const storedLogo = localStorage.getItem("searchintel_agency_logo");
+      const storedName = localStorage.getItem("searchintel_agency_name");
+      setLocalLogoUrl(storedLogo ?? null);
+      setLocalAgencyName(storedName ?? null);
+    };
+    readBranding();
+    window.addEventListener("storage", readBranding);
+    return () => window.removeEventListener("storage", readBranding);
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("sidebar_collapsed");
@@ -112,8 +127,8 @@ export default function Sidebar({
       {/* 1. Brand Header */}
       <div className={`flex items-center ${isCollapsed ? "justify-center flex-col gap-3 py-3 px-2" : "justify-between px-5 py-4"} border-b border-border/80 bg-card shrink-0 z-10 transition-all`}>
         <Link href="/dashboard" className="flex items-center gap-3 min-w-0 group" title={isCollapsed ? "SearchIntel PRO" : undefined}>
-          <div className="relative flex-shrink-0 p-1.5 rounded-[14px] bg-primary/10 border border-primary/20 text-primary">
-            <Image src="/logo.png" alt="SearchIntel" width={24} height={24} className="shrink-0 rounded-md" />
+          <div className="relative flex-shrink-0 p-1 rounded-[12px] bg-amber-500/10 border border-amber-500/20">
+            <Image src="/vg-logo.png" alt="SearchIntel" width={28} height={28} className="shrink-0 rounded-md object-contain" />
           </div>
           {!isCollapsed && (
             <div className="min-w-0">
@@ -153,17 +168,17 @@ export default function Sidebar({
       {/* 2. Agency Workspace Card */}
       <div className={`py-3 border-b border-border/80 bg-card/60 shrink-0 z-10 transition-all ${isCollapsed ? "px-2" : "px-4"}`}>
         <div className={`flex items-center ${isCollapsed ? "justify-center p-1.5" : "justify-between gap-2 p-2"} rounded-[16px] bg-card border border-border/80 shadow-2xs`}>
-          <Link href="/dashboard/settings" title={`${agencyName} (Enterprise Workspace)`} className="flex items-center gap-2.5 min-w-0">
-            {agencyLogoUrl ? (
-              <Image src={agencyLogoUrl} alt={agencyName} width={24} height={24} className="rounded-lg shrink-0 object-contain shadow-2xs border border-border" unoptimized />
+          <Link href="/dashboard/settings" title={`${localAgencyName || agencyName} (Enterprise Workspace)`} className="flex items-center gap-2.5 min-w-0">
+            {(localLogoUrl || agencyLogoUrl) ? (
+              <Image src={(localLogoUrl || agencyLogoUrl)!} alt={localAgencyName || agencyName} width={24} height={24} className="rounded-lg shrink-0 object-contain shadow-2xs border border-border" unoptimized />
             ) : (
               <div className="w-7 h-7 rounded-lg bg-primary text-white flex items-center justify-center font-bold text-xs shadow-2xs shrink-0">
-                {agencyName.slice(0, 1).toUpperCase()}
+                {(localAgencyName || agencyName).slice(0, 1).toUpperCase()}
               </div>
             )}
             {!isCollapsed && (
               <div className="min-w-0">
-                <p className="text-xs font-bold text-foreground truncate">{agencyName}</p>
+                <p className="text-xs font-bold text-foreground truncate">{localAgencyName || agencyName}</p>
                 <p className="text-[9px] text-muted-foreground font-medium uppercase tracking-wider">Enterprise Workspace</p>
               </div>
             )}
@@ -353,7 +368,7 @@ export default function Sidebar({
           >
             <Menu size={18} />
           </button>
-          <Image src="/logo.png" alt="SearchIntel" width={24} height={24} className="rounded" />
+          <Image src="/vg-logo.png" alt="SearchIntel" width={26} height={26} className="rounded object-contain" />
           <p className="text-sm font-bold text-foreground tracking-tight">SearchIntel</p>
         </div>
         <p className="text-xs font-medium text-muted-foreground truncate max-w-[40%]">{agencyName}</p>

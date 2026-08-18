@@ -34,23 +34,35 @@ function isDummySupabase(): boolean {
 }
 
 /** Extract user details from cookies set during client session creation. */
-async function getCookieUser(): Promise<{ email: string | null; fullName: string | null }> {
+async function getCookieUser(): Promise<{
+  email: string | null;
+  fullName: string | null;
+  agencyDisplayName: string | null;
+  agencyEmail: string | null;
+  agencyLogoMarker: string | null;
+}> {
   try {
     const cookieStore = await cookies();
     const emailCookie = cookieStore.get("vsi_user_email")?.value;
     const nameCookie = cookieStore.get("vsi_user_name")?.value;
+    const displayNameCookie = cookieStore.get("vsi_agency_display_name")?.value;
+    const agencyEmailCookie = cookieStore.get("vsi_agency_email")?.value;
+    const logoMarkerCookie = cookieStore.get("vsi_agency_logo_marker")?.value;
     return {
       email: emailCookie ? decodeURIComponent(emailCookie) : null,
       fullName: nameCookie ? decodeURIComponent(nameCookie) : null,
+      agencyDisplayName: displayNameCookie ? decodeURIComponent(displayNameCookie) : null,
+      agencyEmail: agencyEmailCookie ? decodeURIComponent(agencyEmailCookie) : null,
+      agencyLogoMarker: logoMarkerCookie || null,
     };
   } catch {
-    return { email: null, fullName: null };
+    return { email: null, fullName: null, agencyDisplayName: null, agencyEmail: null, agencyLogoMarker: null };
   }
 }
 
 /** Construct session context dynamically from authenticated cookie data or backend state. */
 async function dynamicSession(): Promise<SessionContext> {
-  const { email, fullName } = await getCookieUser();
+  const { email, fullName, agencyDisplayName, agencyEmail, agencyLogoMarker } = await getCookieUser();
   const activeEmail = email || "user@example.com";
   const activeName = fullName || (email ? email.split("@")[0] : "User");
 
@@ -64,10 +76,10 @@ async function dynamicSession(): Promise<SessionContext> {
     isPilot: false,
     maxKeywords: 999,
     branding: {
-      displayName: null,
-      logoUrl: null,
+      displayName: agencyDisplayName || null,
+      logoUrl: agencyLogoMarker || null,
       primaryColor: null,
-      supportEmail: null,
+      supportEmail: agencyEmail || null,
       reportFooter: null,
     },
   };

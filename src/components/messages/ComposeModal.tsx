@@ -236,12 +236,12 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
           height: isMinimized ? "52px" : "auto",
         }}
         exit={{ opacity: 0, y: 50, scale: 0.95 }}
-        className="fixed bottom-0 right-4 sm:right-12 z-50 w-full max-w-[680px] bg-white dark:bg-[#1E1E23] border border-slate-200 dark:border-border/80 rounded-t-[20px] shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-foreground"
+        className="fixed bottom-0 right-4 sm:right-12 z-50 w-full max-w-[680px] bg-card border border-border rounded-t-[20px] shadow-2xl flex flex-col overflow-hidden text-foreground"
         style={{ maxHeight: isMinimized ? "52px" : "85vh" }}
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-4 py-3 bg-slate-100 dark:bg-[#121217] border-b border-slate-200 dark:border-border/60 cursor-pointer select-none"
+          className="flex items-center justify-between px-4 py-3 bg-muted-bg border-b border-border cursor-pointer select-none"
           onClick={() => setIsMinimized(!isMinimized)}
         >
           <div className="flex items-center gap-3 font-bold text-sm text-foreground">
@@ -267,7 +267,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                 e.stopPropagation();
                 setIsMinimized(!isMinimized);
               }}
-              className="p-1.5 hover:bg-slate-200 dark:hover:bg-card rounded-lg transition-colors text-muted-foreground hover:text-foreground"
+              className="p-1.5 hover:bg-card rounded-lg transition-colors text-muted-foreground hover:text-foreground"
               title={isMinimized ? "Expand" : "Minimize"}
             >
               {isMinimized ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
@@ -287,9 +287,9 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
 
         {/* Form Body */}
         {!isMinimized && (
-          <div className="flex flex-col flex-1 overflow-y-auto bg-white dark:bg-[#1E1E23]">
+          <div className="flex flex-col flex-1 overflow-y-auto bg-card">
             {/* Priority & Recipient To Field */}
-            <div className="border-b border-slate-100 dark:border-border/40 px-4 py-3">
+            <div className="border-b border-border px-4 py-3">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-muted-foreground text-sm font-semibold w-16">To</span>
                 <input
@@ -307,7 +307,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                     setPriority(e.target.value as MessagePriority);
                     triggerAutoSave();
                   }}
-                  className="text-xs bg-slate-100 dark:bg-card border border-slate-200 dark:border-border rounded-lg px-2 py-1 outline-none text-foreground font-semibold cursor-pointer"
+                  className="text-xs bg-muted-bg border border-border rounded-lg px-2 py-1 outline-none text-foreground font-semibold cursor-pointer"
                 >
                   <option value="normal">Normal Priority</option>
                   <option value="high">High Priority</option>
@@ -328,7 +328,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
             {/* Optional Cc / Bcc */}
             {showCcBcc && (
               <>
-                <div className="flex items-center border-b border-slate-100 dark:border-border/40 px-4 py-2.5">
+                <div className="flex items-center border-b border-border px-4 py-2.5">
                   <span className="text-muted-foreground text-sm font-semibold w-16">Cc</span>
                   <input
                     type="text"
@@ -338,7 +338,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                     placeholder="cc@example.com"
                   />
                 </div>
-                <div className="flex items-center border-b border-slate-100 dark:border-border/40 px-4 py-2.5">
+                <div className="flex items-center border-b border-border px-4 py-2.5">
                   <span className="text-muted-foreground text-sm font-semibold w-16">Bcc</span>
                   <input
                     type="text"
@@ -352,7 +352,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
             )}
 
             {/* Subject Field */}
-            <div className="border-b border-slate-100 dark:border-border/40 px-4 py-3">
+            <div className="border-b border-border px-4 py-3">
               <div className="flex items-center">
                 <span className="text-muted-foreground text-sm font-semibold w-16">Subject</span>
                 <input
@@ -379,11 +379,11 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
 
             {/* Attached Files List */}
             {attachedFiles.length > 0 && (
-              <div className="px-4 py-2 bg-slate-50 dark:bg-muted/30 border-t border-slate-100 dark:border-border/40 flex flex-wrap gap-2">
+              <div className="px-4 py-2 bg-muted-bg/50 border-t border-border flex flex-wrap gap-2">
                 {attachedFiles.map((att) => (
                   <span
                     key={att.id}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-card border border-slate-200 dark:border-border text-xs text-foreground font-medium"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-card border border-border text-xs text-foreground font-medium"
                   >
                     📎 {att.name} ({att.size})
                     <button
@@ -401,12 +401,12 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
             )}
 
             {/* Formatting Toolbar & Action Footer */}
-            <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-100 dark:bg-[#121217] border-t border-slate-200 dark:border-border/60">
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-muted-bg border-t border-border">
               <div className="flex items-center gap-1 text-muted-foreground">
                 <button
                   type="button"
                   onClick={() => applyFormat("bold")}
-                  className="p-2 hover:bg-white dark:hover:bg-card hover:text-foreground rounded-lg transition-colors"
+                  className="p-2 hover:bg-card hover:text-foreground rounded-lg transition-colors"
                   title="Bold"
                 >
                   <Bold size={16} />
@@ -414,7 +414,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                 <button
                   type="button"
                   onClick={() => applyFormat("italic")}
-                  className="p-2 hover:bg-white dark:hover:bg-card hover:text-foreground rounded-lg transition-colors"
+                  className="p-2 hover:bg-card hover:text-foreground rounded-lg transition-colors"
                   title="Italic"
                 >
                   <Italic size={16} />
@@ -422,7 +422,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                 <button
                   type="button"
                   onClick={() => applyFormat("underline")}
-                  className="p-2 hover:bg-white dark:hover:bg-card hover:text-foreground rounded-lg transition-colors"
+                  className="p-2 hover:bg-card hover:text-foreground rounded-lg transition-colors"
                   title="Underline"
                 >
                   <Underline size={16} />
@@ -430,22 +430,22 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                 <button
                   type="button"
                   onClick={() => applyFormat("list")}
-                  className="p-2 hover:bg-white dark:hover:bg-card hover:text-foreground rounded-lg transition-colors"
+                  className="p-2 hover:bg-card hover:text-foreground rounded-lg transition-colors"
                   title="Bullet List"
                 >
                   <List size={16} />
                 </button>
 
-                <div className="w-px h-4 bg-slate-300 dark:bg-border/60 mx-1" />
+                <div className="w-px h-4 bg-border mx-1" />
 
-                <label className="p-2 hover:bg-white dark:hover:bg-card hover:text-foreground rounded-lg transition-colors cursor-pointer" title="Attach File">
+                <label className="p-2 hover:bg-card hover:text-foreground rounded-lg transition-colors cursor-pointer" title="Attach File">
                   <Paperclip size={16} />
                   <input type="file" onChange={handleFileUpload} className="hidden" />
                 </label>
                 <button
                   type="button"
                   onClick={() => applyFormat("link")}
-                  className="p-2 hover:bg-white dark:hover:bg-card hover:text-foreground rounded-lg transition-colors"
+                  className="p-2 hover:bg-card hover:text-foreground rounded-lg transition-colors"
                   title="Insert Link"
                 >
                   <LinkIcon size={16} />

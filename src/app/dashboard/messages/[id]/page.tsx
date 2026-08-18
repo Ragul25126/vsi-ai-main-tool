@@ -22,10 +22,10 @@ export default function MessageDetailsPage() {
 
   if (!message) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] bg-slate-950 dark:bg-[#121217] text-white">
-        <Mail className="w-16 h-16 text-slate-500 opacity-50 mb-4" />
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] bg-background text-foreground">
+        <Mail className="w-16 h-16 text-muted-foreground opacity-50 mb-4" />
         <h1 className="text-2xl font-bold mb-2">Message Not Found</h1>
-        <p className="text-slate-400 mb-6">This message may have been deleted or moved.</p>
+        <p className="text-muted-foreground mb-6">This message may have been deleted or moved.</p>
         <button 
           onClick={() => router.push("/dashboard/messages")}
           className="px-6 py-2 bg-[#FF6B00] text-white font-bold rounded-full hover:bg-[#FF6B00]/90 transition-colors"
@@ -89,7 +89,7 @@ export default function MessageDetailsPage() {
   });
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] bg-slate-950 dark:bg-[#121217] overflow-hidden relative">
+    <div className="flex flex-col h-[calc(100vh-64px)] bg-background text-foreground overflow-hidden relative">
       {/* Toast Notification Banner */}
       <AnimatePresence>
         {toastMessage && (
@@ -114,17 +114,17 @@ export default function MessageDetailsPage() {
       </AnimatePresence>
 
       {/* Header Toolbar */}
-      <div className="h-16 border-b border-slate-800 dark:border-border/50 flex items-center px-4 sm:px-6 justify-between bg-slate-900/80 dark:bg-[#1E1E23]/30 backdrop-blur-md">
+      <div className="h-16 border-b border-border flex items-center px-4 sm:px-6 justify-between bg-card/80 backdrop-blur-md">
         <div className="flex items-center gap-2 sm:gap-3">
           <button 
             onClick={() => router.push("/dashboard/messages")}
-            className="p-2 rounded-full hover:bg-slate-800 dark:hover:bg-card text-slate-400 hover:text-white dark:hover:text-foreground transition-colors"
+            className="p-2 rounded-full hover:bg-muted-bg text-muted-foreground hover:text-foreground transition-colors"
             title="Back to Messages"
           >
             <ArrowLeft size={18} />
           </button>
           
-          <div className="w-px h-6 bg-slate-800 dark:bg-border mx-1" />
+          <div className="w-px h-6 bg-border mx-1" />
           
           {/* Dynamic Archive / Move to Inbox Button */}
           {message.folder === "archived" ? (
@@ -138,7 +138,7 @@ export default function MessageDetailsPage() {
           ) : (
             <button 
               onClick={() => handleAction('archive')} 
-              className="p-2 rounded-full hover:bg-slate-800 dark:hover:bg-card text-slate-400 hover:text-white dark:hover:text-foreground transition-colors" 
+              className="p-2 rounded-full hover:bg-muted-bg text-muted-foreground hover:text-foreground transition-colors" 
               title="Archive"
             >
               <Archive size={18} />
@@ -147,7 +147,7 @@ export default function MessageDetailsPage() {
 
           <button 
             onClick={() => handleAction('delete')} 
-            className="p-2 rounded-full hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-colors" 
+            className="p-2 rounded-full hover:bg-rose-500/10 text-muted-foreground hover:text-rose-500 transition-colors" 
             title="Delete"
           >
             <Trash2 size={18} />
@@ -155,17 +155,17 @@ export default function MessageDetailsPage() {
 
           <button 
             onClick={handleDownloadPDF} 
-            className="p-2 rounded-full hover:bg-slate-800 dark:hover:bg-card text-slate-400 hover:text-white dark:hover:text-foreground transition-colors" 
+            className="p-2 rounded-full hover:bg-muted-bg text-muted-foreground hover:text-foreground transition-colors" 
             title="Download PDF"
           >
             <Download size={18} />
           </button>
           
-          <div className="w-px h-6 bg-slate-800 dark:bg-border mx-1" />
+          <div className="w-px h-6 bg-border mx-1" />
 
           <button 
             onClick={() => handleAction(message.status === "read" ? "markUnread" : "markRead")} 
-            className="p-2 rounded-full hover:bg-slate-800 dark:hover:bg-card text-slate-400 hover:text-white dark:hover:text-foreground transition-colors" 
+            className="p-2 rounded-full hover:bg-muted-bg text-muted-foreground hover:text-foreground transition-colors" 
             title={message.status === "read" ? "Mark Unread" : "Mark Read"}
           >
             {message.status === "read" ? <Mail size={18} /> : <MailOpen size={18} />}
@@ -173,7 +173,7 @@ export default function MessageDetailsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-400 dark:text-muted-foreground mr-3 hidden sm:inline font-semibold">Message Actions</span>
+          <span className="text-xs text-muted-foreground mr-3 hidden sm:inline font-semibold">Message Actions</span>
           <MessageActionMenu message={message} />
         </div>
       </div>
@@ -183,7 +183,7 @@ export default function MessageDetailsPage() {
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-4xl mx-auto bg-slate-900 dark:bg-[#1E1E23] rounded-[24px] border border-slate-800 dark:border-border/80 shadow-lg p-6 sm:p-8 overflow-hidden relative"
+          className="max-w-4xl mx-auto bg-card rounded-[24px] border border-border shadow-lg p-6 sm:p-8 overflow-hidden relative"
         >
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF6B00]/5 rounded-full blur-[80px]" />
 
@@ -215,41 +215,41 @@ export default function MessageDetailsPage() {
           </div>
 
           {/* Sender Info Area */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 dark:border-border/50 pb-6 mb-6 gap-4 relative z-10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border pb-6 mb-6 gap-4 relative z-10">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-slate-800 to-slate-700 dark:from-muted-bg dark:to-card border border-slate-700 dark:border-border flex items-center justify-center overflow-hidden shrink-0">
+              <div className="w-12 h-12 rounded-full bg-muted-bg border border-border flex items-center justify-center overflow-hidden shrink-0">
                 {message.sender.avatar ? (
                   <img src={message.sender.avatar} alt={message.sender.name} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-lg font-bold text-slate-300 dark:text-muted-foreground">{(message.sender.name || "M").charAt(0).toUpperCase()}</span>
+                  <span className="text-lg font-bold text-muted-foreground">{(message.sender.name || "M").charAt(0).toUpperCase()}</span>
                 )}
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-bold text-foreground">{message.sender.name}</span>
-                  <span className="text-xs text-slate-400 dark:text-muted-foreground">&lt;{message.sender.email}&gt;</span>
+                  <span className="text-xs text-muted-foreground">&lt;{message.sender.email}&gt;</span>
                 </div>
-                <div className="text-xs text-slate-400 dark:text-muted-foreground mt-0.5">
+                <div className="text-xs text-muted-foreground mt-0.5">
                   to {message.recipient.name} &lt;{message.recipient.email}&gt;
                 </div>
               </div>
             </div>
             
             <div className="flex flex-col sm:items-end gap-2">
-              <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-muted-foreground font-medium">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
                 {formattedDate}
                 <button 
                   onClick={() => toggleStar(message.id)}
-                  className={`ml-2 p-1 rounded-full transition-colors ${message.isStarred ? 'text-amber-400 hover:text-amber-500' : 'text-slate-500 hover:text-amber-400'}`}
+                  className={`ml-2 p-1 rounded-full transition-colors ${message.isStarred ? 'text-amber-400 hover:text-amber-500' : 'text-muted-foreground hover:text-amber-400'}`}
                 >
                   <Star size={16} fill={message.isStarred ? "currentColor" : "none"} />
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => handleAction('reply')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-800 dark:border-border/50 hover:bg-slate-800 dark:hover:bg-card text-xs font-semibold text-foreground transition-colors">
+                <button onClick={() => handleAction('reply')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border hover:bg-muted-bg text-xs font-semibold text-foreground transition-colors">
                   <CornerUpLeft size={14} /> Reply
                 </button>
-                <button onClick={() => handleAction('reply')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-800 dark:border-border/50 hover:bg-slate-800 dark:hover:bg-card text-xs font-semibold text-foreground transition-colors">
+                <button onClick={() => handleAction('reply')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border hover:bg-muted-bg text-xs font-semibold text-foreground transition-colors">
                   <CornerUpRight size={14} /> Forward
                 </button>
               </div>
@@ -268,23 +268,23 @@ export default function MessageDetailsPage() {
           )}
 
           {/* Message Body */}
-          <div className="prose prose-invert max-w-none mb-10 text-foreground/90 leading-relaxed relative z-10" dangerouslySetInnerHTML={{ __html: message.body }} />
+          <div className="prose prose-neutral dark:prose-invert max-w-none mb-10 text-foreground/90 leading-relaxed relative z-10" dangerouslySetInnerHTML={{ __html: message.body }} />
 
           {/* Attachments */}
           {message.attachments && message.attachments.length > 0 && (
-            <div className="border-t border-slate-800 dark:border-border/50 pt-6 relative z-10">
-              <h4 className="text-xs font-bold text-slate-400 dark:text-muted-foreground uppercase tracking-wider mb-3">
+            <div className="border-t border-border pt-6 relative z-10">
+              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
                 {message.attachments.length} Attachments
               </h4>
               <div className="flex flex-wrap gap-3">
                 {message.attachments.map(att => (
-                  <a key={att.id} href={att.url} onClick={(e) => { e.preventDefault(); handleDownloadPDF(); }} className="flex items-center gap-3 p-3 pr-4 rounded-xl border border-slate-800 dark:border-border/50 bg-slate-900/50 dark:bg-muted-bg hover:bg-slate-800 dark:hover:bg-card transition-colors group">
+                  <a key={att.id} href={att.url} onClick={(e) => { e.preventDefault(); handleDownloadPDF(); }} className="flex items-center gap-3 p-3 pr-4 rounded-xl border border-border bg-muted-bg/60 hover:bg-muted-bg transition-colors group">
                     <div className="w-10 h-10 rounded-lg bg-[#FF6B00]/10 text-[#FF6B00] flex items-center justify-center">
                       <Paperclip size={18} />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-foreground group-hover:text-[#FF6B00] transition-colors line-clamp-1">{att.name}</p>
-                      <p className="text-xs text-slate-400 dark:text-muted-foreground">{att.size}</p>
+                      <p className="text-xs text-muted-foreground">{att.size}</p>
                     </div>
                   </a>
                 ))}
