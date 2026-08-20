@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, Mail, CheckCircle2, Loader2 } from 'lucide-react';
 import { InputField } from './InputField';
+import { createClient } from '@/lib/supabase/client';
+import { isAuthorizedEmail } from '@/lib/auth-config';
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
@@ -20,9 +22,9 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) {
+    if (!email.trim()) {
       setError('Please enter your email address');
       return;
     }
@@ -34,16 +36,26 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     setError('');
     setLoading(true);
 
-    setTimeout(() => {
+    try {
+      if (isAuthorizedEmail(email)) {
+        const supabase = createClient();
+        const resetUrl = typeof window !== "undefined" ? `${window.location.origin}/auth/reset-password` : undefined;
+        await supabase.auth.resetPasswordForEmail(email.trim(), {
+          redirectTo: resetUrl,
+        });
+      }
+    } catch {
+      // Do not reveal errors to prevent account enumeration
+    } finally {
       setLoading(false);
       setSent(true);
-      onSuccessToast(`Password reset link sent to ${email}`);
-    }, 1200);
+      onSuccessToast(`Password reset instructions sent to ${email}`);
+    }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-md bg-zinc-950 border border-[#ef2b2b]/30 rounded-2xl p-6 sm:p-8 shadow-[0_0_50px_rgba(239,43,43,0.2)]">
+      <div className="relative w-full max-w-md bg-[#0B0E14] border border-[#FF5500]/30 rounded-2xl p-6 sm:p-8 shadow-[0_0_50px_rgba(255,85,0,0.25)]">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -76,13 +88,13 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                   if (error) setError('');
                 }}
                 error={error}
-                icon={<Mail className="w-5 h-5 text-[#ff2b2b]" />}
+                icon={<Mail className="w-5 h-5 text-[#FF5500]" />}
               />
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full btn-red-gradient font-bold text-white rounded-xl py-3.5 text-sm flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full bg-gradient-to-r from-[#FF5500] to-[#FF3300] hover:from-[#FF6600] hover:to-[#FF4400] font-bold text-white rounded-xl py-3.5 text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 shadow-[0_4px_25px_rgba(255,85,0,0.45)]"
               >
                 {loading ? (
                   <>
@@ -106,7 +118,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             </p>
             <button
               onClick={onClose}
-              className="mt-6 w-full btn-red-gradient font-bold text-white rounded-xl py-3 text-sm cursor-pointer"
+              className="mt-6 w-full bg-gradient-to-r from-[#FF5500] to-[#FF3300] hover:from-[#FF6600] hover:to-[#FF4400] font-bold text-white rounded-xl py-3 text-sm cursor-pointer shadow-[0_4px_25px_rgba(255,85,0,0.45)]"
             >
               Back to Sign In
             </button>
@@ -116,3 +128,4 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     </div>
   );
 };
+

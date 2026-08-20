@@ -3,7 +3,7 @@
 
 @layer base {
   body {
-    background-color: #050505;
+    background-color: #07090E;
     color: #ffffff;
     font-family: 'Inter', sans-serif;
     overflow-x: hidden;
@@ -22,44 +22,44 @@
 }
 
 .bg-radial-red-glow-1 {
-  background: radial-gradient(circle at 15% 20%, rgba(255, 43, 43, 0.12) 0%, rgba(5, 5, 5, 0) 50%);
+  background: radial-gradient(circle at 15% 20%, rgba(255, 85, 0, 0.15) 0%, rgba(7, 9, 14, 0) 50%);
 }
 
 .bg-radial-red-glow-2 {
-  background: radial-gradient(circle at 85% 75%, rgba(239, 43, 43, 0.15) 0%, rgba(5, 5, 5, 0) 55%);
+  background: radial-gradient(circle at 85% 75%, rgba(255, 85, 0, 0.18) 0%, rgba(7, 9, 14, 0) 55%);
 }
 
 /* Glassmorphism card styles */
 .glass-panel {
-  background: rgba(15, 15, 18, 0.85);
+  background: rgba(11, 14, 20, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 43, 43, 0.28);
+  border: 1px solid rgba(255, 85, 0, 0.3);
 }
 
 .glass-panel-subtle {
-  background: rgba(12, 12, 16, 0.6);
+  background: rgba(12, 16, 24, 0.6);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .text-gradient-red {
-  background: linear-gradient(135deg, #ff4d4d 0%, #ef2b2b 50%, #c91818 100%);
+  background: linear-gradient(135deg, #FF7700 0%, #FF5500 50%, #FF3300 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 /* Button & Card glow effects */
 .btn-red-gradient {
-  background: linear-gradient(135deg, #ff2b2b 0%, #d61c1c 100%);
+  background: linear-gradient(135deg, #FF5500 0%, #FF3300 100%);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 20px rgba(255, 43, 43, 0.35);
+  box-shadow: 0 4px 25px rgba(255, 85, 0, 0.45);
 }
 
 .btn-red-gradient:hover {
-  background: linear-gradient(135deg, #ff4545 0%, #e62222 100%);
-  box-shadow: 0 0 30px rgba(255, 43, 43, 0.55);
+  background: linear-gradient(135deg, #FF6600 0%, #FF4400 100%);
+  box-shadow: 0 6px 30px rgba(255, 85, 0, 0.6);
   transform: translateY(-1px);
 }
 
@@ -80,6 +80,6 @@
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #ef2b2b;
+  background: #FF5500;
 }
 

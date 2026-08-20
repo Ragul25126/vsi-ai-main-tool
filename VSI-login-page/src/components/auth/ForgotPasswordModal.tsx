@@ -43,11 +43,11 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-md bg-zinc-950 border border-[#ef2b2b]/30 rounded-2xl p-6 sm:p-8 shadow-[0_0_50px_rgba(239,43,43,0.2)]">
+      <div className="relative w-full max-w-md bg-[#0B0E14] border border-[#FF5500]/30 rounded-2xl p-6 sm:p-8 shadow-[0_0_50px_rgba(255,85,0,0.25)]">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+          className="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
           aria-label="Close modal"
         >
           <X className="w-5 h-5" />
@@ -60,7 +60,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 Reset Password
               </h2>
               <p className="text-sm text-zinc-400 mt-1">
-                Enter your email address and we'll send you instructions to reset your password.
+                Enter your email address and we&apos;ll send you instructions to reset your password.
               </p>
             </div>
 
@@ -76,13 +76,13 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                   if (error) setError('');
                 }}
                 error={error}
-                icon={<Mail className="w-5 h-5 text-[#ff2b2b]" />}
+                icon={<Mail className="w-5 h-5 text-[#FF5500]" />}
               />
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full btn-red-gradient font-bold text-white rounded-xl py-3.5 text-sm flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-[#FF5500] to-[#FF3300] hover:from-[#FF6600] hover:to-[#FF4400] font-bold text-white rounded-xl py-3.5 text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 shadow-[0_4px_25px_rgba(255,85,0,0.45)]"
               >
                 {loading ? (
                   <>
@@ -106,7 +106,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             </p>
             <button
               onClick={onClose}
-              className="mt-6 w-full btn-red-gradient font-bold text-white rounded-xl py-3 text-sm"
+              className="mt-6 w-full bg-gradient-to-r from-[#FF5500] to-[#FF3300] hover:from-[#FF6600] hover:to-[#FF4400] font-bold text-white rounded-xl py-3 text-sm cursor-pointer shadow-[0_4px_25px_rgba(255,85,0,0.45)]"
             >
               Back to Sign In
             </button>
@@ -116,3 +116,4 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     </div>
   );
 };
+

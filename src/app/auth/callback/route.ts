@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+import { isAuthorizedEmail } from "@/lib/auth-config";
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
@@ -13,6 +15,12 @@ export async function GET(request: NextRequest) {
       
       if (!error && data?.session?.user) {
         const user = data.session.user;
+
+        if (!isAuthorizedEmail(user.email)) {
+          await supabase.auth.signOut();
+          return NextResponse.redirect(new URL("/login?error=unauthorized_account", requestUrl.origin));
+        }
+
         const nameFromEmail = (user.email ?? "").split("@")[0];
         const formattedName = user.user_metadata?.full_name || user.user_metadata?.name || (nameFromEmail ? nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1) : "User");
 

@@ -10,16 +10,16 @@ interface FeatureItemProps {
 const FeatureRow: React.FC<FeatureItemProps> = ({ icon, title, description }) => {
   return (
     <div className="flex items-center gap-4 group">
-      {/* Icon Container: Dark red/black gradient, thin red border, rounded corners, red glowing icon */}
-      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-red-950/80 via-zinc-950 to-black border border-[#ef2b2b]/40 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(239,43,43,0.2)] group-hover:border-[#ff2b2b] group-hover:shadow-[0_0_22px_rgba(255,43,43,0.45)] transition-all duration-300">
-        <div className="text-[#ff2b2b] drop-shadow-[0_0_8px_rgba(255,43,43,0.8)]">
+      {/* Icon Container: Dark orange gradient, thin orange border, rounded corners, orange glowing icon matching Image 2 */}
+      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-[#FF5500]/20 via-[#161B26] to-[#0B0E14] border border-[#FF5500]/40 flex items-center justify-center shrink-0 shadow-[0_0_18px_rgba(255,85,0,0.25)] group-hover:border-[#FF5500] group-hover:shadow-[0_0_25px_rgba(255,85,0,0.5)] transition-all duration-300">
+        <div className="text-[#FF5500] drop-shadow-[0_0_10px_rgba(255,85,0,0.8)]">
           {icon}
         </div>
       </div>
 
       {/* Content */}
       <div className="flex flex-col justify-center text-left">
-        <h3 className="text-white font-semibold text-sm sm:text-base leading-snug group-hover:text-red-100 transition-colors">
+        <h3 className="text-white font-semibold text-sm sm:text-base leading-snug group-hover:text-orange-200 transition-colors">
           {title}
         </h3>
         <p className="text-zinc-400 text-xs sm:text-sm font-normal leading-relaxed">
@@ -51,3 +51,4 @@ export const FeatureList: React.FC = () => {
     </div>
   );
 };
+

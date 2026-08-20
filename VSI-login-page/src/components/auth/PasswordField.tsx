@@ -27,7 +27,7 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
 
       <div className="relative flex items-center">
         {/* Left icon */}
-        <div className="absolute left-3.5 pointer-events-none text-[#ff2b2b] shrink-0">
+        <div className="absolute left-3.5 pointer-events-none text-[#FF5500] shrink-0">
           <Lock className="w-5 h-5" />
         </div>
 
@@ -35,10 +35,10 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
         <input
           id={id}
           type={showPassword ? 'text' : 'password'}
-          className={`w-full bg-zinc-950/90 text-white placeholder-zinc-500 text-sm rounded-xl pl-11 pr-11 py-3.5 border transition-all duration-200 focus:outline-none ${
+          className={`w-full bg-[#0F1219]/90 text-white placeholder-zinc-500 text-sm rounded-xl pl-11 pr-11 py-3.5 border transition-all duration-200 focus:outline-none ${
             error
               ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500/50 shadow-[0_0_12px_rgba(239,68,68,0.25)]'
-              : 'border-zinc-800 focus:border-[#ff2b2b] focus:ring-1 focus:ring-[#ff2b2b]/40 focus:shadow-[0_0_15px_rgba(255,43,43,0.25)]'
+              : 'border-zinc-800 focus:border-[#FF5500] focus:ring-1 focus:ring-[#FF5500]/40 focus:shadow-[0_0_18px_rgba(255,85,0,0.25)]'
           } ${className}`}
           {...props}
         />
@@ -48,7 +48,7 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
           type="button"
           onClick={toggleVisibility}
           aria-label={showPassword ? 'Hide password' : 'Show password'}
-          className="absolute right-3.5 text-zinc-400 hover:text-white p-1 rounded-lg transition-colors focus:outline-none focus:text-white"
+          className="absolute right-3.5 text-zinc-400 hover:text-white p-1 rounded-lg transition-colors focus:outline-none focus:text-white cursor-pointer"
         >
           {showPassword ? (
             <EyeOff className="w-5 h-5" />
@@ -68,3 +68,4 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
     </div>
   );
 };
+

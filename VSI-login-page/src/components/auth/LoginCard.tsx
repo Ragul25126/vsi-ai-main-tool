@@ -15,7 +15,6 @@ export const LoginCard: React.FC<LoginCardProps> = ({
   onLoginSubmit,
   onOpenForgotPassword,
   onOpenSignUp,
-  onGoogleLogin,
   isLoading = false,
 }) => {
   const [email, setEmail] = useState('');
@@ -54,9 +53,9 @@ export const LoginCard: React.FC<LoginCardProps> = ({
   };
 
   return (
-    <div className="w-full max-w-[460px] mx-auto glass-panel rounded-2xl p-7 sm:p-9 shadow-vsi-card border border-[#ef2b2b]/30 relative overflow-hidden transition-all duration-300">
-      {/* Subtle top red glow bar accent */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-[#ff2b2b] to-transparent shadow-[0_0_12px_#ff2b2b]" />
+    <div className="w-full max-w-[460px] mx-auto bg-[#0B0E14]/90 backdrop-blur-xl rounded-2xl p-7 sm:p-9 shadow-[0_0_50px_rgba(255,85,0,0.2)] border border-[#FF5500]/30 relative overflow-hidden transition-all duration-300">
+      {/* Subtle top orange glow bar accent matching Image 2 */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-[#FF5500] to-transparent shadow-[0_0_12px_#FF5500]" />
 
       {/* Card Heading */}
       <div className="mb-7">
@@ -109,7 +108,7 @@ export const LoginCard: React.FC<LoginCardProps> = ({
                 onChange={(e) => setRemember(e.target.checked)}
                 className="peer sr-only"
               />
-              <div className="w-4 h-4 rounded border border-zinc-700 bg-zinc-950 peer-checked:bg-[#ff2b2b] peer-checked:border-[#ff2b2b] transition-all duration-200 peer-focus:ring-1 peer-focus:ring-[#ff2b2b]/50" />
+              <div className="w-4 h-4 rounded border border-zinc-700 bg-zinc-950 peer-checked:bg-[#FF5500] peer-checked:border-[#FF5500] transition-all duration-200 peer-focus:ring-1 peer-focus:ring-[#FF5500]/50" />
               <svg
                 className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity duration-200"
                 fill="none"
@@ -128,7 +127,7 @@ export const LoginCard: React.FC<LoginCardProps> = ({
           <button
             type="button"
             onClick={onOpenForgotPassword}
-            className="text-[#ff2b2b] hover:text-red-400 font-medium transition-colors hover:underline focus:outline-none"
+            className="text-[#FF5500] hover:text-orange-400 font-medium transition-colors hover:underline focus:outline-none cursor-pointer"
           >
             Forgot password?
           </button>
@@ -138,7 +137,7 @@ export const LoginCard: React.FC<LoginCardProps> = ({
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full btn-red-gradient text-white font-bold text-base py-3.5 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 mt-1 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(255,43,43,0.35)]"
+          className="w-full bg-gradient-to-r from-[#FF5500] to-[#FF3300] hover:from-[#FF6600] hover:to-[#FF4400] text-white font-bold text-base py-3.5 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 mt-1 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_4px_25px_rgba(255,85,0,0.45)] cursor-pointer"
         >
           {isLoading ? (
             <>
@@ -151,15 +150,13 @@ export const LoginCard: React.FC<LoginCardProps> = ({
         </button>
       </form>
 
-
-
       {/* Sign Up Link Footer */}
       <div className="mt-7 text-center text-xs sm:text-sm text-zinc-400 font-normal">
-        Don't have an account?{' '}
+        Don&apos;t have an account?{' '}
         <button
           type="button"
           onClick={onOpenSignUp}
-          className="text-[#ff2b2b] hover:text-red-400 font-semibold transition-colors hover:underline focus:outline-none"
+          className="text-[#FF5500] hover:text-orange-400 font-semibold transition-colors hover:underline focus:outline-none cursor-pointer"
         >
           Sign up
         </button>
@@ -167,3 +164,4 @@ export const LoginCard: React.FC<LoginCardProps> = ({
     </div>
   );
 };
+

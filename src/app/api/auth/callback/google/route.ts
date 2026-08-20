@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { isAuthorizedEmail } from "@/lib/auth-config";
 
 export async function GET(request: NextRequest) {
   const origin = request.nextUrl.origin;
@@ -74,6 +75,13 @@ export async function GET(request: NextRequest) {
       console.error("Failed to fetch Google user info:", googleUser);
       const loginUrl = new URL("/login", origin);
       loginUrl.searchParams.set("error", "google_profile_failed");
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Security Check: Restrict to authorized ValGrow Labs account only
+    if (!isAuthorizedEmail(googleUser.email)) {
+      const loginUrl = new URL("/login", origin);
+      loginUrl.searchParams.set("error", "unauthorized_account");
       return NextResponse.redirect(loginUrl);
     }
 

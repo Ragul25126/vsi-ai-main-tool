@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
-import { BackgroundGrid } from '../common/BackgroundGrid';
-import { BrandHeader } from './BrandHeader';
-import { PillBadge } from './PillBadge';
-import { MainHeadline } from './MainHeadline';
-import { FeatureList } from './FeatureList';
-import { StatsCard } from './StatsCard';
-import { LoginCard } from './LoginCard';
+import { SunIcon as Sunburst, Loader2 } from 'lucide-react';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
 import { SignUpModal } from './SignUpModal';
 import { Toast } from '../common/Toast';
@@ -22,6 +16,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [isForgotOpen, setIsForgotOpen] = useState(false);
   const [isSignUpOpen, setIsSignUpOpen] = useState(false);
 
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
   const showToast = (type: 'success' | 'error' | 'info', text: string) => {
     setToast({
       id: Date.now().toString(),
@@ -30,10 +29,31 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     });
   };
 
-  const handleLoginSubmit = (email: string, _password: string, remember: boolean) => {
+  const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    let hasError = false;
+
+    if (!email.trim()) {
+      setEmailError('Email address is required');
+      hasError = true;
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      setEmailError('Please enter a valid email address');
+      hasError = true;
+    } else {
+      setEmailError('');
+    }
+
+    if (!password) {
+      setPasswordError('Password is required');
+      hasError = true;
+    } else {
+      setPasswordError('');
+    }
+
+    if (hasError) return;
+
     setIsLoading(true);
 
-    // Simulate authentication process
     setTimeout(() => {
       setIsLoading(false);
       
@@ -45,43 +65,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         plan: 'VSI GEO Platform Pro',
       };
 
-      if (remember) {
-        localStorage.setItem('vsi_user', JSON.stringify(mockUser));
-      }
-
+      localStorage.setItem('vsi_user', JSON.stringify(mockUser));
       showToast('success', `Welcome back to VSI AI Suite, ${mockUser.name}!`);
       
-      // Navigate to dashboard
       setTimeout(() => {
         onLoginSuccess(mockUser);
-      }, 700);
-    }, 1200);
-  };
-
-  const handleGoogleLogin = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      const googleUser: UserProfile = {
-        name: 'Alex Mercer',
-        email: 'alex.mercer@gmail.com',
-        role: 'Growth Lead',
-        company: 'Apex AI Ventures',
-        plan: 'VSI GEO Platform Enterprise',
-      };
-      showToast('success', 'Google SSO authentication successful!');
-      setTimeout(() => {
-        onLoginSuccess(googleUser);
       }, 700);
     }, 1000);
   };
 
-  const handleSignUpSuccess = (name: string, email: string) => {
+  const handleSignUpSuccess = (name: string, userEmail: string) => {
     setIsSignUpOpen(false);
     showToast('success', `Account created successfully for ${name}! Logging you in...`);
     const newUser: UserProfile = {
       name,
-      email,
+      email: userEmail,
       role: 'Owner',
       company: 'My Brand',
       plan: '14-Day Free Trial',
@@ -92,83 +90,135 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#050505] text-white flex flex-col justify-center items-center overflow-x-hidden selection:bg-[#ff2b2b] selection:text-white">
-      {/* Dynamic Cyber Grid & Red Orbs Background */}
-      <BackgroundGrid />
-
+    <div className="relative min-h-screen w-full bg-black text-white flex items-center justify-center p-4 sm:p-6 lg:p-12 selection:bg-[#FF5500] selection:text-white">
       {/* Toast Feedback */}
       <Toast toast={toast} onClose={() => setToast(null)} />
 
-      {/* Main Container */}
-      <main className="relative z-10 w-full max-w-[1380px] min-h-screen lg:min-h-0 lg:h-screen px-4 sm:px-8 lg:px-12 py-6 lg:py-4 flex items-center justify-center">
-        {/* Desktop Two-Column Layout: 52% Left, 48% Right. No scroll on desktop */}
-        <div className="w-full grid grid-cols-1 lg:grid-cols-[52%_48%] gap-8 lg:gap-12 items-center my-auto">
-          
-          {/* Mobile Header branding (shown on smaller screens above login card) */}
-          <div className="lg:hidden flex flex-col items-center text-center gap-3 pt-2">
-            <BrandHeader />
-            <PillBadge />
+      {/* Floating Centered Card Container matching Image 2 */}
+      <main className="relative z-10 w-full max-w-5xl overflow-hidden flex flex-col md:flex-row shadow-[0_0_60px_rgba(0,0,0,0.8)] rounded-3xl border border-zinc-800/80 bg-black min-h-[500px] my-auto">
+        
+        {/* LEFT COLUMN: BRANDING & HEADLINE matching Image 2 */}
+        <div className="bg-black text-white p-8 sm:p-12 md:p-14 md:w-1/2 relative rounded-l-3xl overflow-hidden flex flex-col justify-between z-10 min-h-[440px]">
+          {/* Vertical Grid Lines Overlay */}
+          <div className="absolute inset-0 grid grid-cols-5 pointer-events-none opacity-20 divide-x divide-zinc-800 z-0">
+            <div className="h-full" />
+            <div className="h-full" />
+            <div className="h-full" />
+            <div className="h-full" />
+            <div className="h-full" />
           </div>
 
-          {/* LEFT COLUMN: BRANDING & FEATURES (Desktop view) */}
-          <div className="hidden lg:flex flex-col justify-center gap-4 xl:gap-5">
-            {/* Top Logo */}
-            <div>
-              <BrandHeader />
-            </div>
-
-            {/* Small Badge / Tagline */}
-            <div>
-              <PillBadge />
-            </div>
-
-            {/* Main Headline */}
-            <div>
-              <MainHeadline />
-            </div>
-
-            {/* Description */}
-            <p className="text-zinc-400 text-sm xl:text-base leading-relaxed max-w-xl font-normal">
-              Monitor how AI platforms mention your brand, discover competitor opportunities, optimize your content for AI search, and increase visibility where modern buyers search first.
+          {/* Main Headline & Description matching Image 2 */}
+          <div className="flex flex-col justify-center my-auto relative z-10 gap-4">
+            <h1 className="text-3xl sm:text-4xl md:text-[44px] xl:text-[48px] font-extrabold text-white tracking-tight leading-[1.12]">
+              Design and dev partner for startups and founders.
+            </h1>
+            <p className="text-zinc-400 text-sm sm:text-base leading-relaxed font-normal max-w-md mt-2">
+              Monitor AI search mentions, citation share of voice, and brand visibility across modern AI platforms.
             </p>
-
-            {/* Feature Rows */}
-            <FeatureList />
-
-            {/* Statistics Horizontal Container */}
-            <div className="pt-1">
-              <StatsCard />
-            </div>
           </div>
 
-          {/* RIGHT COLUMN: LOGIN CARD */}
-          <div className="flex items-center justify-center w-full my-auto">
-            <LoginCard
-              onLoginSubmit={handleLoginSubmit}
-              onOpenForgotPassword={() => setIsForgotOpen(true)}
-              onOpenSignUp={() => setIsSignUpOpen(true)}
-              onGoogleLogin={handleGoogleLogin}
-              isLoading={isLoading}
-            />
+          {/* Footer Copyright */}
+          <div className="relative z-10 text-xs text-zinc-500 font-normal">
+            © ValGrow Labs • VSI AI Suite
           </div>
-
-          {/* MOBILE MARKETING & FEATURES (Shown below login card on mobile viewports) */}
-          <div className="lg:hidden flex flex-col gap-6 pt-2 pb-6">
-            <div className="text-center">
-              <MainHeadline />
-              <p className="text-zinc-400 text-sm leading-relaxed mt-3 max-w-md mx-auto">
-                Monitor how AI platforms mention your brand, discover competitor opportunities, optimize your content for AI search, and increase visibility where modern buyers search first.
-              </p>
-            </div>
-
-            <FeatureList />
-
-            <div className="pt-1">
-              <StatsCard />
-            </div>
-          </div>
-
         </div>
+
+        {/* RIGHT COLUMN: FORM matching Image 2 */}
+        <div className="p-8 sm:p-12 md:p-14 md:w-1/2 flex flex-col bg-[#16181f] z-10 text-white border-l border-zinc-800/80 justify-center">
+          <div className="flex flex-col items-start mb-8">
+            <div className="text-[#FF5500] mb-3 drop-shadow-[0_0_12px_rgba(255,85,0,0.5)]">
+              <Sunburst className="h-8 w-8 stroke-[1.8]" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-1.5 tracking-tight text-white">
+              Get Started
+            </h2>
+            <p className="text-left text-zinc-400 text-xs sm:text-sm">
+              Welcome to VSI AI Suite — Let&apos;s get started
+            </p>
+          </div>
+
+          <form onSubmit={handleLoginSubmit} noValidate className="flex flex-col gap-4">
+            <div>
+              <label htmlFor="email-vsi" className="block text-sm mb-2 font-medium text-zinc-300">
+                Your email
+              </label>
+              <input
+                type="email"
+                id="email-vsi"
+                placeholder="valgrowlabs444@gmail.com"
+                className={`text-sm font-medium w-full py-3 px-4 border rounded-lg focus:outline-none focus:ring-2 bg-white text-black placeholder:text-gray-400 focus:ring-[#FF5500] transition-all ${
+                  emailError ? "border-red-500" : "border-gray-200"
+                }`}
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (emailError) setEmailError('');
+                }}
+                autoComplete="email"
+              />
+              {emailError && (
+                <p className="text-red-400 text-xs mt-1 font-medium">{emailError}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="password-vsi" className="block text-sm mb-2 font-medium text-zinc-300">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password-vsi"
+                placeholder="••••••••••••"
+                className={`text-sm font-medium w-full py-3 px-4 border rounded-lg focus:outline-none focus:ring-2 bg-white text-black placeholder:text-gray-400 focus:ring-[#FF5500] transition-all ${
+                  passwordError ? "border-red-500" : "border-gray-200"
+                }`}
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (passwordError) setPasswordError('');
+                }}
+                autoComplete="current-password"
+              />
+              {passwordError && (
+                <p className="text-red-400 text-xs mt-1 font-medium">{passwordError}</p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-[#ff5500] hover:bg-[#e64d00] active:scale-[0.99] text-white font-bold text-base py-3.5 px-4 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 mt-3 disabled:opacity-60 shadow-[0_4px_20px_rgba(255,85,0,0.35)]"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Authenticating...</span>
+                </>
+              ) : (
+                <span>Sign In</span>
+              )}
+            </button>
+
+            <div className="flex items-center justify-between text-xs text-zinc-400 mt-4">
+              <button
+                type="button"
+                onClick={() => setIsForgotOpen(true)}
+                className="hover:text-white transition-colors"
+              >
+                Forgot password?
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsSignUpOpen(true)}
+                className="text-[#FF5500] hover:underline font-medium"
+              >
+                Create account
+              </button>
+            </div>
+          </form>
+        </div>
+
       </main>
 
       {/* Modals */}
@@ -186,4 +236,5 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     </div>
   );
 };
+
 

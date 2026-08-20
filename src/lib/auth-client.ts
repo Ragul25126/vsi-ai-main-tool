@@ -65,7 +65,18 @@ export function clearClientSession() {
   document.cookie = `vsi_user_name=; ${expired}`;
 }
 
-export function logoutAndRedirect() {
+import { createClient } from "@/lib/supabase/client";
+
+export async function logoutAndRedirect() {
+  if (typeof window !== "undefined") {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.error("Error signing out of Supabase:", e);
+    }
+  }
   clearClientSession();
   window.location.href = "/login";
 }
+

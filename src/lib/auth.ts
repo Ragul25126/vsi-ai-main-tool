@@ -30,7 +30,7 @@ export interface SessionContext {
  */
 function isDummySupabase(): boolean {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  return url.includes("dummy") || url.includes("localhost:54321") || url === "";
+  return url.includes("dummy") || url.includes("your-project.supabase.co") || url.includes("localhost:54321") || url === "";
 }
 
 /** Extract user details from cookies set during client session creation. */
@@ -85,9 +85,11 @@ async function dynamicSession(): Promise<SessionContext> {
   };
 }
 
+import { isAuthorizedEmail } from "@/lib/auth-config";
+
 /**
  * Server-side: fetch current authenticated user + their profile + their agency.
- * Returns null if not signed in.
+ * Returns null if not signed in or not the authorized ValGrow Labs account.
  */
 export async function getSession(): Promise<SessionContext | null> {
   try {
@@ -100,20 +102,26 @@ export async function getSession(): Promise<SessionContext | null> {
     // If cookies API fails, proceed
   }
 
-  // When running with dummy credentials, return dynamic session if session cookie exists
+  // When running with dummy credentials, return dynamic session ONLY if email is authorized
   if (isDummySupabase()) {
+    const cookieUserData = await getCookieUser();
+    if (!isAuthorizedEmail(cookieUserData.email)) {
+      return null;
+    }
     return dynamicSession();
   }
 
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return dynamicSession();
+    if (!user || !isAuthorizedEmail(user.email)) {
+      return null;
+    }
 
     const { data: profile } = await supabase
       .from("profiles")
       .select("agency_id, role, full_name, agencies(name, is_pilot, max_keywords, display_name, logo_url, primary_color, support_email, report_footer)")
-      .eq("id", user?.id || "")
+      .eq("id", user.id)
       .single();
 
     const agency = (profile?.agencies as unknown) as {
@@ -124,17 +132,17 @@ export async function getSession(): Promise<SessionContext | null> {
     } | null;
 
     const cookieUserData = await getCookieUser();
-    const resolvedEmail = user?.email ?? cookieUserData.email ?? "";
+    const resolvedEmail = user.email ?? cookieUserData.email ?? "";
     const resolvedName = profile?.full_name ?? cookieUserData.fullName ?? null;
 
     const userRole = (profile?.role as UserRole) ?? "pilot";
     return {
-      userId:       user?.id || "",
+      userId:       user.id,
       email:        resolvedEmail,
       fullName:     resolvedName,
       role:         userRole,
-      agencyId:     profile?.agency_id ?? null,
-      agencyName:   agency?.name ?? null,
+      agencyId:     profile?.agency_id ?? "agency-001",
+      agencyName:   agency?.name ?? "Valgrow Enterprise",
       isPilot:      agency?.is_pilot ?? true,
       maxKeywords:  agency?.max_keywords ?? 10,
       branding: {
@@ -146,6 +154,10 @@ export async function getSession(): Promise<SessionContext | null> {
       },
     };
   } catch {
+    const cookieUserData = await getCookieUser();
+    if (!isAuthorizedEmail(cookieUserData.email)) {
+      return null;
+    }
     return dynamicSession();
   }
 }
