@@ -14,6 +14,7 @@ import { SERVICE_TYPE_LABELS, ServiceType } from "@/types/search";
 import type { UserRole } from "@/lib/auth";
 import { useTheme } from "@/components/ThemeProvider";
 import { logoutAndRedirect, getClientUser } from "@/lib/auth-client";
+import { getCustomClients } from "@/lib/client-store";
 
 interface ClientEntry {
   id: string;
@@ -74,6 +75,32 @@ export default function Sidebar({
   const [localLogoUrl, setLocalLogoUrl] = useState<string | null>(null);
   const [localAgencyName, setLocalAgencyName] = useState<string | null>(null);
   const { resolvedTheme, toggleTheme } = useTheme();
+
+  const [displayedClients, setDisplayedClients] = useState<ClientEntry[]>(clients);
+
+  useEffect(() => {
+    const updateClients = () => {
+      const custom = getCustomClients();
+      const customEntries: ClientEntry[] = custom.map((c) => ({
+        id: c.id,
+        name: c.name,
+        service_type: (c.service_type || "geo") as ServiceType,
+        agencyName: null,
+      }));
+      const serverIds = new Set(clients.map((c) => c.id));
+      const combined = [...clients, ...customEntries.filter((c) => !serverIds.has(c.id))];
+      setDisplayedClients(combined);
+    };
+
+    updateClients();
+
+    window.addEventListener("storage", updateClients);
+    window.addEventListener("clients_updated", updateClients);
+    return () => {
+      window.removeEventListener("storage", updateClients);
+      window.removeEventListener("clients_updated", updateClients);
+    };
+  }, [clients]);
 
   useEffect(() => { setOpen(false); }, [pathname]);
 
@@ -255,7 +282,7 @@ export default function Sidebar({
           {!isCollapsed ? (
             <div className="flex items-center justify-between px-2">
               <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">
-                {userRole === "super_admin" ? `CLIENTS (${clients.length})` : `PORTFOLIO (${clients.length})`}
+                {userRole === "super_admin" ? `CLIENTS (${displayedClients.length})` : `PORTFOLIO (${displayedClients.length})`}
               </p>
               <Link
                 href="/dashboard/clients"
@@ -270,14 +297,14 @@ export default function Sidebar({
             </div>
           )}
 
-          {clients.length === 0 ? (
+          {displayedClients.length === 0 ? (
             !isCollapsed && (
               <div className="px-3 py-3 rounded-xl border border-dashed border-border text-center">
                 <p className="text-xs text-muted-foreground font-medium">No clients tracked</p>
               </div>
             )
           ) : (
-            <ClientList clients={clients} isClientOn={isClientOn} isCollapsed={isCollapsed} />
+            <ClientList clients={displayedClients} isClientOn={isClientOn} isCollapsed={isCollapsed} />
           )}
 
           <Link

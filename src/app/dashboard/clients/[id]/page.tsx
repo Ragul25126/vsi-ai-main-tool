@@ -183,7 +183,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               Reports
             </Link>
             <Link
-              href={`/dashboard/clients/${id}/settings`}
+              href="/dashboard/settings"
               className="inline-flex items-center rounded-[20px] px-3.5 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted-bg transition-colors"
             >
               Settings

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Plus, Search, Globe, Tag, MapPin, Users, TrendingUp } from "lucide-react";
+import { getAllClients, ClientItem } from "@/lib/client-store";
 
-const MOCK_CLIENTS = [
+const MOCK_CLIENTS: ClientItem[] = [
  { id: "1", name: "VG Digital", brand_name: "VG Digital", website: "vgdigital.com", service_type: "seo", country: "UAE", industry: "Digital Marketing", keywords: 12, winRate: 67, tasks: 3 },
  { id: "2", name: "Athariw", brand_name: "Athariw", website: "athariw.com", service_type: "seo", country: "KSA", industry: "E-commerce", keywords: 8, winRate: 42, tasks: 2 },
  { id: "3", name: "ValGrow Labs", brand_name: "ValGrow Labs", website: "valgrowing.com", service_type: "geo", country: "UAE", industry: "SaaS", keywords: 15, winRate: 53, tasks: 2 },
@@ -19,6 +20,7 @@ const MOCK_CLIENTS = [
 const SERVICE_BADGE: Record<string, { label: string; color: string }> = {
  seo: { label: "SEO", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
  geo: { label: "GEO", color: "bg-[#FF4500]/20 text-[#FF4500] border-[#FF4500]/30" },
+ seo_geo: { label: "SEO+GEO", color: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
 };
 
 const AVATAR_COLORS = [
@@ -31,20 +33,34 @@ const AVATAR_COLORS = [
 
 export default function ClientsPage() {
  const [query, setQuery] = useState("");
+ const [clientsList, setClientsList] = useState<ClientItem[]>([]);
 
- const filtered = MOCK_CLIENTS.filter((c) => {
+ useEffect(() => {
+  const update = () => {
+   setClientsList(getAllClients(MOCK_CLIENTS));
+  };
+  update();
+  window.addEventListener("storage", update);
+  window.addEventListener("clients_updated", update);
+  return () => {
+   window.removeEventListener("storage", update);
+   window.removeEventListener("clients_updated", update);
+  };
+ }, []);
+
+ const filtered = clientsList.filter((c) => {
   const q = query.toLowerCase();
   return (
    c.name.toLowerCase().includes(q) ||
-   c.brand_name.toLowerCase().includes(q) ||
-   c.website.toLowerCase().includes(q) ||
-   c.industry.toLowerCase().includes(q) ||
-   c.country.toLowerCase().includes(q)
+   (c.brand_name || "").toLowerCase().includes(q) ||
+   (c.website || "").toLowerCase().includes(q) ||
+   (c.industry || "").toLowerCase().includes(q) ||
+   (c.country || "").toLowerCase().includes(q)
   );
  });
 
- const avgWin = Math.round(MOCK_CLIENTS.reduce((s, c) => s + c.winRate, 0) / MOCK_CLIENTS.length);
- const totalKw = MOCK_CLIENTS.reduce((s, c) => s + c.keywords, 0);
+ const avgWin = clientsList.length > 0 ? Math.round(clientsList.reduce((s, c) => s + (c.winRate || 0), 0) / clientsList.length) : 0;
+ const totalKw = clientsList.reduce((s, c) => s + (c.keywords || 0), 0);
 
  return (
  <div className="min-h-[calc(100vh-60px)] bg-background p-3 sm:p-6 font-sans text-foreground">
@@ -54,7 +70,7 @@ export default function ClientsPage() {
  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
  <div>
  <h1 className="text-2xl font-bold text-foreground tracking-tight">Clients</h1>
- <p className="text-sm text-muted-foreground mt-0.5">{MOCK_CLIENTS.length} clients across your agency</p>
+ <p className="text-sm text-muted-foreground mt-0.5">{clientsList.length} clients across your agency</p>
  </div>
  <div className="flex items-center gap-3">
  <div className="relative">
@@ -80,10 +96,10 @@ export default function ClientsPage() {
  {/* Stats Row */}
  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
  {[
- { label: "Total Clients", value: MOCK_CLIENTS.length, sub: "across agency", Icon: Users, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
- { label: "SEO Clients", value: MOCK_CLIENTS.filter(c => c.service_type === "seo").length, sub: "search focused", Icon: Search, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
- { label: "GEO Clients", value: MOCK_CLIENTS.filter(c => c.service_type === "geo").length, sub: "AI visibility", Icon: Globe, color: "text-[#FF4500]", bg: "bg-[#FF4500]/10", border: "border-[#FF4500]/20" },
- { label: "Avg Win Rate", value: `${avgWin}%`, sub: `${totalKw} keywords`, Icon: TrendingUp, color: "text-[#00E676]", bg: "bg-[#00E676]/10", border: "border-[#00E676]/20" },
+  { label: "Total Clients", value: clientsList.length, sub: "across agency", Icon: Users, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+  { label: "SEO Clients", value: clientsList.filter(c => c.service_type === "seo").length, sub: "search focused", Icon: Search, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+  { label: "GEO Clients", value: clientsList.filter(c => c.service_type === "geo").length, sub: "AI visibility", Icon: Globe, color: "text-[#FF4500]", bg: "bg-[#FF4500]/10", border: "border-[#FF4500]/20" },
+  { label: "Avg Win Rate", value: `${avgWin}%`, sub: `${totalKw} keywords`, Icon: TrendingUp, color: "text-[#00E676]", bg: "bg-[#00E676]/10", border: "border-[#00E676]/20" },
  ].map(({ label, value, sub, Icon, color, bg, border }) => (
  <div key={label} className={`bg-card border ${border} rounded-[20px] p-5 flex items-center gap-4`}>
  <div className={`w-10 h-10 rounded-[20px] ${bg} flex items-center justify-center shrink-0`}>

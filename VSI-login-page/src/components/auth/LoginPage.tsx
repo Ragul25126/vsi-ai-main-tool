@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SunIcon as Sunburst, Loader2 } from 'lucide-react';
+import { SunIcon as Sunburst, Loader2, Eye, EyeOff } from 'lucide-react';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
 import { SignUpModal } from './SignUpModal';
 import { Toast } from '../common/Toast';
@@ -18,6 +18,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
@@ -166,20 +167,34 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               <label htmlFor="password-vsi" className="block text-sm mb-2 font-medium text-zinc-300">
                 Password
               </label>
-              <input
-                type="password"
-                id="password-vsi"
-                placeholder="••••••••••••"
-                className={`text-sm font-medium w-full py-3 px-4 border rounded-lg focus:outline-none focus:ring-2 bg-white text-black placeholder:text-gray-400 focus:ring-[#FF5500] transition-all ${
-                  passwordError ? "border-red-500" : "border-gray-200"
-                }`}
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (passwordError) setPasswordError('');
-                }}
-                autoComplete="current-password"
-              />
+              <div className="relative flex items-center">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password-vsi"
+                  placeholder="••••••••••••"
+                  className={`text-sm font-medium w-full py-3 pl-4 pr-11 border rounded-lg focus:outline-none focus:ring-2 bg-white text-black placeholder:text-gray-400 focus:ring-[#FF5500] transition-all ${
+                    passwordError ? "border-red-500" : "border-gray-200"
+                  }`}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError) setPasswordError('');
+                  }}
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 text-gray-500 hover:text-gray-700 p-1 rounded-lg transition-colors focus:outline-none cursor-pointer"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
               {passwordError && (
                 <p className="text-red-400 text-xs mt-1 font-medium">{passwordError}</p>
               )}

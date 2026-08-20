@@ -1,6 +1,6 @@
 "use client";
  
-import { SunIcon as Sunburst, AlertCircle, Loader2 } from "lucide-react";
+import { SunIcon as Sunburst, AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
 interface FullScreenSignupProps {
@@ -18,6 +18,7 @@ export const FullScreenSignup = ({
 }: FullScreenSignupProps = {}) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -165,22 +166,36 @@ export const FullScreenSignup = ({
               <label htmlFor="password" className="block text-sm mb-1.5 font-semibold text-slate-700">
                 Create new password
               </label>
-              <input
-                type="password"
-                id="password"
-                className={`text-sm font-medium w-full py-2.5 px-3.5 border rounded-xl focus:outline-none focus:ring-2 bg-slate-50 text-slate-900 focus:bg-white focus:ring-orange-500 transition-all ${
-                  passwordError ? "border-red-500 focus:ring-red-500" : "border-slate-300"
-                }`}
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (passwordError) setPasswordError("");
-                  if (clearAuthError) clearAuthError();
-                }}
-                aria-invalid={!!passwordError}
-                aria-describedby="password-error"
-                autoComplete="current-password"
-              />
+              <div className="relative flex items-center">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  className={`text-sm font-medium w-full py-2.5 pl-3.5 pr-10 border rounded-xl focus:outline-none focus:ring-2 bg-slate-50 text-slate-900 focus:bg-white focus:ring-orange-500 transition-all ${
+                    passwordError ? "border-red-500 focus:ring-red-500" : "border-slate-300"
+                  }`}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError) setPasswordError("");
+                    if (clearAuthError) clearAuthError();
+                  }}
+                  aria-invalid={!!passwordError}
+                  aria-describedby="password-error"
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 text-slate-400 hover:text-slate-600 focus:text-slate-600 p-1 rounded-lg transition-colors focus:outline-none cursor-pointer"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
               {passwordError && (
                 <p id="password-error" className="text-red-500 text-xs mt-1 font-medium">
                   {passwordError}
