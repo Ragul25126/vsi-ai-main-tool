@@ -13,6 +13,7 @@ import { Dropdown } from "@/components/Dropdown";
 import ServiceFilterDropdown from "@/components/ServiceFilterDropdown";
 import { downloadCSV, exportPrintablePDF, ExportDataRow } from "@/utils/export";
 import { SERVICE_TYPE_LABELS, ServiceType } from "@/types/search";
+import { useTheme } from "./ThemeProvider";
 
 interface ClientRecord {
  id: string;
@@ -50,6 +51,8 @@ export default function DashboardClientView({
  rawResults,
  maxClients,
 }: DashboardClientViewProps) {
+ const { theme } = useTheme();
+ const isDark = theme === "dark";
  const [dateRange, setDateRange] = useState("30d");
  const [serviceFilter, setServiceFilter] = useState("all");
 
@@ -185,15 +188,19 @@ export default function DashboardClientView({
 
  {/* Export Report Actions */}
  <div className="flex items-center gap-2">
- <button
- onClick={handleExportCSV}
- type="button"
- className="flex items-center gap-2 rounded-full px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
- title="Download CSV report"
- >
- <Download size={14} />
- <span>CSV</span>
- </button>
+  <button
+  onClick={handleExportCSV}
+  type="button"
+  className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 disabled:opacity-50 ${
+    isDark
+      ? "bg-slate-900 border border-transparent text-white hover:bg-slate-800 focus:ring-slate-700/30"
+      : "bg-white border border-transparent text-slate-900 hover:bg-orange-50/30 focus:ring-[#FF6B00]/20"
+  }`}
+  title="Download CSV report"
+  >
+  <Download size={14} className={isDark ? "text-white" : "text-black"} />
+  <span className={isDark ? "text-white" : "text-black"}>CSV</span>
+  </button>
 
  <button
  onClick={handleExportPDF}
