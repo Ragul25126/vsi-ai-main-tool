@@ -50,17 +50,37 @@ export default function DashboardClientView({
  rawResults,
  maxClients,
 }: DashboardClientViewProps) {
- const [dateRange, setDateRange] = useState("30d");
- const [serviceFilter, setServiceFilter] = useState("all");
+  const [dateRange, setDateRange] = useState("30d");
+  const [serviceFilter, setServiceFilter] = useState("all");
 
- // Deduplicate to latest snapshot per (client, keyword, track_type)
- const seenKw = new Set<string>();
- const results = rawResults.filter((r) => {
- const k = `${r.client_id}::${r.keyword}::${r.track_type}`;
- if (seenKw.has(k)) return false;
- seenKw.add(k);
- return true;
- });
+  const nowMs = Date.now();
+  const rangeMsMap: Record<string, number> = {
+    "7d": 7 * 86400000,
+    "30d": 30 * 86400000,
+    "90d": 90 * 86400000,
+  };
+
+  const filteredRawResults = rawResults.filter((r) => {
+    // 1. Date Range Filter
+    if (dateRange !== "all" && rangeMsMap[dateRange] && r.created_at) {
+      const itemMs = new Date(r.created_at).getTime();
+      if (nowMs - itemMs > rangeMsMap[dateRange]) return false;
+    }
+    // 2. Service Filter
+    if (serviceFilter !== "all") {
+      if (r.track_type !== serviceFilter && r.track_type !== "both") return false;
+    }
+    return true;
+  });
+
+  // Deduplicate to latest snapshot per (client, keyword, track_type)
+  const seenKw = new Set<string>();
+  const results = filteredRawResults.filter((r) => {
+    const k = `${r.client_id}::${r.keyword}::${r.track_type}`;
+    if (seenKw.has(k)) return false;
+    seenKw.add(k);
+    return true;
+  });
 
  const clientMap = new Map(clientList.map((c) => [c.id, c]));
 
