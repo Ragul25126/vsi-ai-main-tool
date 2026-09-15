@@ -40,4 +40,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# media & screen recordings
+*.mp4
+*.mov
+*.webm
 .claude/

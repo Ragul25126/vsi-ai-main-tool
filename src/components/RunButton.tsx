@@ -1,10 +1,3 @@
-"use client";
+﻿export * from "@/features/diagnosis/components/RunButton";
+export { default } from "@/features/diagnosis/components/RunButton";
 
-interface RunButtonProps {
-  clientId?: string;
-  keywordCount?: number;
-}
-
-export default function RunButton(_props: RunButtonProps) {
-  return null;
-}
