@@ -224,7 +224,7 @@ export default function DashboardClientView({
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-7 space-y-6 max-w-[1440px] mx-auto font-sans transition-colors bg-[#F8FAFC] min-h-full">
+    <div className="p-4 sm:p-6 lg:p-7 space-y-6 max-w-[1440px] w-full mx-auto font-sans transition-colors bg-[#F8FAFC] min-h-full">
       
       {/* ── Active Keyword Results View (When q is present) ── */}
       {activeKeyword ? (
