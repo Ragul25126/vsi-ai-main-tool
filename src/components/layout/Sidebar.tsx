@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { 
   LayoutDashboard, Search, Plus, LogOut, ShieldCheck, Menu, Settings, 
   CheckSquare, ChevronRight, ChevronDown, ChevronUp, Users, Terminal, 
@@ -79,6 +79,18 @@ export default function Sidebar({
   const [displayedClients, setDisplayedClients] = useState<ClientEntry[]>(clients);
   const [showClientSelector, setShowClientSelector] = useState(false);
   const [clientSearch, setClientSearch] = useState("");
+  const clientSelectorRef = useRef<HTMLDivElement>(null);
+
+  // Close client selector on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (clientSelectorRef.current && !clientSelectorRef.current.contains(event.target as Node)) {
+        setShowClientSelector(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Sync clients from store
   useEffect(() => {
@@ -329,12 +341,12 @@ export default function Sidebar({
 
       {/* ── 2. Project / Client Context Selector (Ubersuggest Style) ── */}
       {!isCollapsed ? (
-        <div className="p-3 border-b border-border/70 bg-muted/20 shrink-0">
-          <div className="relative">
+        <div className="p-3 border-b border-border/70 bg-muted/20 shrink-0 space-y-2.5">
+          <div className="relative" ref={clientSelectorRef}>
             <button
               type="button"
               onClick={() => setShowClientSelector(!showClientSelector)}
-              className="w-full flex items-center justify-between p-2.5 rounded-xl bg-card border border-border/90 hover:border-[#FF5A1F]/40 shadow-xs transition-all text-left group"
+              className="w-full flex items-center justify-between p-2.5 rounded-xl bg-card border border-border/90 hover:border-[#FF5A1F]/40 shadow-xs transition-all text-left group cursor-pointer"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-7 h-7 rounded-lg bg-[#FF5A1F] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">
@@ -347,16 +359,16 @@ export default function Sidebar({
                     </p>
                   </div>
                   <p className="text-[10px] text-muted-foreground truncate font-mono">
-                    {activeClient?.website || "valgrow.com"}
+                    {activeClient?.website || "valgrowlabs.com"}
                   </p>
                 </div>
               </div>
               <ChevronDown size={14} className={`text-muted-foreground transition-transform duration-200 shrink-0 ${showClientSelector ? "rotate-180 text-[#FF5A1F]" : ""}`} />
             </button>
 
-            {/* Dropdown Menu */}
+            {/* Dropdown Menu (Solid, Opaque & High-Z Elevation) */}
             {showClientSelector && (
-              <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl bg-popover border border-border shadow-xl p-2 space-y-2 animate-in fade-in-50 zoom-in-95">
+              <div className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-2xl bg-white dark:bg-[#121215] border border-slate-200 dark:border-border shadow-2xl p-2.5 space-y-2 animate-in fade-in-50 zoom-in-95">
                 <div className="relative">
                   <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <input
@@ -364,7 +376,7 @@ export default function Sidebar({
                     value={clientSearch}
                     onChange={(e) => setClientSearch(e.target.value)}
                     placeholder="Search project..."
-                    className="w-full pl-7 pr-3 py-1.5 text-xs bg-muted/50 rounded-lg border border-border focus:outline-none focus:ring-1 focus:ring-[#FF5A1F]"
+                    className="w-full pl-7 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-muted/50 rounded-lg border border-slate-200 dark:border-border focus:outline-none focus:ring-1 focus:ring-[#FF5A1F] text-foreground"
                   />
                 </div>
                 <div className="max-h-44 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
@@ -378,10 +390,10 @@ export default function Sidebar({
                           setShowClientSelector(false);
                           router.push(`/dashboard?client=${client.id}`);
                         }}
-                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors text-left ${
+                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors text-left cursor-pointer ${
                           isSelected
                             ? "bg-[#FFF4ED] dark:bg-[#FF5A1F]/15 text-[#FF5A1F] font-bold"
-                            : "text-foreground hover:bg-muted"
+                            : "text-foreground hover:bg-slate-100 dark:hover:bg-muted font-medium"
                         }`}
                       >
                         <span className="truncate">{client.name}</span>
@@ -390,9 +402,10 @@ export default function Sidebar({
                     );
                   })}
                 </div>
-                <div className="pt-1.5 border-t border-border flex items-center justify-between">
+                <div className="pt-1.5 border-t border-slate-100 dark:border-border flex items-center justify-between">
                   <Link
                     href="/dashboard/clients/new"
+                    prefetch={true}
                     onClick={() => setShowClientSelector(false)}
                     className="text-[11px] font-bold text-[#FF5A1F] hover:underline flex items-center gap-1"
                   >
@@ -400,24 +413,27 @@ export default function Sidebar({
                   </Link>
                   <Link
                     href="/dashboard/clients"
+                    prefetch={true}
                     onClick={() => setShowClientSelector(false)}
-                    className="text-[10px] text-muted-foreground hover:text-foreground"
+                    className="text-[10px] text-muted-foreground hover:text-foreground font-semibold"
                   >
                     View All →
                   </Link>
                 </div>
               </div>
             )}
-            {/* Prominent + Add Project Button (Ubersuggest Style) */}
-            <div className="pt-2.5">
-              <Link
-                href="/dashboard/clients/new"
-                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#FF5A1F] hover:bg-[#E04810] text-white text-xs font-black shadow-xs hover:shadow-md transition-all cursor-pointer"
-              >
-                <Plus size={15} className="stroke-[3]" />
-                <span>Add Project</span>
-              </Link>
-            </div>
+          </div>
+
+          {/* Prominent + Add Project Button (Ubersuggest Style) */}
+          <div>
+            <Link
+              href="/dashboard/clients/new"
+              prefetch={true}
+              className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#FF5A1F] hover:bg-[#E04810] text-white text-xs font-black shadow-xs hover:shadow-md transition-all cursor-pointer"
+            >
+              <Plus size={15} className="stroke-[3]" />
+              <span>Add Project</span>
+            </Link>
           </div>
         </div>
       ) : (
