@@ -86,7 +86,7 @@ async function dynamicSession(): Promise<SessionContext> {
     userId: "00000000-0000-0000-0000-000000000002",
     email: activeEmail,
     fullName: activeName,
-    role: "pilot",
+    role: "super_admin",
     agencyId: "00000000-0000-0000-0000-000000000001",
     agencyName: "Valgrow Enterprise",
     isPilot: false,

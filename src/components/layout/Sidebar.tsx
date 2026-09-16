@@ -212,6 +212,12 @@ export default function Sidebar({
           Icon: ShieldCheck,
         },
         { 
+          href: "/dashboard/check?tab=quick-check", 
+          label: "Search & AI Check", 
+          tooltip: "Live real-time check across Google Search & AI Overviews", 
+          Icon: Search,
+        },
+        { 
           href: "/dashboard/check?tab=opportunities", 
           label: "Next Actions", 
           tooltip: "High-impact citation & ranking opportunities", 
@@ -496,6 +502,7 @@ export default function Sidebar({
                       <Link
                         key={href}
                         href={href}
+                        prefetch={true}
                         title={tooltip || label}
                         className={`
                           relative flex items-center transition-all duration-150 rounded-lg group
@@ -549,6 +556,7 @@ export default function Sidebar({
           )}
           <Link
             href="/dashboard/feedback"
+            prefetch={true}
             className={`flex items-center ${isCollapsed ? "justify-center p-2.5" : "gap-2.5 px-3 py-1.5"} rounded-lg text-xs text-slate-500 hover:text-foreground hover:bg-muted transition-colors`}
             title="Feedback & Feature Requests"
           >
@@ -556,35 +564,19 @@ export default function Sidebar({
             {!isCollapsed && <span>Feedback</span>}
           </Link>
           <Link
-            href="/dashboard/messages"
-            className={`flex items-center ${isCollapsed ? "justify-center p-2.5" : "gap-2.5 px-3 py-1.5"} rounded-lg text-xs text-slate-500 hover:text-foreground hover:bg-muted transition-colors`}
-            title="Help Center & System Messages"
+            href="/dashboard/help"
+            prefetch={true}
+            className={`flex items-center ${isCollapsed ? "justify-center p-2.5" : "gap-2.5 px-3 py-1.5"} rounded-lg text-xs ${
+              pathname === "/dashboard/help" ? "bg-[#FFF4ED] dark:bg-[#FF5A1F]/15 text-[#FF5A1F] font-bold" : "text-slate-500 hover:text-foreground hover:bg-muted"
+            } transition-colors`}
+            title="Help Center, Guides & FAQs"
           >
-            <HelpCircle size={15} />
+            <HelpCircle size={15} className={pathname === "/dashboard/help" ? "text-[#FF5A1F]" : ""} />
             {!isCollapsed && <span>Help Center</span>}
           </Link>
         </div>
       </nav>
 
-      {/* ── 3.5. Bottom Trial Promo Card (Ubersuggest Reference) ── */}
-      {!isCollapsed && (
-        <div className="mx-3 mb-2 p-3.5 rounded-2xl bg-gradient-to-br from-blue-50/90 to-blue-100/50 dark:from-blue-950/40 dark:to-blue-900/20 border border-blue-200/80 dark:border-blue-800/40 space-y-2.5 shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center font-black">
-              <ArrowUp size={13} className="stroke-[3]" />
-            </div>
-            <span className="text-xs font-black text-slate-900 dark:text-white">
-              Free trial available
-            </span>
-          </div>
-          <Link
-            href="/dashboard/settings"
-            className="block w-full py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold text-center shadow-xs transition-colors"
-          >
-            Start a 7-Day Trial
-          </Link>
-        </div>
-      )}
 
       {/* ── 4. Bottom User Profile & Workspace Status ── */}
       {showSidebarProfile && (

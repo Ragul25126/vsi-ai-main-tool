@@ -2,14 +2,17 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { 
-  Search, Bell, Mail, Command, Sun, Moon, User, LogOut, Settings, ChevronDown, Building2, Shield, Loader2, ExternalLink 
+  Bell, Mail, Sun, Moon, User, LogOut, Settings, ChevronDown, ChevronRight, 
+  Building2, Shield, Globe, LayoutDashboard, Search, Bot, ShieldCheck, Zap, 
+  TrendingUp, Users, Sparkles, CheckSquare, FileText, Terminal, HelpCircle 
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { useMessages } from "@/contexts/MessagesContext";
 import NotificationDropdown from "@/components/NotificationDropdown";
 import { logoutAndRedirect, getClientUser, syncOAuthSession } from "@/lib/auth-client";
+import { getCustomClients } from "@/lib/client-store";
 
 interface TopbarProps {
   userEmail: string;
@@ -17,26 +20,74 @@ interface TopbarProps {
   agencyName: string;
 }
 
-interface SerpResultItem {
-  position: number;
-  title: string;
-  link: string;
-  snippet?: string;
-  source?: string;
-}
-
 export default function Topbar({ userEmail, userRole, agencyName }: TopbarProps) {
-  const [searchQuery, setSearchQuery] = useState("");
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [liveResults, setLiveResults] = useState<SerpResultItem[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
   const [currentUserEmail, setCurrentUserEmail] = useState(userEmail);
   const [currentUserName, setCurrentUserName] = useState<string | null>(null);
+  const [activeClientName, setActiveClientName] = useState("ValGrow Labs");
+  const [activeClientDomain, setActiveClientDomain] = useState("valgrowlabs.com");
 
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { resolvedTheme, toggleTheme } = useTheme();
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
   const { unreadCount } = useMessages();
+
+  // Sync client name from store
+  useEffect(() => {
+    const clients = getCustomClients();
+    if (clients.length > 0) {
+      setActiveClientName(clients[0].name || "ValGrow Labs");
+      setActiveClientDomain(clients[0].website || "valgrowlabs.com");
+    }
+  }, []);
+
+  // Determine current page title & icon based on route and query
+  const pageInfo = React.useMemo(() => {
+    const tab = searchParams.get("tab");
+
+    if (pathname === "/dashboard") {
+      return { title: "Overview Dashboard", Icon: LayoutDashboard, category: "Intelligence" };
+    }
+    if (pathname === "/dashboard/chat") {
+      return { title: "AI Search Assistant", Icon: Bot, category: "Search AI" };
+    }
+    if (pathname === "/dashboard/check") {
+      if (tab === "quick-check") return { title: "Search & AI Check", Icon: Search, category: "Diagnostics" };
+      if (tab === "opportunities") return { title: "Next Actions", Icon: Zap, category: "Optimization" };
+      if (tab === "aivisibility") return { title: "Pixel Rank Tracking", Icon: Sparkles, category: "Visibility" };
+      return { title: "Site Audit & Diagnostics", Icon: ShieldCheck, category: "Audit" };
+    }
+    if (pathname === "/dashboard/services/seo") {
+      return { title: "Rank Tracking", Icon: TrendingUp, category: "Rankings" };
+    }
+    if (pathname === "/dashboard/competitors") {
+      return { title: "Competitor Analysis", Icon: Users, category: "Intelligence" };
+    }
+    if (pathname === "/dashboard/tasks") {
+      return { title: "Action Board", Icon: CheckSquare, category: "Execution" };
+    }
+    if (pathname === "/dashboard/clients") {
+      return { title: "Client Reports", Icon: FileText, category: "Reporting" };
+    }
+    if (pathname === "/dashboard/prompts") {
+      return { title: "AI Search Simulator", Icon: Terminal, category: "Grounding" };
+    }
+    if (pathname === "/dashboard/help") {
+      return { title: "Help Center & FAQs", Icon: HelpCircle, category: "Support" };
+    }
+    if (pathname === "/dashboard/settings") {
+      return { title: "Project Settings", Icon: Settings, category: "Configuration" };
+    }
+    if (pathname === "/dashboard/feedback") {
+      return { title: "Feedback & Requests", Icon: Mail, category: "Support" };
+    }
+    if (pathname.startsWith("/admin")) {
+      return { title: "Super Admin Console", Icon: Shield, category: "Administration" };
+    }
+    return { title: "Search Intelligence", Icon: Globe, category: "VSI" };
+  }, [pathname, searchParams]);
 
   // Sync authenticated user data from client auth state and OAuth payload
   useEffect(() => {
@@ -62,38 +113,6 @@ export default function Topbar({ userEmail, userRole, agencyName }: TopbarProps)
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Fetch SerpAPI live results securely through backend endpoint /api/search
-  useEffect(() => {
-    if (!searchQuery.trim() || searchQuery.trim().length < 2) {
-      setLiveResults([]);
-      setIsSearching(false);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setIsSearching(true);
-      try {
-        const res = await fetch("/api/search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: searchQuery.trim() }),
-        });
-        const data = await res.json();
-        if (data.success && Array.isArray(data.results)) {
-          setLiveResults(data.results.slice(0, 4));
-        } else {
-          setLiveResults([]);
-        }
-      } catch {
-        setLiveResults([]);
-      } finally {
-        setIsSearching(false);
-      }
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
   function handleSignOut() {
     setShowProfileMenu(false);
     logoutAndRedirect();
@@ -116,127 +135,44 @@ export default function Topbar({ userEmail, userRole, agencyName }: TopbarProps)
     return displayName.slice(0, 2).toUpperCase();
   }, [displayName]);
 
-  const quickNavItems = [
-    { title: "Valgrow Labs — Overview", category: "Client", href: "/dashboard/clients/valgrow-labs-001" },
-    { title: "AI Visibility Intelligence", category: "Tool", href: "/dashboard/check?tab=aivisibility" },
-    { title: "Competitor Benchmark", category: "Intelligence", href: "/dashboard/competitors" },
-    { title: "Tasks & Execution Audits", category: "Tasks", href: "/dashboard/tasks" },
-    { title: "AI Prompt Manager", category: "Prompts", href: "/dashboard/prompts" },
-  ].filter((item) => 
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    item.category.toLowerCase().includes(searchQuery.toLowerCase())
-  ).slice(0, 3);
+  const PageIcon = pageInfo.Icon;
 
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between gap-4 px-6 py-3 bg-card/90 backdrop-blur-md border-b border-border transition-colors">
-      {/* Left: Global Search input */}
-      <div className="flex-1 max-w-md relative">
-        <div className="relative flex items-center w-full">
-          {isSearching ? (
-            <Loader2 size={15} className="absolute left-3.5 text-amber-500 animate-spin pointer-events-none" />
-          ) : (
-            <Search size={15} className="absolute left-3.5 text-muted-foreground pointer-events-none" />
-          )}
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search keywords, clients, AI citations..."
-            className="w-full bg-muted-bg/40 border border-border rounded-[20px] pl-9 pr-14 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-amber-500 focus:bg-card focus:ring-2 focus:ring-amber-500/10 transition-all shadow-2xs"
-          />
-          {!searchQuery ? (
-            <div className="absolute right-3 pointer-events-none hidden sm:flex items-center gap-0.5 text-[10px] font-mono font-semibold text-muted-foreground bg-muted-bg border border-border px-1.5 py-0.5 rounded-md">
-              <Command size={10} /> K
-            </div>
-          ) : (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-3 text-[10px] uppercase font-bold text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded bg-muted-bg cursor-pointer"
-            >
-              Clear
-            </button>
-          )}
+    <header className="w-full shrink-0 z-20 flex items-center justify-between gap-4 px-4 sm:px-6 py-3 bg-card border-b border-border transition-colors">
+      
+      {/* ── Left Area: Dynamic Context & Breadcrumbs ── */}
+      <div className="flex items-center gap-2.5 min-w-0">
+        
+        {/* Active Client / Workspace Badge */}
+        <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-muted/60 border border-border/80 text-xs font-bold text-foreground shrink-0 shadow-2xs">
+          <Building2 size={13} className="text-[#FF5A1F]" />
+          <span className="truncate max-w-[130px]">{activeClientName}</span>
         </div>
 
-        {/* Global Search Results Overlay */}
-        {searchQuery.trim() && (
-          <div className="absolute left-0 right-0 mt-2 rounded-[20px] bg-card border border-border p-3 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 space-y-3">
-            
-            {/* Quick Navigation Section */}
-            {quickNavItems.length > 0 && (
-              <div className="space-y-1">
-                <div className="px-2 py-1 flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border/60 pb-1.5">
-                  <span>Navigation Shortcuts</span>
-                  <span>ESC to close</span>
-                </div>
-                {quickNavItems.map((item, idx) => (
-                  <Link
-                    key={idx}
-                    href={item.href}
-                    onClick={() => setSearchQuery("")}
-                    className="flex items-center justify-between px-3 py-1.5 rounded-[12px] text-xs font-semibold text-foreground hover:bg-muted-bg transition-colors"
-                  >
-                    <span className="truncate">{item.title}</span>
-                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 shrink-0 ml-2">
-                      {item.category}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            )}
+        <ChevronRight size={13} className="text-muted-foreground hidden md:block shrink-0 opacity-50" />
 
-            {/* SerpAPI Live Search Results Section */}
-            <div className="space-y-1 pt-1">
-              <div className="px-2 py-1 flex items-center justify-between text-[10px] font-bold text-amber-500 uppercase tracking-wider border-b border-border/60 pb-1.5">
-                <span className="flex items-center gap-1.5">
-                  Live SerpAPI Search Results
-                  {isSearching && <Loader2 size={10} className="animate-spin text-amber-500" />}
-                </span>
-                <span className="text-[9px] text-muted-foreground">Backend /api/search</span>
-              </div>
-
-              {isSearching && liveResults.length === 0 ? (
-                <div className="p-3 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
-                  <Loader2 size={14} className="animate-spin text-amber-500" />
-                  Searching live web via SerpAPI...
-                </div>
-              ) : liveResults.length > 0 ? (
-                <div className="space-y-1.5 max-h-56 overflow-y-auto pt-1">
-                  {liveResults.map((result, idx) => (
-                    <a
-                      key={idx}
-                      href={result.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block p-2 rounded-[12px] hover:bg-muted-bg transition-colors group border border-transparent hover:border-border/50"
-                    >
-                      <div className="flex items-center justify-between text-xs font-semibold text-foreground group-hover:text-amber-500 transition-colors">
-                        <span className="truncate pr-2">{result.title}</span>
-                        <ExternalLink size={12} className="shrink-0 text-muted-foreground group-hover:text-amber-500" />
-                      </div>
-                      {result.snippet && (
-                        <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5 font-normal">
-                          {result.snippet}
-                        </p>
-                      )}
-                    </a>
-                  ))}
-                </div>
-              ) : !isSearching ? (
-                <div className="px-3 py-2 text-xs text-muted-foreground text-center">
-                  No live web results found for &quot;{searchQuery}&quot;
-                </div>
-              ) : null}
-            </div>
-
+        {/* Current Active Page Title */}
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-6 h-6 rounded-lg bg-[#FF5A1F]/10 border border-[#FF5A1F]/20 flex items-center justify-center shrink-0 text-[#FF5A1F]">
+            <PageIcon size={13} />
           </div>
-        )}
+          <h2 className="text-xs sm:text-sm font-black text-foreground truncate tracking-tight">
+            {pageInfo.title}
+          </h2>
+        </div>
+
+        {/* Active Website Domain Chip */}
+        <div className="hidden lg:flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-semibold shrink-0">
+          <Globe size={11} />
+          <span className="truncate">{activeClientDomain}</span>
+        </div>
+
       </div>
 
       {/* Right: Quick actions, live status pill, theme toggle & user profile */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 ml-auto">
         {/* Live AI Engine Status Pill */}
-        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-semibold shadow-2xs">
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-semibold shadow-2xs">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>

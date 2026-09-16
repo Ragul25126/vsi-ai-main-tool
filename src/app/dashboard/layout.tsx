@@ -83,17 +83,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
               userEmail={session.email}
               atClientCap={atClientCap}
             />
-            <main className="flex-1 flex flex-col md:overflow-y-auto min-w-0" data-scroll-container>
+            <div className="flex-1 flex flex-col min-w-0 md:h-screen md:overflow-hidden">
               <Topbar
                 userEmail={session.email}
                 userRole={session.role}
                 agencyName={session.branding.displayName || session.agencyName}
               />
               <PilotBanner />
-              <div className="flex-1">
+              <main className="flex-1 md:overflow-y-auto min-w-0" data-scroll-container>
                 {children}
-              </div>
-            </main>
+              </main>
+            </div>
             <ChatFloating />
           </div>
         </FeedbackProvider>

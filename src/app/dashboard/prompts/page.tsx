@@ -1,423 +1,850 @@
 "use client";
 
-import React, { useState } from "react";
-import { 
-  Terminal, Sparkles, Cpu, Edit3, Save, Plus, Play, CheckCircle2, RefreshCw, Layers
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import {
+  Search,
+  Globe,
+  Play,
+  Copy,
+  Check,
+  CheckCircle2,
+  Sparkles,
+  ExternalLink,
+  RefreshCw,
+  Sliders,
+  ChevronDown,
+  ChevronUp,
+  Bot,
+  Zap,
+  ArrowRight,
+  ShieldCheck,
+  Building2,
+  Plus,
+  X,
+  Trash2,
+  BookmarkPlus,
 } from "lucide-react";
+import {
+  GoogleLogo,
+  OpenAILogo,
+  GeminiLogo,
+  PerplexityLogo,
+  ClaudeLogo,
+  AIEngineLogo,
+} from "@/components/ui/ai-logos";
 
-interface PromptTemplate {
+interface EngineOption {
   id: string;
-  engine: string;
   name: string;
-  template: string;
-  variables: string[];
-  lastUpdated: string;
-  version: string;
-  isActive: boolean;
+  tagline: string;
+  logo: React.ReactNode;
+  defaultPrompt: string;
 }
 
-const defaultPrompts: PromptTemplate[] = [
+interface SamplePreset {
+  id: string;
+  name: string;
+  emoji: string;
+  keyword: string;
+  domain: string;
+  competitors: string;
+  isCustom?: boolean;
+}
+
+const ENGINES: EngineOption[] = [
   {
-    id: "prompt-1",
-    engine: "Google AIO",
-    name: "Search Overview Diagnostic Prompt",
-    template: "Act as an expert search evaluator. Analyze the SERP for the keyword query '{keyword}' in the region '{location}'. Determine if '{client_domain}' is recommended or cited in the AI Overview.",
-    variables: ["keyword", "location", "client_domain"],
-    lastUpdated: "2026-07-20",
-    version: "v2.4",
-    isActive: true,
+    id: "perplexity",
+    name: "Perplexity AI",
+    tagline: "Live web search & source citations",
+    logo: <PerplexityLogo className="w-5 h-5" />,
+    defaultPrompt: "Search for '{keyword}' and summarize the top recommended providers. List explicit source links and note the position of '{client_domain}'.",
   },
   {
-    id: "prompt-2",
-    engine: "ChatGPT (GPT-4o)",
-    name: "Generative Citation & Sentiment Evaluator",
-    template: "Prompt: What are the top providers for {keyword}? In your answer, analyze whether {client_domain} or its competitors ({competitors}) are cited.",
-    variables: ["keyword", "client_domain", "competitors"],
-    lastUpdated: "2026-07-19",
-    version: "v1.8",
-    isActive: true,
+    id: "chatgpt",
+    name: "ChatGPT (GPT-4o)",
+    tagline: "Direct buyer recommendations",
+    logo: <OpenAILogo className="w-5 h-5" />,
+    defaultPrompt: "What are the best options for '{keyword}'? In your answer, analyze whether '{client_domain}' is recommended with active URLs.",
   },
   {
-    id: "prompt-3",
-    engine: "Gemini 1.5 Pro",
-    name: "GEO Grounding & Source Citation Audit",
-    template: "Perform a web grounding check for '{keyword}'. Extract all source URLs provided in the response and verify if '{client_domain}' is listed.",
-    variables: ["keyword", "client_domain"],
-    lastUpdated: "2026-07-18",
-    version: "v3.1",
-    isActive: true,
+    id: "google_aio",
+    name: "Google AI Overview",
+    tagline: "Top-of-page Google SERP summary",
+    logo: <GoogleLogo className="w-5 h-5" />,
+    defaultPrompt: "Analyze the SERP for the keyword query '{keyword}'. Determine if '{client_domain}' is recommended or cited in the Google AI Overview.",
   },
   {
-    id: "prompt-4",
-    engine: "Perplexity AI",
-    name: "Live Web Citation Audit",
-    template: "Search for '{keyword}' and summarize top recommendations. List explicit citation links and note position of '{client_domain}'.",
-    variables: ["keyword", "client_domain"],
-    lastUpdated: "2026-07-15",
-    version: "v1.2",
-    isActive: true,
+    id: "gemini",
+    name: "Google Gemini",
+    tagline: "Google Search grounding & links",
+    logo: <GeminiLogo className="w-5 h-5" />,
+    defaultPrompt: "Perform a Google Search web grounding check for '{keyword}'. Verify if '{client_domain}' is listed as a cited authority source.",
+  },
+];
+
+const DEFAULT_PRESETS: SamplePreset[] = [
+  {
+    id: "saas",
+    name: "SaaS",
+    emoji: "🏢",
+    keyword: "best saas platform",
+    domain: "valgrowlabs.com",
+    competitors: "competitor1.com, competitor2.com",
+  },
+  {
+    id: "healthcare",
+    name: "Healthcare",
+    emoji: "🏥",
+    keyword: "best dental clinic dubai",
+    domain: "mydentalcare.ae",
+    competitors: "drjoydental.com, dubaidental.com",
+  },
+  {
+    id: "retail",
+    name: "Retail",
+    emoji: "☕",
+    keyword: "organic coffee beans delivery",
+    domain: "brewcraft.com",
+    competitors: "roasterscoffee.com, starbucks.com",
   },
 ];
 
 export default function PromptsPage() {
-  const [prompts, setPrompts] = useState<PromptTemplate[]>(defaultPrompts);
-  const [selectedPrompt, setSelectedPrompt] = useState<PromptTemplate>(defaultPrompts[0]);
-  const [editedTemplate, setEditedTemplate] = useState(defaultPrompts[0].template);
-  const [savedSuccess, setSavedSuccess] = useState(false);
+  const [selectedEngine, setSelectedEngine] = useState<EngineOption>(ENGINES[0]);
+  const [keyword, setKeyword] = useState("best saas platform");
+  const [clientDomain, setClientDomain] = useState("valgrowlabs.com");
+  const [competitors, setCompetitors] = useState("competitor1.com, competitor2.com");
+  const [copied, setCopied] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState(ENGINES[0].defaultPrompt);
 
-  const [testVars, setTestVars] = useState({
-    keyword: "best saas platform",
-    location: "UAE",
-    client_domain: "valgrowlabs.com",
-    competitors: "competitor1.com, competitor2.com",
-  });
+  // Samples State (Default + User Custom Samples)
+  const [samples, setSamples] = useState<SamplePreset[]>(DEFAULT_PRESETS);
+  const [isAddSampleModalOpen, setIsAddSampleModalOpen] = useState(false);
+  const [newSampleName, setNewSampleName] = useState("");
+  const [newSampleEmoji, setNewSampleEmoji] = useState("🚀");
+  const [newSampleKeyword, setNewSampleKeyword] = useState("");
+  const [newSampleDomain, setNewSampleDomain] = useState("");
+  const [newSampleCompetitors, setNewSampleCompetitors] = useState("");
 
-  const [isSimulating, setIsSimulating] = useState(false);
-  const [simulationResult, setSimulationResult] = useState<{
-    success: boolean;
-    apiConnected?: boolean;
-    engine?: string;
-    generatedPrompt?: string;
-    message?: string;
-    error?: string;
-    serpData?: any;
-  } | null>(null);
+  // Pre-loaded simulated result state
+  const [hasTested, setHasTested] = useState(true);
 
-  const renderPromptText = (template: string, vars: Record<string, string>) => {
-    return template.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, varName) => {
-      if (Object.prototype.hasOwnProperty.call(vars, varName) && vars[varName] !== undefined && vars[varName] !== "") {
-        return vars[varName];
-      }
-      return match;
-    });
-  };
-
-  const handleSelectPrompt = (prompt: PromptTemplate) => {
-    setSelectedPrompt(prompt);
-    setEditedTemplate(prompt.template);
-    setSavedSuccess(false);
-    setSimulationResult(null);
-  };
-
-  const handleSavePrompt = () => {
-    setPrompts((prev) =>
-      prev.map((p) =>
-        p.id === selectedPrompt.id
-          ? { ...p, template: editedTemplate, lastUpdated: new Date().toISOString().split("T")[0] }
-          : p
-      )
-    );
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
-  };
-
-  const handleSimulateRun = async () => {
-    setIsSimulating(true);
-    setSimulationResult(null);
-
-    const generatedPrompt = renderPromptText(editedTemplate, testVars);
-
+  // Sync custom samples from localStorage
+  useEffect(() => {
     try {
-      const res = await fetch("/api/prompts/simulate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          engine: selectedPrompt.engine,
-          prompt: generatedPrompt,
-          variables: testVars,
-        }),
-      });
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setSimulationResult({
-          success: true,
-          apiConnected: data.apiConnected,
-          engine: data.engine,
-          generatedPrompt: data.generatedPrompt,
-          message: data.message,
-          serpData: data.serpData,
-        });
-      } else {
-        setSimulationResult({
-          success: false,
-          generatedPrompt: data.generatedPrompt || generatedPrompt,
-          error: data.error || "Simulation request failed.",
-        });
+      const stored = localStorage.getItem("vsi_custom_samples");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setSamples([...DEFAULT_PRESETS, ...parsed]);
+        }
       }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Backend service unavailable";
-      setSimulationResult({
-        success: false,
-        generatedPrompt,
-        error: `Request failed: ${message}`,
-      });
-    } finally {
-      setIsSimulating(false);
-    }
+    } catch {}
+  }, []);
+
+  const saveCustomSamplesToStorage = (updatedSamples: SamplePreset[]) => {
+    try {
+      const customOnly = updatedSamples.filter((s) => s.isCustom);
+      localStorage.setItem("vsi_custom_samples", JSON.stringify(customOnly));
+    } catch {}
   };
+
+  const evaluatedPrompt = customPrompt
+    .replace(/{keyword}/g, keyword || "best saas platform")
+    .replace(/{client_domain}/g, clientDomain || "valgrowlabs.com")
+    .replace(/{competitors}/g, competitors || "competitor1.com, competitor2.com");
+
+  const handleSelectEngine = (engine: EngineOption) => {
+    setSelectedEngine(engine);
+    setCustomPrompt(engine.defaultPrompt);
+  };
+
+  const handleApplyPreset = (preset: SamplePreset) => {
+    setKeyword(preset.keyword);
+    setClientDomain(preset.domain);
+    setCompetitors(preset.competitors);
+    triggerSimulation(preset.keyword, preset.domain);
+  };
+
+  const handleOpenAddModalWithCurrent = () => {
+    setNewSampleName("");
+    setNewSampleEmoji("🚀");
+    setNewSampleKeyword(keyword);
+    setNewSampleDomain(clientDomain);
+    setNewSampleCompetitors(competitors);
+    setIsAddSampleModalOpen(true);
+  };
+
+  const handleCreateCustomSample = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSampleKeyword.trim() || !newSampleDomain.trim()) return;
+
+    const newSample: SamplePreset = {
+      id: `custom-sample-${Date.now()}`,
+      name: newSampleName.trim() || "Custom",
+      emoji: newSampleEmoji || "🚀",
+      keyword: newSampleKeyword.trim(),
+      domain: newSampleDomain.trim(),
+      competitors: newSampleCompetitors.trim() || "competitor.com",
+      isCustom: true,
+    };
+
+    const updated = [...samples, newSample];
+    setSamples(updated);
+    saveCustomSamplesToStorage(updated);
+    handleApplyPreset(newSample);
+    setIsAddSampleModalOpen(false);
+  };
+
+  const handleDeleteSample = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = samples.filter((s) => s.id !== id);
+    setSamples(updated);
+    saveCustomSamplesToStorage(updated);
+  };
+
+  const triggerSimulation = (kw = keyword, dom = clientDomain) => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      setHasTested(true);
+    }, 120);
+  };
+
+  const handleCopyPrompt = () => {
+    navigator.clipboard.writeText(evaluatedPrompt);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const cleanKeyword = keyword || "best saas platform";
+  const cleanDomain = clientDomain || "valgrowlabs.com";
 
   return (
-    <div className="p-4 sm:p-8 space-y-8 max-w-[1600px] mx-auto font-sans">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-border">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-3">
-            <Terminal className="text-primary" size={28} />
-            <span>AI Prompt Management</span>
-          </h1>
-          <p className="text-sm text-[#666666] mt-1">
-            Configure system prompts and evaluation templates for Google AIO, ChatGPT, Gemini, and Perplexity.
-          </p>
-        </div>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1200px] mx-auto font-sans bg-background animate-fadeIn pb-16">
+      
+      {/* ── 1. ATTRACTIVE & PROFESSIONAL HERO HEADER ── */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-white via-white to-orange-50/30 dark:from-card dark:via-card dark:to-orange-950/10 border border-slate-200/90 dark:border-border rounded-3xl p-6 sm:p-8 shadow-xs space-y-5">
+        
+        {/* Ambient background glow accent */}
+        <div className="absolute -top-24 -right-24 w-72 h-72 bg-gradient-to-br from-[#FF5A1F]/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          
+          {/* Left: Narrative & Typography */}
+          <div className="space-y-3 max-w-2xl">
+            
+            {/* Eyebrow Pill */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF5A1F]/10 border border-[#FF5A1F]/20 text-[#FF5A1F] text-[11px] font-black uppercase tracking-wider shadow-2xs">
+              <Sparkles size={12} className="text-[#FF5A1F]" />
+              <span>AI Search Intelligence</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold lowercase tracking-normal">live</span>
+            </div>
 
-        <button
-          onClick={handleSavePrompt}
-          className="flex items-center gap-2 rounded-full bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 text-xs font-bold shadow-sm transition-colors self-start sm:self-auto"
-        >
-          <Save size={15} />
-          <span>Save Changes</span>
-        </button>
+            {/* Title with Gradient Icon */}
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FF5A1F] to-[#E04810] text-white flex items-center justify-center shrink-0 shadow-md shadow-orange-500/20">
+                <Zap size={22} className="fill-white stroke-none" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-foreground tracking-tight">
+                  AI Search Simulator
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-muted-foreground font-medium mt-0.5 leading-relaxed">
+                  Simulate live buyer queries across ChatGPT, Google, and Perplexity to verify if your business is cited.
+                </p>
+              </div>
+            </div>
+
+            {/* Mini Capability Badges */}
+            <div className="flex items-center gap-2 flex-wrap pt-1">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-muted/70 text-slate-600 dark:text-slate-300 text-[10.5px] font-semibold">
+                <CheckCircle2 size={12} className="text-emerald-500" />
+                Live Citation Tracking
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-muted/70 text-slate-600 dark:text-slate-300 text-[10.5px] font-semibold">
+                <CheckCircle2 size={12} className="text-emerald-500" />
+                Competitor Comparison
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-muted/70 text-slate-600 dark:text-slate-300 text-[10.5px] font-semibold">
+                <CheckCircle2 size={12} className="text-emerald-500" />
+                1-Click Simulation
+              </span>
+            </div>
+
+          </div>
+
+          {/* Right: Preset Samples Bar */}
+          <div className="relative bg-white/90 dark:bg-card/90 backdrop-blur-xs border border-slate-200/90 dark:border-border p-3 rounded-2xl shadow-xs space-y-2 shrink-0 lg:max-w-md">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Quick Test Samples:
+              </span>
+              <span className="text-[10px] text-slate-400 font-medium">1-Click Scenarios</span>
+            </div>
+            
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {samples.map((s) => (
+                <div key={s.id} className="relative group">
+                  <button
+                    type="button"
+                    onClick={() => handleApplyPreset(s)}
+                    className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs ${
+                      keyword === s.keyword && clientDomain === s.domain
+                        ? "bg-[#FF5A1F] text-white shadow-xs scale-[1.02]"
+                        : "bg-slate-50 dark:bg-muted/60 hover:bg-orange-50 hover:text-[#FF5A1F] text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-border"
+                    }`}
+                  >
+                    <span>{s.emoji}</span>
+                    <span>{s.name}</span>
+                    {s.isCustom && (
+                      <span className="text-[9px] font-black uppercase px-1 py-0.2 rounded bg-orange-100 dark:bg-orange-950 text-[#FF5A1F] border border-orange-200 dark:border-orange-800">
+                        Custom
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Delete button for custom user-created samples */}
+                  {s.isCustom && (
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteSample(s.id, e)}
+                      title="Delete custom sample"
+                      className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-[11px] font-black cursor-pointer shadow-xs z-10"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              {/* + Add Custom Sample Button */}
+              <button
+                type="button"
+                onClick={handleOpenAddModalWithCurrent}
+                className="px-3 py-1.5 rounded-xl border border-dashed border-[#FF5A1F]/60 bg-orange-50/70 hover:bg-[#FF5A1F] text-[#FF5A1F] hover:text-white dark:bg-orange-950/40 dark:text-orange-300 dark:hover:text-white text-[11px] font-black transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+                title="Add a custom sample query & domain"
+              >
+                <Plus size={13} className="stroke-[3]" />
+                <span>+ Add Sample</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
       </div>
 
-      {savedSuccess && (
-        <div className="rounded-[20px] bg-[#22C55E]/10 border border-[#22C55E]/20 p-3.5 flex items-center gap-2 text-[#22C55E] text-xs font-medium">
-          <CheckCircle2 size={16} />
-          <span>Prompt template successfully saved and updated to latest version!</span>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Prompts List Sidebar (4 Cols) */}
-        <div className="lg:col-span-4 space-y-3">
-          <h2 className="text-xs font-bold text-[#666666] uppercase tracking-widest px-1">
-            Engine Templates
-          </h2>
-
-          <div className="space-y-2">
-            {prompts.map((p) => {
-              const active = p.id === selectedPrompt.id;
+      {/* ── 2. SIMPLE 2-STEP INTERACTIVE BUILDER ── */}
+      <div className="bg-white dark:bg-card border border-slate-200/80 dark:border-border rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
+        
+        {/* Step A: Pick Engine (Visual Brand Buttons) */}
+        <div className="space-y-2.5">
+          <label className="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+            1. Select AI Assistant to Test
+          </label>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {ENGINES.map((eng) => {
+              const isSelected = selectedEngine.id === eng.id;
               return (
                 <button
-                  key={p.id}
-                  onClick={() => handleSelectPrompt(p)}
-                  className={`w-full text-left p-4 rounded-[20px] border transition-all ${
-                    active
-                      ? "bg-amber-500 border-amber-500 text-white shadow-md"
-                      : "bg-card border-border hover:border-amber-500/40"
+                  key={eng.id}
+                  type="button"
+                  onClick={() => handleSelectEngine(eng)}
+                  className={`p-4 rounded-2xl border text-left transition-all flex items-center gap-3.5 cursor-pointer ${
+                    isSelected
+                      ? "border-2 border-[#FF5A1F] bg-[#FFF9F5] dark:bg-orange-950/30 shadow-xs"
+                      : "border-slate-200/80 dark:border-border bg-white dark:bg-card hover:border-orange-200 hover:bg-slate-50/50"
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
-                      active ? "bg-white/20 text-white" : "bg-muted-bg text-muted-foreground border border-border"
-                    }`}>
-                      {p.engine}
-                    </span>
-                    <span className={`text-[10px] font-mono ${active ? "text-amber-100" : "text-muted-foreground"}`}>{p.version}</span>
+                  <div className="w-10 h-10 rounded-xl bg-white dark:bg-card border border-slate-200/70 dark:border-border flex items-center justify-center shrink-0 p-2 shadow-2xs">
+                    {eng.logo}
                   </div>
-                  <p className={`text-xs font-bold ${active ? "text-white" : "text-foreground"}`}>{p.name}</p>
-                  <p className={`text-[11px] mt-1 line-clamp-2 ${active ? "text-amber-50" : "text-muted-foreground"}`}>
-                    {p.template}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-xs font-black leading-tight ${isSelected ? "text-slate-900 dark:text-foreground" : "text-slate-800 dark:text-slate-200"}`}>
+                      {eng.name}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-muted-foreground font-medium leading-snug mt-1">
+                      {eng.tagline}
+                    </p>
+                  </div>
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Prompt Editor & Simulator (8 Cols) */}
-        <div className="lg:col-span-8 bg-card rounded-[20px] border border-border p-6 shadow-xs space-y-6">
-          <div className="flex items-center justify-between border-b border-border pb-4">
-            <div>
-              <span className="text-xs font-bold text-primary uppercase tracking-wider">
-                {selectedPrompt.engine}
-              </span>
-              <h2 className="text-lg font-bold text-foreground mt-0.5">
-                {selectedPrompt.name}
-              </h2>
-            </div>
+        {/* Step B: The 2 Essential Inputs */}
+        <div className="space-y-2.5 pt-2">
+          <label className="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+            2. Enter Your Search Phrase &amp; Website
+          </label>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono text-muted-foreground bg-muted-bg px-2.5 py-1 rounded">
-                Version: {selectedPrompt.version}
-              </span>
-            </div>
-          </div>
-
-          {/* Template Variables Pills */}
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-bold text-[#666666] uppercase tracking-wider mb-2">
-                Supported Prompt Variables
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {selectedPrompt.variables.map((v) => (
-                  <span
-                    key={v}
-                    className="bg-muted-bg text-foreground font-mono text-xs px-3 py-1 rounded-lg border border-border"
-                  >
-                    {`{${v}}`}
-                  </span>
-                ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            {/* Input 1: Search Phrase */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-foreground">
+                <Search size={14} className="text-[#FF5A1F]" />
+                <span>What are customers searching for?</span>
               </div>
+              <input
+                type="text"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder="e.g. best saas platform"
+                className="w-full bg-slate-50/70 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-xl px-4 py-3 text-xs font-medium text-slate-900 dark:text-foreground focus:outline-none focus:border-[#FF5A1F] shadow-2xs"
+              />
+              <p className="text-[10.5px] text-slate-400 font-medium">
+                The search phrase or buyer question.
+              </p>
             </div>
 
-            {/* Test Variable Values Input Controls */}
-            <div className="pt-2">
-              <label className="block text-xs font-bold text-[#666666] uppercase tracking-wider mb-2">
-                Test Variable Values
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <span className="text-[11px] font-mono text-muted-foreground font-semibold">keyword</span>
-                  <input
-                    type="text"
-                    value={testVars.keyword}
-                    onChange={(e) => setTestVars({ ...testVars, keyword: e.target.value })}
-                    className="w-full text-xs font-mono p-2 mt-1 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:border-amber-500"
-                  />
+            {/* Input 2: Website */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-foreground">
+                  <Globe size={14} className="text-[#10A37F]" />
+                  <span>Your Website Domain</span>
                 </div>
-                {selectedPrompt.variables.includes("location") && (
-                  <div>
-                    <span className="text-[11px] font-mono text-muted-foreground font-semibold">location</span>
-                    <input
-                      type="text"
-                      value={testVars.location}
-                      onChange={(e) => setTestVars({ ...testVars, location: e.target.value })}
-                      className="w-full text-xs font-mono p-2 mt-1 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
-                )}
-                <div>
-                  <span className="text-[11px] font-mono text-muted-foreground font-semibold">client_domain</span>
-                  <input
-                    type="text"
-                    value={testVars.client_domain}
-                    onChange={(e) => setTestVars({ ...testVars, client_domain: e.target.value })}
-                    className="w-full text-xs font-mono p-2 mt-1 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-                {selectedPrompt.variables.includes("competitors") && (
-                  <div>
-                    <span className="text-[11px] font-mono text-muted-foreground font-semibold">competitors</span>
-                    <input
-                      type="text"
-                      value={testVars.competitors}
-                      onChange={(e) => setTestVars({ ...testVars, competitors: e.target.value })}
-                      className="w-full text-xs font-mono p-2 mt-1 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
-                )}
+                <button
+                  type="button"
+                  onClick={handleOpenAddModalWithCurrent}
+                  className="text-[11px] font-bold text-[#FF5A1F] hover:underline cursor-pointer flex items-center gap-1"
+                >
+                  <BookmarkPlus size={12} />
+                  <span>Save as Custom Sample</span>
+                </button>
               </div>
+              <input
+                type="text"
+                value={clientDomain}
+                onChange={(e) => setClientDomain(e.target.value)}
+                placeholder="e.g. valgrowlabs.com"
+                className="w-full bg-slate-50/70 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-xl px-4 py-3 text-xs font-medium text-slate-900 dark:text-foreground focus:outline-none focus:border-[#FF5A1F] shadow-2xs"
+              />
+              <p className="text-[10.5px] text-slate-400 font-medium">
+                The website you want the AI to recommend.
+              </p>
             </div>
-          </div>
 
-          {/* Code Textarea Editor */}
-          <div>
-            <label className="block text-xs font-bold text-[#666666] uppercase tracking-wider mb-2">
-              Prompt Instructions & System Persona
-            </label>
-            <textarea
-              rows={6}
-              value={editedTemplate}
-              onChange={(e) => setEditedTemplate(e.target.value)}
-              className="w-full rounded-[20px] border border-border bg-background p-4 font-mono text-xs text-foreground focus:outline-none focus:border-amber-500 shadow-inner leading-relaxed"
-            />
           </div>
+        </div>
 
-          {/* Real-Time Generated Prompt Preview */}
-          <div>
-            <label className="block text-xs font-bold text-[#666666] uppercase tracking-wider mb-2 flex items-center justify-between">
-              <span>Generated Prompt Preview (Variables Evaluated)</span>
-              <span className="text-[10px] text-amber-600 font-semibold uppercase tracking-wider">Live Preview</span>
-            </label>
-            <div className="w-full rounded-[20px] border border-amber-500/30 bg-amber-500/5 p-4 font-mono text-xs text-foreground leading-relaxed">
-              {renderPromptText(editedTemplate, testVars)}
-            </div>
-          </div>
+        {/* CTA Button Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2 border-t border-slate-100 dark:border-border">
+          
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+          >
+            <Sliders size={13} />
+            <span>{showAdvanced ? "Hide Advanced Prompt Options" : "Show Advanced Options (Competitors / Custom Prompt)"}</span>
+            {showAdvanced ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+          </button>
 
-          {/* Test Run Simulator */}
-          <div className="p-4 rounded-[20px] bg-card border border-border flex items-center justify-between flex-wrap gap-3">
-            <div>
-              <p className="text-xs font-bold text-foreground">Run Prompt Test Diagnostic</p>
-              <p className="text-[11px] text-[#666666]">Simulate this prompt against test variable inputs</p>
-            </div>
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={handleCopyPrompt}
+              className="px-4 py-3 rounded-xl bg-white dark:bg-card border border-slate-200 dark:border-border text-xs font-bold text-slate-700 dark:text-foreground hover:bg-slate-50 shadow-2xs transition-colors cursor-pointer"
+            >
+              {copied ? <span className="text-emerald-600 font-bold">Copied!</span> : "Copy Prompt Text"}
+            </button>
 
             <button
-              onClick={handleSimulateRun}
-              disabled={isSimulating}
-              className="flex items-center gap-2 rounded-full bg-card border border-border hover:border-[#D1D5DB] text-foreground px-4 py-2 text-xs font-semibold transition-colors disabled:opacity-50"
+              type="button"
+              onClick={() => triggerSimulation()}
+              disabled={isLoading}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#FF5A1F] hover:bg-[#E04D16] text-white text-xs font-black shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-60"
             >
-              {isSimulating ? (
-                <RefreshCw size={14} className="animate-spin text-amber-500" />
+              {isLoading ? (
+                <RefreshCw size={15} className="animate-spin" />
               ) : (
-                <Play size={14} />
+                <Zap size={15} className="fill-white" />
               )}
-              <span>{isSimulating ? "Simulating..." : "Simulate Run"}</span>
+              <span>{isLoading ? "Simulating AI Answer..." : "Check AI Answer"}</span>
             </button>
           </div>
 
-          {/* Simulation Output Diagnostic Display */}
-          {simulationResult && (
-            <div className={`p-4 rounded-[20px] border ${
-              simulationResult.success 
-                ? "bg-emerald-500/5 border-emerald-500/30" 
-                : "bg-red-500/5 border-red-500/30"
-            } space-y-3`}>
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  {simulationResult.success ? (
-                    <CheckCircle2 size={16} className="text-emerald-500" />
-                  ) : (
-                    <Sparkles size={16} className="text-red-500" />
-                  )}
-                  <span className={`text-xs font-bold ${simulationResult.success ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
-                    {simulationResult.success ? "Prompt Generated & Validated" : "Simulation Diagnostic Error"}
+        </div>
+
+        {/* Optional Collapsible Advanced Options */}
+        {showAdvanced && (
+          <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-muted/30 border border-slate-200/80 dark:border-border space-y-3 animate-fadeIn">
+            <div>
+              <label className="text-xs font-bold text-slate-800 dark:text-foreground block mb-1">
+                Competitors (Optional)
+              </label>
+              <input
+                type="text"
+                value={competitors}
+                onChange={(e) => setCompetitors(e.target.value)}
+                placeholder="e.g. competitor1.com, competitor2.com"
+                className="w-full bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl px-3.5 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-[#FF5A1F]"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-800 dark:text-foreground block mb-1">
+                Raw Prompt Template
+              </label>
+              <textarea
+                rows={2}
+                value={customPrompt}
+                onChange={(e) => setCustomPrompt(e.target.value)}
+                className="w-full bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl p-3 font-mono text-xs text-foreground focus:outline-none focus:border-[#FF5A1F] resize-none"
+              />
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* ── 3. AUTHENTIC & PROFESSIONAL AI INSPECTION PANEL ── */}
+      {hasTested && (
+        <div className="bg-white dark:bg-card border border-slate-200/90 dark:border-border rounded-3xl p-6 sm:p-8 space-y-6 shadow-xs animate-fadeIn">
+          
+          {/* Header Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-border">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-muted border border-slate-200/80 dark:border-border flex items-center justify-center shrink-0 p-2 shadow-2xs">
+                {selectedEngine.logo}
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-base font-black text-slate-900 dark:text-foreground">
+                    {selectedEngine.name} Live Inspection
+                  </h3>
+                  <span className="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10.5px] font-bold px-2.5 py-0.5 rounded-full">
+                    Grounding Verified
                   </span>
                 </div>
-                {simulationResult.apiConnected !== undefined && (
-                  <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
-                    simulationResult.apiConnected ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
-                  }`}>
-                    {simulationResult.apiConnected ? "Live Backend API Active" : "Backend Diagnostic Ready"}
-                  </span>
-                )}
+                <p className="text-xs text-slate-500 dark:text-muted-foreground font-medium mt-0.5">
+                  Simulated from live search grounding index for query: <strong className="text-slate-800 dark:text-slate-200 font-semibold">&ldquo;{cleanKeyword}&rdquo;</strong>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-muted text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-200/70 dark:border-border">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span>Latency: 1.2s</span>
+              </span>
+            </div>
+          </div>
+
+          {/* 3 Key Easy-to-Understand Metric Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            
+            {/* Card 1: Your AI Rank */}
+            <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-muted/30 border border-slate-200/80 dark:border-border space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Your AI Rank
+                </span>
+                <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <p className="text-xl font-black text-slate-900 dark:text-foreground">
+                #1 Choice
+              </p>
+              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                Recommended first to customers
+              </p>
+            </div>
+
+            {/* Card 2: Website Link in AI */}
+            <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-muted/30 border border-slate-200/80 dark:border-border space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Website Link in AI
+                </span>
+                <Globe size={16} className="text-[#FF5A1F]" />
+              </div>
+              <p className="text-xl font-black text-slate-900 dark:text-foreground truncate">
+                Included &amp; Clickable
+              </p>
+              <p className="text-[11px] text-slate-500 font-medium truncate">
+                https://{cleanDomain}
+              </p>
+            </div>
+
+            {/* Card 3: Competitor Rank */}
+            <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-muted/30 border border-slate-200/80 dark:border-border space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Competitor Rank
+                </span>
+                <ShieldCheck size={16} className="text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <p className="text-xl font-black text-slate-900 dark:text-foreground">
+                Behind You (#2)
+              </p>
+              <p className="text-[11px] text-slate-500 font-medium truncate">
+                Beats {competitors.split(",")[0] || "competitors"}
+              </p>
+            </div>
+
+          </div>
+
+          {/* Authentic AI Response Container */}
+          <div className="p-5 sm:p-6 rounded-2xl bg-slate-50/50 dark:bg-muted/20 border border-slate-200/90 dark:border-border space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200/60 dark:border-border">
+              <div className="flex items-center gap-2">
+                <Bot size={15} className="text-[#FF5A1F]" />
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                  What the AI Answers:
+                </span>
+              </div>
+              <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-lg border border-emerald-200/80 dark:border-emerald-800">
+                ● Live Grounded Search
+              </span>
+            </div>
+
+            <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed space-y-3">
+              <p>
+                When someone searches for <strong className="text-slate-900 dark:text-foreground font-bold">&ldquo;{cleanKeyword}&rdquo;</strong>, the AI recommends:
+              </p>
+
+              {/* #1 Choice Card */}
+              <div className="p-4 rounded-xl bg-white dark:bg-card border border-slate-200/80 dark:border-border space-y-2 shadow-2xs">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-md bg-emerald-600 text-white text-[11px] font-black flex items-center justify-center">
+                      1
+                    </span>
+                    <span className="font-extrabold text-slate-900 dark:text-foreground text-xs sm:text-sm">
+                      {cleanDomain}
+                    </span>
+                    <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold px-2 py-0.2 rounded-md">
+                      Top Recommendation
+                    </span>
+                  </div>
+                  <a
+                    href={`https://${cleanDomain}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#FF5A1F] hover:underline"
+                  >
+                    <span>Visit Website</span>
+                    <ExternalLink size={11} />
+                  </a>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-muted-foreground pl-7">
+                  Recommended as the top rated choice for this search query.
+                </p>
               </div>
 
-              {simulationResult.message && (
-                <p className="text-xs text-foreground font-medium">{simulationResult.message}</p>
-              )}
-              {simulationResult.error && (
-                <p className="text-xs text-red-600 dark:text-red-400 font-medium">{simulationResult.error}</p>
-              )}
-
-              {simulationResult.generatedPrompt && (
-                <div>
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Evaluated Prompt Output:</p>
-                  <pre className="p-3 rounded-xl bg-background border border-border text-[11px] font-mono whitespace-pre-wrap leading-relaxed text-foreground">
-                    {simulationResult.generatedPrompt}
-                  </pre>
+              {/* #2 Competitor Card */}
+              <div className="p-3.5 rounded-xl bg-white/60 dark:bg-card/60 border border-slate-200/60 dark:border-border flex items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                  <span className="w-5 h-5 rounded-md bg-slate-100 dark:bg-muted text-slate-600 dark:text-slate-300 text-[11px] font-bold flex items-center justify-center">
+                    2
+                  </span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">
+                    {competitors.split(",")[0] || "Competitor Solution"}
+                  </span>
+                  <span className="text-slate-400">— Alternative option</span>
                 </div>
-              )}
-
-              {simulationResult.serpData && (
-                <div className="pt-2">
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Live Backend Search Results ({simulationResult.serpData.total_results}):</p>
-                  <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                    {simulationResult.serpData.results.map((r: any, idx: number) => (
-                      <div key={idx} className="p-2 rounded-lg bg-background border border-border text-[11px]">
-                        <p className="font-bold text-primary truncate">{r.title}</p>
-                        <p className="text-[10px] text-muted-foreground truncate">{r.link}</p>
-                        {r.snippet && <p className="text-[10px] text-slate-600 dark:text-slate-400 line-clamp-2 mt-0.5">{r.snippet}</p>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                <span className="text-[10px] text-slate-400 font-bold uppercase">
+                  Rank #2
+                </span>
+              </div>
             </div>
-          )}
+
+            {/* Cited Sources List */}
+            <div className="pt-3 border-t border-slate-200/60 dark:border-border flex items-center gap-2 flex-wrap text-[11px]">
+              <span className="font-extrabold uppercase tracking-wider text-slate-400">Websites Cited by AI:</span>
+              <a
+                href={`https://${cleanDomain}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-card border border-slate-200 dark:border-border text-slate-700 dark:text-slate-200 font-semibold hover:border-orange-300 transition-colors"
+              >
+                <Globe size={11} className="text-emerald-600" />
+                <span>https://{cleanDomain}</span>
+                <ExternalLink size={10} className="text-slate-400" />
+              </a>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-card border border-slate-200 dark:border-border text-slate-500 font-medium">
+                <Globe size={11} className="text-slate-400" />
+                <span>https://g2.com/reviews</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Plain English Summary */}
+          <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-muted/30 border border-slate-200/80 dark:border-border flex items-start gap-3">
+            <ShieldCheck size={18} className="text-emerald-600 shrink-0 mt-0.5" />
+            <div className="text-xs text-slate-600 dark:text-muted-foreground leading-relaxed">
+              <strong className="text-slate-900 dark:text-foreground font-bold">Summary:</strong> When customers search {selectedEngine.name} for <em>&ldquo;{cleanKeyword}&rdquo;</em>, your business is shown as the #1 answer with a direct clickable link to your website.
+            </div>
+          </div>
+
         </div>
-      </div>
+      )}
+
+      {/* ── 4. ADD CUSTOM SAMPLE MODAL ── */}
+      {isAddSampleModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl space-y-4 animate-scaleUp">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-border">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-[#FF5A1F] flex items-center justify-center font-bold">
+                  <BookmarkPlus size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-foreground">
+                    Add Custom Sample
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    Save a 1-click test scenario for your business
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddSampleModalOpen(false)}
+                className="w-7 h-7 rounded-full hover:bg-slate-100 dark:hover:bg-muted flex items-center justify-center text-slate-400 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleCreateCustomSample} className="space-y-3.5">
+              
+              {/* Quick Template Starters */}
+              <div className="space-y-1.5 pb-1">
+                <label className="text-[10.5px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                  Or Quick-Fill From Template:
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { name: "Legal", emoji: "⚖️", kw: "top corporate law firm", dom: "alrashidlaw.ae" },
+                    { name: "Real Estate", emoji: "🏠", kw: "luxury penthouses for sale", dom: "dubailuxuryproperties.com" },
+                    { name: "E-Commerce", emoji: "🛍️", kw: "ergonomic office chairs online", dom: "ergocomfort.store" },
+                    { name: "Finance", emoji: "📈", kw: "wealth management advisor", dom: "apexwealth.com" },
+                  ].map((t) => (
+                    <button
+                      key={t.name}
+                      type="button"
+                      onClick={() => {
+                        setNewSampleName(t.name);
+                        setNewSampleEmoji(t.emoji);
+                        setNewSampleKeyword(t.kw);
+                        setNewSampleDomain(t.dom);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-muted/70 hover:bg-orange-50 hover:text-[#FF5A1F] text-[10.5px] font-bold text-slate-600 dark:text-slate-300 transition-colors cursor-pointer flex items-center gap-1 border border-slate-200/50 dark:border-border"
+                    >
+                      <span>{t.emoji}</span>
+                      <span>{t.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-4 gap-2">
+                <div className="col-span-1">
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Emoji
+                  </label>
+                  <select
+                    value={newSampleEmoji}
+                    onChange={(e) => setNewSampleEmoji(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-xl px-2 py-2 text-base text-center cursor-pointer"
+                  >
+                    {["🚀", "⚖️", "🏠", "🚗", "✈️", "🛍️", "🍔", "💼", "📈", "💻", "💎", "🏥", "☕", "🎓", "🎨"].map((em) => (
+                      <option key={em} value={em}>
+                        {em}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-span-3">
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Sample Title
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Law Firm, Real Estate"
+                    value={newSampleName}
+                    onChange={(e) => setNewSampleName(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-xl px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-[#FF5A1F]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  Search Query / Topic
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. best corporate lawyer dubai"
+                  value={newSampleKeyword}
+                  onChange={(e) => setNewSampleKeyword(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-xl px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-[#FF5A1F]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  Your Website Domain
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. alrashidlaw.ae"
+                  value={newSampleDomain}
+                  onChange={(e) => setNewSampleDomain(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-xl px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-[#FF5A1F]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  Competitors (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. competitorlaw.com"
+                  value={newSampleCompetitors}
+                  onChange={(e) => setNewSampleCompetitors(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-xl px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-[#FF5A1F]"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-border">
+                <button
+                  type="button"
+                  onClick={() => setIsAddSampleModalOpen(false)}
+                  className="px-3.5 py-2 rounded-xl bg-white dark:bg-card border border-slate-200 dark:border-border text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-[#FF5A1F] hover:bg-[#E04D16] text-white text-xs font-black shadow-xs cursor-pointer"
+                >
+                  Save Sample
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -15,7 +15,7 @@ export default function AnimatedQuery({
   fullText,
   isTyping,
   onTypingComplete,
-  speedMs = 35,
+  speedMs = 14,
   reducedMotion = false,
 }: AnimatedQueryProps) {
   const [displayedText, setDisplayedText] = useState(reducedMotion ? fullText : "");

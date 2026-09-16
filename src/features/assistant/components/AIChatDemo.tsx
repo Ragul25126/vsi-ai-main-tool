@@ -72,27 +72,27 @@ export default function AIChatDemo() {
     let timer: NodeJS.Timeout;
 
     if (stage === "query") {
-      timer = setTimeout(() => setStage("analyzing"), 1400);
+      timer = setTimeout(() => setStage("analyzing"), 700);
     } else if (stage === "analyzing") {
-      timer = setTimeout(() => setStage("analyzed"), 900);
+      timer = setTimeout(() => setStage("analyzed"), 450);
     } else if (stage === "analyzed") {
-      timer = setTimeout(() => setStage("metrics"), 500);
+      timer = setTimeout(() => setStage("metrics"), 300);
     } else if (stage === "metrics") {
-      timer = setTimeout(() => setStage("visibility"), 1400);
+      timer = setTimeout(() => setStage("visibility"), 650);
     } else if (stage === "visibility") {
-      timer = setTimeout(() => setStage("competitors"), 1100);
+      timer = setTimeout(() => setStage("competitors"), 550);
     } else if (stage === "competitors") {
-      timer = setTimeout(() => setStage("diagnosis"), 1400);
+      timer = setTimeout(() => setStage("diagnosis"), 650);
     } else if (stage === "diagnosis") {
-      timer = setTimeout(() => setStage("recommendation"), 1400);
+      timer = setTimeout(() => setStage("recommendation"), 650);
     } else if (stage === "recommendation") {
-      timer = setTimeout(() => setStage("complete"), 2000);
+      timer = setTimeout(() => setStage("complete"), 900);
     } else if (stage === "complete") {
-      // Hold complete state for 3.5 seconds, then restart smoothly
+      // Hold complete state for 2 seconds, then restart smoothly
       timer = setTimeout(() => {
         setCycleCount((c) => c + 1);
         setStage("query");
-      }, 3500);
+      }, 2000);
     }
 
     return () => clearTimeout(timer);

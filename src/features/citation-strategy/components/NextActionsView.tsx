@@ -1,582 +1,695 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { 
-  Zap, Sparkles, TrendingUp, AlertTriangle, ArrowRight, CheckCircle2, 
-  Plus, Loader2, Search, Filter, ShieldAlert, FileText, Globe, 
-  ExternalLink, ChevronDown, Check, RefreshCw
+import {
+  Target,
+  Zap,
+  BarChart2,
+  Sparkles,
+  TrendingUp,
+  Search,
+  Clock,
+  ArrowRight,
+  Check,
+  FileText,
+  Link2,
+  Edit3,
+  ChevronDown,
+  ChevronUp,
+  X,
+  CheckCircle2,
+  Lightbulb,
 } from "lucide-react";
-import { getCustomClients, ClientItem } from "@/lib/client-store";
-import { useTheme } from "@/components/ThemeProvider";
 
-export interface ActionOpportunity {
+export interface ActionItem {
   id: string;
-  keyword: string;
-  clientName: string;
-  clientId: string;
-  domain: string;
-  category: "quick_win" | "ai_citation" | "ranking" | "competitor_gap";
-  priority: "critical" | "high" | "medium";
-  rankPosition: number | null;
-  aioPresent: boolean;
-  clientCited: boolean;
-  mentionedInText: boolean;
-  competitorsCited: string[];
+  category: "quick_win" | "competitor_gap" | "ai_citation" | "ranking";
+  categoryName: string;
+  priority: "Critical" | "High" | "Medium";
+  iconType: "file" | "link" | "edit" | "chart";
+  title: string;
+  oneLiner: string;
+  impactGain: string;
   impactLabel: string;
-  effortLabel: string;
-  headline: string;
-  recommendation: string;
-  actionType: "schema_snippet" | "content_depth" | "citation_pr" | "entity_cluster";
+  timeEstimate: string;
+  difficulty: "Easy" | "Medium" | "Hard";
+  steps: string[];
 }
 
-const DEFAULT_OPPORTUNITIES: ActionOpportunity[] = [
+const ACTION_ITEMS: ActionItem[] = [
   {
-    id: "opp-1",
-    keyword: "enterprise seo platform",
-    clientName: "Valgrow Labs",
-    clientId: "valgrow-labs-001",
-    domain: "valgrowlabs.com",
+    id: "act-1",
     category: "quick_win",
-    priority: "critical",
-    rankPosition: 2,
-    aioPresent: true,
-    clientCited: false,
-    mentionedInText: true,
-    competitorsCited: ["semrush.com", "ahrefs.com"],
-    impactLabel: "+45% AI Traffic",
-    effortLabel: "30 min",
-    headline: "Rank #2 on Google but missing AI Overview citation card",
-    recommendation: "Your brand is mentioned in the LLM synthesis text, but not awarded a source card. Inject a concise 45-word definition snippet with schema.org/SoftwareApplication to claim the primary citation anchor.",
-    actionType: "schema_snippet",
+    categoryName: "Quick Win",
+    priority: "Critical",
+    iconType: "file",
+    title: "Get mentioned in AI Overviews",
+    oneLiner: "Your brand is mentioned in AI answers, but doesn't have a proper source link. Add a short description on your homepage.",
+    impactGain: "+45%",
+    impactLabel: "Potential increase in AI traffic",
+    timeEstimate: "30 min",
+    difficulty: "Easy",
+    steps: [
+      "Open your homepage header or hero section.",
+      "Add a 2-sentence summary stating what your business does and where you operate.",
+      "Save changes so search engines can index your direct link.",
+    ],
   },
   {
-    id: "opp-2",
-    keyword: "best ai search optimization software",
-    clientName: "Valgrow Labs",
-    clientId: "valgrow-labs-001",
-    domain: "valgrowlabs.com",
+    id: "act-2",
     category: "competitor_gap",
-    priority: "critical",
-    rankPosition: null,
-    aioPresent: true,
-    clientCited: false,
-    mentionedInText: false,
-    competitorsCited: ["hubspot.com", "searchengineland.com", "brightedge.com"],
-    impactLabel: "+60% Brand Share",
-    effortLabel: "2 hours",
-    headline: "3 competitors cited in Google AI Overview while brand is absent",
-    recommendation: "Major generative search gap. Searchers querying AI search tools see only competitors. Publish a comprehensive comparison breakdown addressing feature parity, citation scoring, and API integrations.",
-    actionType: "content_depth",
+    categoryName: "Competitor Gap",
+    priority: "Critical",
+    iconType: "link",
+    title: "Create a comparison page for key competitors",
+    oneLiner: "3 competitors are mentioned in AI Overviews, but your brand is not. Publish a simple comparison page highlighting your unique features.",
+    impactGain: "+60%",
+    impactLabel: "Potential increase in brand visibility",
+    timeEstimate: "2 hours",
+    difficulty: "Medium",
+    steps: [
+      "Create a page highlighting what makes your service different and better.",
+      "Add a side-by-side feature comparison table.",
+      "Include a direct 'Contact Us' or 'Get Quote' button.",
+    ],
   },
   {
-    id: "opp-3",
-    keyword: "generative engine optimization tools",
-    clientName: "Valgrow Labs",
-    clientId: "valgrow-labs-001",
-    domain: "valgrowlabs.com",
+    id: "act-3",
     category: "ai_citation",
-    priority: "high",
-    rankPosition: 7,
-    aioPresent: true,
-    clientCited: false,
-    mentionedInText: false,
-    competitorsCited: ["searchenginejournal.com", "backlinko.com"],
-    impactLabel: "+30% Conversions",
-    effortLabel: "1 hour",
-    headline: "Striking distance (#7) with active AI Overview expansion",
-    recommendation: "Adding structured bulleted feature matrices and quotable benchmark stats will simultaneously lift your organic rank into the top 3 and trigger AI Overview inclusion.",
-    actionType: "entity_cluster",
+    categoryName: "AI Citation",
+    priority: "High",
+    iconType: "edit",
+    title: "Write content for high-potential keywords",
+    oneLiner: "You rank on page 4–20 for some valuable keywords. Create helpful content to move into the top 3 results.",
+    impactGain: "+30%",
+    impactLabel: "Potential increase in organic traffic",
+    timeEstimate: "1 hour",
+    difficulty: "Medium",
+    steps: [
+      "Identify the 3 most searched questions your customers ask.",
+      "Add clear, direct answers with bullet points on your service page.",
+      "Update your page title to reflect the target service keyword.",
+    ],
   },
   {
-    id: "opp-4",
-    keyword: "b2b search intelligence metrics",
-    clientName: "Valgrow Labs",
-    clientId: "valgrow-labs-001",
-    domain: "valgrowlabs.com",
+    id: "act-4",
     category: "ranking",
-    priority: "high",
-    rankPosition: 11,
-    aioPresent: false,
-    clientCited: false,
-    mentionedInText: false,
-    competitorsCited: [],
-    impactLabel: "+20% Organic",
-    effortLabel: "1.5 hours",
-    headline: "Page 2 position (#11) with high commercial intent",
-    recommendation: "Refresh content with 2026 data points, update internal link anchor text from high-authority parent pages, and improve author E-E-A-T credentials.",
-    actionType: "content_depth",
+    categoryName: "Ranking Expansion",
+    priority: "High",
+    iconType: "chart",
+    title: "Refresh key pages to reach Google Page 1",
+    oneLiner: "Your main service page ranks #11. Update outdated information and add clear headlines to break into the top 10.",
+    impactGain: "+25%",
+    impactLabel: "Potential increase in search traffic",
+    timeEstimate: "1.5 hours",
+    difficulty: "Medium",
+    steps: [
+      "Update any older dates, pricing, or examples on the page.",
+      "Add 2 to 3 photos of your real work or team.",
+      "Ensure your primary city or region is included in the page header.",
+    ],
   },
   {
-    id: "opp-5",
-    keyword: "chatgpt search citation tracker",
-    clientName: "Valgrow Labs",
-    clientId: "valgrow-labs-001",
-    domain: "valgrowlabs.com",
+    id: "act-5",
     category: "quick_win",
-    priority: "high",
-    rankPosition: 4,
-    aioPresent: true,
-    clientCited: false,
-    mentionedInText: true,
-    competitorsCited: ["marketbrew.ai"],
-    impactLabel: "+35% AI Traffic",
-    effortLabel: "45 min",
-    headline: "High SERP rank (#4) and LLM brand recognition",
-    recommendation: "Add an FAQ schema section with direct question-and-answer format addressing 'How does ChatGPT search choose citation sources?' to trigger direct quote attribution.",
-    actionType: "schema_snippet",
+    categoryName: "Quick Win",
+    priority: "Critical",
+    iconType: "file",
+    title: "Add FAQ section to get quoted by ChatGPT",
+    oneLiner: "Answer 4 common customer questions on your homepage so AI search engines can quote your website directly.",
+    impactGain: "+35%",
+    impactLabel: "Potential increase in AI mentions",
+    timeEstimate: "45 min",
+    difficulty: "Easy",
+    steps: [
+      "Add a 'Frequently Asked Questions' section near your homepage footer.",
+      "Write 4 short, 2-sentence answers to top client questions.",
+      "Publish updates so AI crawlers can index the questions.",
+    ],
   },
   {
-    id: "opp-6",
-    keyword: "ai visibility score calculation",
-    clientName: "Valgrow Labs",
-    clientId: "valgrow-labs-001",
-    domain: "valgrowlabs.com",
+    id: "act-6",
     category: "competitor_gap",
-    priority: "medium",
-    rankPosition: null,
-    aioPresent: true,
-    clientCited: false,
-    mentionedInText: false,
-    competitorsCited: ["onely.com", "moz.com"],
-    impactLabel: "+25% Entity Share",
-    effortLabel: "2 hours",
-    headline: "Technical niche query dominated by competitor research",
-    recommendation: "Publish an original methodology whitepaper detailing the formula behind AI visibility weighting across SERP, AIO, and LLM text mentions.",
-    actionType: "citation_pr",
-  }
+    categoryName: "Competitor Gap",
+    priority: "Medium",
+    iconType: "edit",
+    title: "Publish client reviews and transparent pricing",
+    oneLiner: "Display 3 client reviews and starting price ranges to build immediate trust with incoming searchers.",
+    impactGain: "+20%",
+    impactLabel: "Potential increase in lead quality",
+    timeEstimate: "30 min",
+    difficulty: "Easy",
+    steps: [
+      "Add 3 customer testimonials with star ratings to your homepage.",
+      "List starting price ranges beside your core service offerings.",
+      "Include a call-to-action button for custom quotes.",
+    ],
+  },
 ];
 
 export default function NextActionsView() {
-  const { theme } = useTheme();
-  const [clients, setClients] = useState<ClientItem[]>([]);
-  const [selectedClientId, setSelectedClientId] = useState<string>("all");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [opportunities, setOpportunities] = useState<ActionOpportunity[]>(DEFAULT_OPPORTUNITIES);
-  
-  // Task creation tracking
-  const [addingTaskId, setAddingTaskId] = useState<string | null>(null);
-  const [addedTaskIds, setAddedTaskIds] = useState<Set<string>>(new Set());
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [addedTasks, setAddedTasks] = useState<Record<string, boolean>>({});
+  const [loadingTasks, setLoadingTasks] = useState<Record<string, boolean>>({});
+  const [showMore, setShowMore] = useState<boolean>(false);
+  const [selectedDetailsOpp, setSelectedDetailsOpp] = useState<ActionItem | null>(null);
 
-  // Brief generation tracking
-  const [generatingBriefId, setGeneratingBriefId] = useState<string | null>(null);
-  const [activeBriefs, setActiveBriefs] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    const list = getCustomClients();
-    setClients(list);
-  }, []);
-
-  // Filter opportunities
-  const filtered = opportunities.filter((opp) => {
-    if (selectedClientId !== "all" && opp.clientId !== selectedClientId) return false;
-    if (categoryFilter !== "all" && opp.category !== categoryFilter) return false;
+  // Filter items
+  const filtered = ACTION_ITEMS.filter((opp) => {
+    if (activeCategory !== "all" && opp.category !== activeCategory) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return (
-        opp.keyword.toLowerCase().includes(q) ||
-        opp.headline.toLowerCase().includes(q) ||
-        opp.recommendation.toLowerCase().includes(q)
+        opp.title.toLowerCase().includes(q) ||
+        opp.oneLiner.toLowerCase().includes(q)
       );
     }
     return true;
   });
 
-  // Task creation handler
-  async function handleCreateTask(opp: ActionOpportunity) {
-    setAddingTaskId(opp.id);
+  const displayedOpportunities = showMore ? filtered : filtered.slice(0, 3);
+
+  // Summary counts
+  const countQuickWins = ACTION_ITEMS.filter((o) => o.category === "quick_win").length;
+  const countCompetitorGaps = ACTION_ITEMS.filter((o) => o.category === "competitor_gap").length;
+  const countAICitations = ACTION_ITEMS.filter((o) => o.category === "ai_citation").length;
+  const countRanking = ACTION_ITEMS.filter((o) => o.category === "ranking").length;
+
+  const handleAddToBoard = async (opp: ActionItem) => {
+    setLoadingTasks((prev) => ({ ...prev, [opp.id]: true }));
     try {
-      const res = await fetch("/api/tasks", {
+      await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          client_id: opp.clientId,
-          title: `[Next Action] ${opp.keyword} - ${opp.headline}`,
-          group_name: opp.actionType === "schema_snippet" ? "technical_seo" : "content_brief",
-          description: `Strategic Recommendation:\n${opp.recommendation}\n\nEstimated Impact: ${opp.impactLabel}\nEffort: ${opp.effortLabel}`,
-          impact: opp.priority === "critical" ? "high" : "medium",
-          effort: opp.effortLabel.includes("30") || opp.effortLabel.includes("45") ? "low" : "medium",
+          client_id: "valgrow-labs-001",
+          title: opp.title,
+          group_name: "content_brief",
+          description: `${opp.oneLiner}\n\nEstimated Impact: ${opp.impactGain} (${opp.impactLabel})\nEffort: ${opp.timeEstimate}`,
+          impact: opp.priority === "Critical" ? "high" : "medium",
+          effort: opp.difficulty === "Easy" ? "low" : "medium",
         }),
       });
-
-      if (res.ok) {
-        setAddedTaskIds((prev) => new Set([...prev, opp.id]));
-      } else {
-        // Fallback simulate local save
-        setAddedTaskIds((prev) => new Set([...prev, opp.id]));
-      }
+      setAddedTasks((prev) => ({ ...prev, [opp.id]: true }));
     } catch {
-      setAddedTaskIds((prev) => new Set([...prev, opp.id]));
+      setAddedTasks((prev) => ({ ...prev, [opp.id]: true }));
     } finally {
-      setAddingTaskId(null);
+      setLoadingTasks((prev) => ({ ...prev, [opp.id]: false }));
     }
-  }
-
-  // Generate Brief handler
-  async function handleGenerateBrief(opp: ActionOpportunity) {
-    if (activeBriefs[opp.id]) {
-      // Toggle off if already showing
-      setActiveBriefs((prev) => {
-        const next = { ...prev };
-        delete next[opp.id];
-        return next;
-      });
-      return;
-    }
-
-    setGeneratingBriefId(opp.id);
-    try {
-      const res = await fetch("/api/opportunity-brief", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          keyword: opp.keyword,
-          domain: opp.domain,
-          gapLabel: opp.category,
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setActiveBriefs((prev) => ({
-          ...prev,
-          [opp.id]: data.briefText || data.contentBrief || "Optimize target page with structured schema, 45-word direct answer block, and comparison table with competitor citations."
-        }));
-      } else {
-        setActiveBriefs((prev) => ({
-          ...prev,
-          [opp.id]: `### AI Content Outline for "${opp.keyword}"\n- **Target Entity**: ${opp.domain}\n- **Core Hook**: Answer user intent in under 45 words for AI snippet extraction.\n- **Competitor Target**: Outrank ${opp.competitorsCited.join(", ") || "incumbents"}.\n- **Recommended Schema**: WebPage + FAQPage JSON-LD.`
-        }));
-      }
-    } catch {
-      setActiveBriefs((prev) => ({
-        ...prev,
-        [opp.id]: `### AI Content Outline for "${opp.keyword}"\n- **Core Action**: Add quotable definition snippet and structured table.\n- **Competitors to displace**: ${opp.competitorsCited.join(", ") || "Competitor citations"}.`
-      }));
-    } finally {
-      setGeneratingBriefId(null);
-    }
-  }
-
-  const categoryCounts = {
-    all: opportunities.length,
-    quick_win: opportunities.filter((o) => o.category === "quick_win").length,
-    ai_citation: opportunities.filter((o) => o.category === "ai_citation").length,
-    ranking: opportunities.filter((o) => o.category === "ranking").length,
-    competitor_gap: opportunities.filter((o) => o.category === "competitor_gap").length,
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fadeIn pb-16 font-sans">
       
-      {/* ── TOP EXECUTIVE HERO BAR ── */}
-      <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-[11px] font-bold text-amber-500 uppercase tracking-widest">
-              AI Action Intelligence
-            </span>
+      {/* ── 1. HEADER ROW ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200/80 dark:border-orange-800/40 flex items-center justify-center text-[#FF5A1F] shrink-0 shadow-xs">
+            <Zap size={24} className="fill-[#FF5A1F]" />
           </div>
-          <h1 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2.5">
-            <span>Next Actions & High-Impact Opportunities</span>
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-              {filtered.length} prioritized
-            </span>
-          </h1>
-          <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
-            Prioritized tactical moves to capture AI Overviews, resolve citation omissions, and displace competitor domains in ChatGPT and Google search.
-          </p>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+              Instant Visibility Wins
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              The quickest steps to outrank competitors and get recommended by AI.
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard/tasks"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card hover:bg-muted border border-border text-foreground text-xs font-bold shadow-xs transition-all"
-          >
-            <span>Open Action Board</span>
-            <ArrowRight size={14} className="text-muted-foreground" />
-          </Link>
-        </div>
+        <Link
+          href="/dashboard/tasks"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF5A1F] hover:bg-[#E04810] text-white text-xs font-bold shadow-xs hover:shadow-md transition-all shrink-0 cursor-pointer"
+        >
+          <span>Open Action Board</span>
+          <ArrowRight size={14} />
+        </Link>
       </div>
 
-      {/* ── KPI HIGHLIGHT STRIP ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-xs">
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-            Quick Wins
-          </span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-emerald-500">{categoryCounts.quick_win}</span>
-            <span className="text-[11px] font-semibold text-muted-foreground">High SERP, No AIO</span>
-          </div>
-        </div>
-
-        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-xs">
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-            Competitor Gaps
-          </span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-rose-500">{categoryCounts.competitor_gap}</span>
-            <span className="text-[11px] font-semibold text-muted-foreground">Competitors Dominate</span>
-          </div>
-        </div>
-
-        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-xs">
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-            AI Citations To Win
-          </span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-cyan-500">{categoryCounts.ai_citation}</span>
-            <span className="text-[11px] font-semibold text-muted-foreground">Brand Mentioned Only</span>
-          </div>
-        </div>
-
-        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-xs">
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-            Ranking Expansion
-          </span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-amber-500">{categoryCounts.ranking}</span>
-            <span className="text-[11px] font-semibold text-muted-foreground">Pos 4-20 Striking</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── CONTROLS & FILTER BAR ── */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card border border-border/70 rounded-xl p-3 shadow-xs">
+      {/* ── 2. TOP 4 SUMMARY STAT CARDS ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
-        {/* Category Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-          {[
-            { id: "all", label: "All Opportunities", count: categoryCounts.all },
-            { id: "quick_win", label: "Quick Wins", count: categoryCounts.quick_win, icon: Zap },
-            { id: "ai_citation", label: "AI Citations", count: categoryCounts.ai_citation, icon: Sparkles },
-            { id: "competitor_gap", label: "Competitor Gaps", count: categoryCounts.competitor_gap, icon: ShieldAlert },
-            { id: "ranking", label: "Rank Expansion", count: categoryCounts.ranking, icon: TrendingUp },
-          ].map((tab) => {
-            const active = categoryFilter === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setCategoryFilter(tab.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-                  active
-                    ? "bg-primary text-primary-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                }`}
-              >
-                {tab.icon && <tab.icon size={13} />}
-                <span>{tab.label}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
-                }`}>
-                  {tab.count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Search & Client Select */}
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="relative w-full sm:w-60">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Filter keyword..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-            />
+        {/* Quick Wins */}
+        <div 
+          onClick={() => setActiveCategory(activeCategory === "quick_win" ? "all" : "quick_win")}
+          className={`p-4 rounded-2xl border transition-all cursor-pointer shadow-xs flex items-center gap-3.5 ${
+            activeCategory === "quick_win"
+              ? "bg-emerald-100/70 dark:bg-emerald-950/40 border-emerald-400 ring-2 ring-emerald-400/20"
+              : "bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/30 hover:border-emerald-300"
+          }`}
+        >
+          <div className="w-11 h-11 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <Zap size={20} className="fill-emerald-600 dark:fill-emerald-400 stroke-none" />
           </div>
-
-          {clients.length > 1 && (
-            <select
-              value={selectedClientId}
-              onChange={(e) => setSelectedClientId(e.target.value)}
-              className="bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary font-medium"
-            >
-              <option value="all">All Clients</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          )}
+          <div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-black text-foreground">{countQuickWins}</span>
+              <span className="text-sm font-bold text-foreground">Quick Wins</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Easy to fix, fast results
+            </p>
+          </div>
         </div>
+
+        {/* Competitor Gaps */}
+        <div 
+          onClick={() => setActiveCategory(activeCategory === "competitor_gap" ? "all" : "competitor_gap")}
+          className={`p-4 rounded-2xl border transition-all cursor-pointer shadow-xs flex items-center gap-3.5 ${
+            activeCategory === "competitor_gap"
+              ? "bg-rose-100/70 dark:bg-rose-950/40 border-rose-400 ring-2 ring-rose-400/20"
+              : "bg-rose-50/60 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/30 hover:border-rose-300"
+          }`}
+        >
+          <div className="w-11 h-11 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+            <BarChart2 size={20} className="stroke-[2.5]" />
+          </div>
+          <div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-black text-foreground">{countCompetitorGaps}</span>
+              <span className="text-sm font-bold text-foreground">Competitor Gaps</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Where others are ahead
+            </p>
+          </div>
+        </div>
+
+        {/* AI Citations */}
+        <div 
+          onClick={() => setActiveCategory(activeCategory === "ai_citation" ? "all" : "ai_citation")}
+          className={`p-4 rounded-2xl border transition-all cursor-pointer shadow-xs flex items-center gap-3.5 ${
+            activeCategory === "ai_citation"
+              ? "bg-purple-100/70 dark:bg-purple-950/40 border-purple-400 ring-2 ring-purple-400/20"
+              : "bg-purple-50/60 dark:bg-purple-950/20 border-purple-100 dark:border-purple-900/30 hover:border-purple-300"
+          }`}
+        >
+          <div className="w-11 h-11 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+            <Sparkles size={20} className="stroke-[2.2]" />
+          </div>
+          <div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-black text-foreground">{countAICitations}</span>
+              <span className="text-sm font-bold text-foreground">AI Citations to Win</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Get your brand mentioned
+            </p>
+          </div>
+        </div>
+
+        {/* Ranking Expansion */}
+        <div 
+          onClick={() => setActiveCategory(activeCategory === "ranking" ? "all" : "ranking")}
+          className={`p-4 rounded-2xl border transition-all cursor-pointer shadow-xs flex items-center gap-3.5 ${
+            activeCategory === "ranking"
+              ? "bg-amber-100/70 dark:bg-amber-950/40 border-amber-400 ring-2 ring-amber-400/20"
+              : "bg-amber-50/60 dark:bg-amber-950/20 border-amber-100 dark:border-amber-900/30 hover:border-amber-300"
+          }`}
+        >
+          <div className="w-11 h-11 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <TrendingUp size={20} className="stroke-[2.5]" />
+          </div>
+          <div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-black text-foreground">{countRanking}</span>
+              <span className="text-sm font-bold text-foreground">Ranking Expansion</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              New keyword opportunities
+            </p>
+          </div>
+        </div>
+
       </div>
 
-      {/* ── OPPORTUNITY CARDS LIST ── */}
+      {/* ── 3. FILTER TABS + SEARCH BAR ── */}
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-1">
+        
+        {/* Filter Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
+          
+          <button
+            type="button"
+            onClick={() => setActiveCategory("all")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-2 ${
+              activeCategory === "all"
+                ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xs"
+                : "bg-white dark:bg-card border border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <span>All Opportunities</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${
+              activeCategory === "all" ? "bg-white/20 dark:bg-slate-900/20" : "bg-muted"
+            }`}>
+              {ACTION_ITEMS.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveCategory("quick_win")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-2 ${
+              activeCategory === "quick_win"
+                ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xs"
+                : "bg-white dark:bg-card border border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Zap size={13} className="text-emerald-500 fill-emerald-500" />
+            <span>Quick Wins</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${
+              activeCategory === "quick_win" ? "bg-white/20 dark:bg-slate-900/20" : "bg-muted"
+            }`}>
+              {countQuickWins}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveCategory("competitor_gap")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-2 ${
+              activeCategory === "competitor_gap"
+                ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xs"
+                : "bg-white dark:bg-card border border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <BarChart2 size={13} className="text-rose-500" />
+            <span>Competitor Gaps</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${
+              activeCategory === "competitor_gap" ? "bg-white/20 dark:bg-slate-900/20" : "bg-muted"
+            }`}>
+              {countCompetitorGaps}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveCategory("ai_citation")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-2 ${
+              activeCategory === "ai_citation"
+                ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xs"
+                : "bg-white dark:bg-card border border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Sparkles size={13} className="text-purple-500" />
+            <span>AI Citations</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${
+              activeCategory === "ai_citation" ? "bg-white/20 dark:bg-slate-900/20" : "bg-muted"
+            }`}>
+              {countAICitations}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveCategory("ranking")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-2 ${
+              activeCategory === "ranking"
+                ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xs"
+                : "bg-white dark:bg-card border border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <TrendingUp size={13} className="text-amber-500" />
+            <span>Ranking Expansion</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${
+              activeCategory === "ranking" ? "bg-white/20 dark:bg-slate-900/20" : "bg-muted"
+            }`}>
+              {countRanking}
+            </span>
+          </button>
+
+        </div>
+
+        {/* Search */}
+        <div className="relative w-full lg:w-72">
+          <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search opportunities..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-white dark:bg-card border border-border rounded-xl pl-9 pr-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#FF5A1F] transition-colors shadow-xs"
+          />
+        </div>
+
+      </div>
+
+      {/* ── 4. OPPORTUNITIES ACTION CARDS LIST (Exact match to Reference) ── */}
       <div className="space-y-4">
         {filtered.length === 0 ? (
-          <div className="bg-card border border-border rounded-2xl p-12 text-center shadow-xs">
-            <Sparkles size={32} className="text-muted-foreground/50 mx-auto mb-3" />
+          <div className="bg-white dark:bg-card border border-border rounded-2xl p-12 text-center shadow-xs space-y-2">
+            <Sparkles size={28} className="text-muted-foreground/50 mx-auto" />
             <h3 className="text-sm font-bold text-foreground">No matching opportunities found</h3>
-            <p className="text-xs text-muted-foreground mt-1">Try selecting a different filter category or clearing your search query.</p>
+            <p className="text-xs text-muted-foreground">Try selecting a different filter category above.</p>
           </div>
         ) : (
-          filtered.map((opp) => {
-            const isAdded = addedTaskIds.has(opp.id);
-            const isAdding = addingTaskId === opp.id;
-            const isGeneratingBrief = generatingBriefId === opp.id;
-            const hasBrief = !!activeBriefs[opp.id];
+          displayedOpportunities.map((opp) => {
+            const isAdded = addedTasks[opp.id];
+            const isLoading = loadingTasks[opp.id];
 
-            // Badge styling based on category
-            const categoryBadge = {
-              quick_win: { bg: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20", label: "Quick Win" },
-              ai_citation: { bg: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20", label: "AI Citation" },
-              competitor_gap: { bg: "bg-rose-500/10 text-rose-500 border-rose-500/20", label: "Competitor Gap" },
-              ranking: { bg: "bg-amber-500/10 text-amber-500 border-amber-500/20", label: "Rank Expansion" },
-            }[opp.category];
+            // Icon styling
+            const iconConfig = {
+              file: { bg: "bg-rose-50 dark:bg-rose-950/40", text: "text-rose-500", border: "border-rose-100 dark:border-rose-900/40", icon: FileText },
+              link: { bg: "bg-rose-50 dark:bg-rose-950/40", text: "text-rose-500", border: "border-rose-100 dark:border-rose-900/40", icon: Link2 },
+              edit: { bg: "bg-amber-50 dark:bg-amber-950/40", text: "text-amber-500", border: "border-amber-100 dark:border-amber-900/40", icon: Edit3 },
+              chart: { bg: "bg-amber-50 dark:bg-amber-950/40", text: "text-amber-500", border: "border-amber-100 dark:border-amber-900/40", icon: TrendingUp },
+            }[opp.iconType] || { bg: "bg-rose-50 dark:bg-rose-950/40", text: "text-rose-500", border: "border-rose-100 dark:border-rose-900/40", icon: FileText };
 
-            const priorityBadge = {
-              critical: "bg-rose-500 text-white",
-              high: "bg-amber-500 text-white",
-              medium: "bg-muted text-muted-foreground",
-            }[opp.priority];
+            const IconComponent = iconConfig.icon;
+
+            // Border color line
+            const borderAccent = opp.priority === "Critical"
+              ? "border-l-4 border-l-rose-500"
+              : "border-l-4 border-l-amber-500";
 
             return (
               <div
                 key={opp.id}
-                className="bg-card border border-border/80 hover:border-primary/50 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all space-y-4 group"
+                className={`bg-white dark:bg-card border border-border rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-all ${borderAccent}`}
               >
-                {/* Header row */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-3">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${priorityBadge}`}>
-                      {opp.priority}
-                    </span>
-                    <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold border ${categoryBadge.bg}`}>
-                      {categoryBadge.label}
-                    </span>
-                    <span className="text-xs font-bold text-foreground">
-                      {opp.clientName}
-                    </span>
-                    <span className="text-xs text-muted-foreground font-mono">
-                      ({opp.domain})
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3 text-xs">
-                    <div className="flex items-center gap-1.5 text-muted-foreground font-medium">
-                      <span>Impact:</span>
-                      <span className="font-bold text-emerald-500">{opp.impactLabel}</span>
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                  
+                  {/* Left Column: Icon + Badges + Title + 1-Sentence Description */}
+                  <div className="flex items-start gap-4 min-w-0 flex-1">
+                    
+                    {/* Left Icon Box */}
+                    <div className={`w-12 h-12 rounded-2xl ${iconConfig.bg} border ${iconConfig.border} flex items-center justify-center shrink-0 mt-0.5`}>
+                      <IconComponent size={22} className="stroke-[2.2]" />
                     </div>
-                    <span className="text-border">•</span>
-                    <div className="flex items-center gap-1.5 text-muted-foreground font-medium">
-                      <span>Effort:</span>
-                      <span className="font-bold text-foreground">{opp.effortLabel}</span>
+
+                    {/* Middle Info */}
+                    <div className="space-y-1.5 min-w-0 flex-1">
+                      
+                      {/* Top Badges */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {opp.priority === "Critical" ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40">
+                            Critical
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40">
+                            High
+                          </span>
+                        )}
+
+                        {opp.category === "quick_win" && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
+                            Quick Win
+                          </span>
+                        )}
+                        {opp.category === "competitor_gap" && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40">
+                            Competitor Gap
+                          </span>
+                        )}
+                        {opp.category === "ai_citation" && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 border border-purple-200/60 dark:border-purple-800/40">
+                            AI Citation
+                          </span>
+                        )}
+                        {opp.category === "ranking" && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40">
+                            Ranking Expansion
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Title (Bold, Crisp) */}
+                      <h3 className="text-base sm:text-lg font-bold text-foreground tracking-tight leading-snug">
+                        {opp.title}
+                      </h3>
+
+                      {/* 1 Short Sentence (No wall of text) */}
+                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                        {opp.oneLiner}
+                      </p>
                     </div>
-                  </div>
-                </div>
 
-                {/* Keyword & Headline */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-base font-black text-foreground group-hover:text-primary transition-colors">
-                      {opp.keyword}
-                    </h2>
-                    {opp.rankPosition && (
-                      <span className="px-2 py-0.5 bg-blue-500/10 text-blue-500 border border-blue-500/20 font-bold text-[11px] rounded-md">
-                        #{opp.rankPosition} Google SERP
-                      </span>
-                    )}
-                    {opp.aioPresent && (
-                      <span className="px-2 py-0.5 bg-purple-500/10 text-purple-500 border border-purple-500/20 font-bold text-[11px] rounded-md flex items-center gap-1">
-                        <Sparkles size={11} /> AI Overview Live
-                      </span>
-                    )}
                   </div>
-                  <h3 className="text-xs font-bold text-foreground/90">
-                    {opp.headline}
-                  </h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {opp.recommendation}
-                  </p>
-                </div>
 
-                {/* Competitors cited pill row */}
-                {opp.competitorsCited.length > 0 && (
-                  <div className="flex items-center gap-2 flex-wrap text-xs pt-1">
-                    <span className="text-[11px] font-bold text-muted-foreground">Competitors dominating AI citation:</span>
-                    {opp.competitorsCited.map((comp) => (
-                      <span
-                        key={comp}
-                        className="px-2 py-0.5 rounded-md bg-muted/80 text-muted-foreground font-mono text-[11px] border border-border"
+                  {/* Right Column: Impact + Effort + Action Buttons */}
+                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-3.5 shrink-0 w-full lg:w-auto pt-2 lg:pt-0 border-t lg:border-t-0 border-border">
+                    
+                    {/* Stat Box 1: Impact */}
+                    <div className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 rounded-xl px-4 py-3 min-w-[145px] text-left">
+                      <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-extrabold text-sm sm:text-base">
+                        <TrendingUp size={16} className="stroke-[3]" />
+                        <span>{opp.impactGain}</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                        {opp.impactLabel}
+                      </p>
+                    </div>
+
+                    {/* Stat Box 2: Effort */}
+                    <div className="bg-slate-50 dark:bg-muted/40 border border-border/80 rounded-xl px-4 py-3 min-w-[130px] text-left">
+                      <div className="flex items-center gap-1.5 text-foreground font-extrabold text-xs sm:text-sm">
+                        <Clock size={15} className="text-blue-500 shrink-0 stroke-[2.5]" />
+                        <span>{opp.timeEstimate}</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                        Estimated effort
+                      </p>
+                      <div className="mt-1.5">
+                        <span className={`inline-block text-[9px] font-extrabold px-2 py-0.5 rounded-full ${
+                          opp.difficulty === "Easy" 
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
+                            : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"
+                        }`}>
+                          {opp.difficulty}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons: Add to Action Board + View Details */}
+                    <div className="flex flex-col gap-2 shrink-0 min-w-[160px] w-full sm:w-auto">
+                      <button
+                        type="button"
+                        onClick={() => handleAddToBoard(opp)}
+                        disabled={isAdded || isLoading}
+                        className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs ${
+                          isAdded
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                            : "bg-[#FF5A1F] hover:bg-[#E04810] text-white hover:shadow-md"
+                        }`}
                       >
-                        {comp}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                        {isLoading ? (
+                          <span>Adding…</span>
+                        ) : isAdded ? (
+                          <><Check size={14} className="stroke-[3]" /> Added to Action Board</>
+                        ) : (
+                          <span>Add to Action Board</span>
+                        )}
+                      </button>
 
-                {/* Content Brief Expansion */}
-                {hasBrief && (
-                  <div className="bg-muted/40 border border-border rounded-xl p-4 text-xs space-y-2 animate-in fade-in duration-200">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-foreground flex items-center gap-1.5">
-                        <FileText size={14} className="text-primary" />
-                        <span>Generated Action Brief & Outline</span>
-                      </span>
-                      <span className="text-[10px] text-muted-foreground font-mono">Ready for execution</span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDetailsOpp(opp)}
+                        className="w-full py-2 px-4 rounded-xl bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-muted border border-border text-foreground text-xs font-bold transition-colors text-center cursor-pointer shadow-2xs"
+                      >
+                        View Details
+                      </button>
                     </div>
-                    <div className="text-xs text-muted-foreground whitespace-pre-line leading-relaxed font-sans bg-background/60 p-3 rounded-lg border border-border/50">
-                      {activeBriefs[opp.id]}
-                    </div>
-                  </div>
-                )}
 
-                {/* Action buttons row */}
-                <div className="flex items-center justify-between gap-3 pt-1">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleCreateTask(opp)}
-                      disabled={isAdded || isAdding}
-                      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        isAdded
-                          ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30"
-                          : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs hover:scale-[1.02]"
-                      }`}
-                    >
-                      {isAdding ? (
-                        <><Loader2 size={13} className="animate-spin" /> Adding to Board…</>
-                      ) : isAdded ? (
-                        <><Check size={13} /> On Action Board</>
-                      ) : (
-                        <><Plus size={13} /> Add to Action Board</>
-                      )}
-                    </button>
-
-                    <button
-                      onClick={() => handleGenerateBrief(opp)}
-                      disabled={isGeneratingBrief}
-                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-card hover:bg-muted border border-border text-foreground transition-all cursor-pointer"
-                    >
-                      {isGeneratingBrief ? (
-                        <><Loader2 size={13} className="animate-spin" /> Analyzing Outline…</>
-                      ) : hasBrief ? (
-                        <><FileText size={13} className="text-primary" /> Hide Brief</>
-                      ) : (
-                        <><Zap size={13} className="text-amber-500" /> Generate AI Brief</>
-                      )}
-                    </button>
                   </div>
 
-                  <Link
-                    href={`/dashboard/check?tab=quick-check&kw=${encodeURIComponent(opp.keyword)}&domain=${encodeURIComponent(opp.domain)}`}
-                    className="text-xs font-bold text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
-                  >
-                    <span>Run Live Check</span>
-                    <ExternalLink size={12} />
-                  </Link>
                 </div>
-
               </div>
             );
           })
         )}
       </div>
+
+      {/* ── 5. "SHOW MORE OPPORTUNITIES" TOGGLE ── */}
+      {filtered.length > 3 && (
+        <div className="flex justify-center pt-2">
+          <button
+            type="button"
+            onClick={() => setShowMore(!showMore)}
+            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-white dark:bg-card border border-border hover:border-foreground/30 text-xs font-bold text-foreground transition-all cursor-pointer shadow-xs"
+          >
+            <span>{showMore ? "Show fewer opportunities" : "Show more opportunities"}</span>
+            {showMore ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+        </div>
+      )}
+
+      {/* ── 6. VIEW DETAILS MODAL ── */}
+      {selectedDetailsOpp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white dark:bg-card border border-border rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
+            
+            <div className="flex items-start justify-between gap-4 border-b border-border pb-3">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-orange-50 text-[#FF5A1F] border border-orange-200">
+                  Action Checklist
+                </span>
+                <h2 className="text-base sm:text-lg font-bold text-foreground mt-1">
+                  {selectedDetailsOpp.title}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedDetailsOpp(null)}
+                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <p className="text-muted-foreground leading-relaxed">
+                {selectedDetailsOpp.oneLiner}
+              </p>
+
+              <div className="space-y-2 pt-1">
+                <h4 className="font-bold text-foreground">Action Steps:</h4>
+                {selectedDetailsOpp.steps.map((step, idx) => (
+                  <div key={idx} className="flex items-start gap-2.5 bg-slate-50 dark:bg-muted/30 p-2.5 rounded-lg border border-border text-foreground">
+                    <CheckCircle2 size={14} className="text-emerald-500 shrink-0 mt-0.5" />
+                    <span>{step}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-muted/40 border border-border mt-2">
+                <div>
+                  <span className="text-[10px] text-muted-foreground uppercase font-bold block">Effort</span>
+                  <span className="font-bold text-foreground">{selectedDetailsOpp.timeEstimate} ({selectedDetailsOpp.difficulty})</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-muted-foreground uppercase font-bold block">Expected Impact</span>
+                  <span className="font-bold text-emerald-600">{selectedDetailsOpp.impactGain}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-border flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setSelectedDetailsOpp(null)}
+                className="text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                Close
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  handleAddToBoard(selectedDetailsOpp);
+                  setSelectedDetailsOpp(null);
+                }}
+                className="px-5 py-2 rounded-xl bg-[#FF5A1F] hover:bg-[#E04810] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+              >
+                Add to Action Board
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );
