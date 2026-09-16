@@ -1,13 +1,23 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import { 
-  ShieldCheck, AlertTriangle, XCircle, CheckCircle2, RefreshCw, 
+  ShieldCheck, AlertTriangle, AlertCircle, CheckCircle2, RefreshCw, 
   Search, Filter, Plus, ArrowRight, ExternalLink, Loader2, 
   Check, Globe, Cpu, FileText, Share2, Layers, Zap
 } from "lucide-react";
 import { getCustomClients, ClientItem } from "@/lib/client-store";
+import { getFriendlyAuditItem, FriendlyAuditItem } from "../lib/audit-translations";
+
+import AuditHeader from "./AuditHeader";
+import HealthScoreCard from "./HealthScoreCard";
+import AuditSummaryPillars from "./AuditSummaryPillars";
+import TopPrioritiesSection from "./TopPrioritiesSection";
+import CategoryHealthOverview from "./CategoryHealthOverview";
+import AuditIssueCard from "./AuditIssueCard";
+import AffectedPagesModal from "./AffectedPagesModal";
+import AuditProgressModal from "./AuditProgressModal";
+import EmptyAuditState from "./EmptyAuditState";
 
 export interface AuditItem {
   id: string;
@@ -19,7 +29,7 @@ export interface AuditItem {
   recommendation: string;
 }
 
-const DEFAULT_AUDIT_ITEMS: AuditItem[] = [
+export const DEFAULT_AUDIT_ITEMS: AuditItem[] = [
   // ── Technical SEO ──
   {
     id: "tech-1",
@@ -154,59 +164,88 @@ export default function SiteAuditView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [auditItems, setAuditItems] = useState<AuditItem[]>(DEFAULT_AUDIT_ITEMS);
   const [isRunningAudit, setIsRunningAudit] = useState(false);
+  const [showProgressModal, setShowProgressModal] = useState(false);
   const [addedTasks, setAddedTasks] = useState<Set<string>>(new Set());
+  const [selectedAffectedItem, setSelectedAffectedItem] = useState<FriendlyAuditItem | null>(null);
 
   useEffect(() => {
     const list = getCustomClients();
     setClients(list);
   }, []);
 
-  // Filter items
-  const filteredItems = auditItems.filter((item) => {
-    if (categoryFilter !== "all" && item.category !== categoryFilter) return false;
-    if (statusFilter !== "all" && item.status !== statusFilter) return false;
+  // Compute Active Client Context
+  const activeClient = clients.find((c) => c.id === selectedClientId) || clients[0];
+  const clientName = activeClient?.name || "ValGrow Labs";
+  const clientWebsite = activeClient?.website || "valgrow.com";
+
+  // Map raw items to Friendly items
+  const friendlyItems: FriendlyAuditItem[] = auditItems.map(getFriendlyAuditItem);
+
+  // Top priorities: failed items + high-impact warnings (limit to 4)
+  const priorityItems = friendlyItems.filter(
+    (item) => item.rawItem.status === "fail" || (item.rawItem.status === "warning" && item.rawItem.impact === "high")
+  ).slice(0, 4);
+
+  // Health Score Calculation: 100 - (failed * 12) - (warnings * 4)
+  const total = auditItems.length;
+  const passed = auditItems.filter((i) => i.status === "pass").length;
+  const warnings = auditItems.filter((i) => i.status === "warning").length;
+  const failed = auditItems.filter((i) => i.status === "fail").length;
+  const healthScore = Math.max(0, Math.min(100, Math.round(100 - (failed * 12) - (warnings * 4))));
+
+  // Filter items for Issue Browser
+  const filteredItems = friendlyItems.filter((item) => {
+    // Category mapping:
+    if (categoryFilter !== "all") {
+      if (categoryFilter === "technical" && item.category !== "technical") return false;
+      if (categoryFilter === "content" && item.category !== "on_page") return false;
+      if (categoryFilter === "ai_readiness" && item.category !== "ai_readiness") return false;
+      if (categoryFilter === "visibility" && item.id !== "page-2") return false;
+      if (categoryFilter === "citations" && item.category !== "citations") return false;
+    }
+
+    // Status filter
+    if (statusFilter !== "all" && item.rawItem.status !== statusFilter) return false;
+
+    // Search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return (
-        item.title.toLowerCase().includes(q) ||
-        item.details.toLowerCase().includes(q) ||
-        item.recommendation.toLowerCase().includes(q)
+        item.friendlyTitle.toLowerCase().includes(q) ||
+        item.whyItMatters.toLowerCase().includes(q) ||
+        item.whatToDoNext.toLowerCase().includes(q) ||
+        item.affectedPages.some((p) => p.toLowerCase().includes(q)) ||
+        item.rawItem.title.toLowerCase().includes(q)
       );
     }
     return true;
   });
 
-  // Calculate audit score
-  const total = auditItems.length;
-  const passed = auditItems.filter((i) => i.status === "pass").length;
-  const warnings = auditItems.filter((i) => i.status === "warning").length;
-  const failed = auditItems.filter((i) => i.status === "fail").length;
-  
-  // Health score calculation: 100 - (failed * 10) - (warnings * 3)
-  const healthScore = Math.max(0, Math.min(100, Math.round(100 - (failed * 12) - (warnings * 4))));
-
-  // Re-run audit simulation
+  // Re-run Audit flow with animated modal
   const handleRunAudit = () => {
     setIsRunningAudit(true);
-    setTimeout(() => {
-      setIsRunningAudit(false);
-    }, 1200);
+    setShowProgressModal(true);
+  };
+
+  const handleCloseProgressModal = () => {
+    setShowProgressModal(false);
+    setIsRunningAudit(false);
   };
 
   // Convert failed/warning item to task
-  async function handleCreateTask(item: AuditItem) {
+  async function handleCreateTask(item: FriendlyAuditItem) {
     try {
       const clientId = selectedClientId !== "all" ? selectedClientId : (clients[0]?.id || "valgrow-labs-001");
-      const res = await fetch("/api/tasks", {
+      await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           client_id: clientId,
-          title: `[Site Audit] ${item.title}`,
+          title: `[Site Audit] ${item.friendlyTitle}`,
           group_name: item.category === "technical" ? "technical_seo" : "on_page_seo",
-          description: `Audit Finding:\n${item.details}\n\nRemediation Plan:\n${item.recommendation}`,
-          impact: item.impact,
-          effort: item.impact === "high" ? "medium" : "low",
+          description: `Friendly Diagnosis:\n${item.whyItMatters}\n\nRecommended Action:\n${item.whatToDoNext}\n\nTechnical Reference: ${item.rawItem.title} (${item.id})`,
+          impact: item.rawItem.impact,
+          effort: item.rawItem.impact === "high" ? "medium" : "low",
         }),
       });
       setAddedTasks((prev) => new Set([...prev, item.id]));
@@ -215,7 +254,7 @@ export default function SiteAuditView() {
     }
   }
 
-  // Toggle item status directly
+  // Toggle item status directly (for QA / interactive demo)
   const toggleStatus = (id: string) => {
     setAuditItems((prev) =>
       prev.map((item) => {
@@ -228,234 +267,139 @@ export default function SiteAuditView() {
     );
   };
 
+  if (auditItems.length === 0) {
+    return <EmptyAuditState onRunFirstAudit={handleRunAudit} />;
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fadeIn pb-8">
       
-      {/* ── AUDIT SCORE & CONTROL BAR ── */}
-      <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-5">
-          {/* Health score circle */}
-          <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/30 flex flex-col items-center justify-center shrink-0 shadow-xs">
-            <span className="text-2xl font-black text-emerald-500 tracking-tight">{healthScore}</span>
-            <span className="text-[9px] font-bold text-muted-foreground uppercase">Health Score</span>
+      {/* ── 1. COMPACT AUDIT HEADER ── */}
+      <AuditHeader
+        clientName={clientName}
+        clientWebsite={clientWebsite}
+        lastChecked="Today, 2:30 PM"
+        isRunning={isRunningAudit}
+        onRunAudit={handleRunAudit}
+      />
+
+      {/* ── 2. PROMINENT HEALTH SCORE CARD ── */}
+      <HealthScoreCard
+        score={healthScore}
+        criticalCount={failed}
+        needsWorkCount={warnings}
+        lastAudit="Today"
+      />
+
+      {/* ── 3. AT-A-GLANCE SUMMARY PILLARS ── */}
+      <AuditSummaryPillars
+        passedCount={passed}
+        needsAttentionCount={warnings}
+        criticalCount={failed}
+        activeFilter={statusFilter}
+        onSelectFilter={(f) => setStatusFilter(f)}
+      />
+
+      {/* ── 4. WHAT NEEDS YOUR ATTENTION (TOP PRIORITIES) ── */}
+      <TopPrioritiesSection
+        priorityItems={priorityItems}
+        addedTasks={addedTasks}
+        onCreateTask={handleCreateTask}
+        onViewPages={(item) => setSelectedAffectedItem(item)}
+      />
+
+      {/* ── 5. WEBSITE HEALTH BY CATEGORY ── */}
+      <CategoryHealthOverview
+        items={friendlyItems}
+        activeCategory={categoryFilter}
+        onSelectCategory={(cat) => setCategoryFilter(cat)}
+      />
+
+      {/* ── 6. ALL CHECKS & ISSUE BROWSER ── */}
+      <div className="space-y-4 pt-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-card border border-border/80 rounded-2xl p-3.5 shadow-xs">
+          
+          {/* Status Tab Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+            {[
+              { id: "all", label: "All Checks", count: friendlyItems.length },
+              { id: "fail", label: "Critical", count: failed },
+              { id: "warning", label: "Needs Attention", count: warnings },
+              { id: "pass", label: "Passed", count: passed },
+            ].map((tab) => {
+              const active = statusFilter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setStatusFilter(tab.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                    active
+                      ? "bg-[#FF5A1F] text-white shadow-xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-extrabold ${
+                    active ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
+                  }`}>
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-              <span className="text-[11px] font-bold text-emerald-500 uppercase tracking-widest">
-                Comprehensive Diagnostic
-              </span>
-            </div>
-            <h1 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
-              <span>Site Audit & Technical Diagnostics</span>
-            </h1>
-            <p className="text-xs text-muted-foreground mt-0.5 max-w-xl">
-              Automated crawl inspection verifying crawlability, structured data schemas, AI entity visibility, and content signals.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleRunAudit}
-            disabled={isRunningAudit}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold shadow-xs transition-all cursor-pointer"
-          >
-            {isRunningAudit ? (
-              <><Loader2 size={14} className="animate-spin" /> Running Crawl Audit…</>
-            ) : (
-              <><RefreshCw size={14} /> Run Full Audit</>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* ── AUDIT METRIC PILLARS ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-xs">
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-            Passed Checks
-          </span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-emerald-500">{passed}</span>
-            <span className="text-[11px] font-semibold text-muted-foreground">/{total} verified</span>
-          </div>
-          <div className="w-full bg-muted rounded-full h-1.5 mt-2 overflow-hidden">
-            <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${Math.round((passed / total) * 100)}%` }} />
-          </div>
-        </div>
-
-        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-xs">
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-            Critical Errors
-          </span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-rose-500">{failed}</span>
-            <span className="text-[11px] font-semibold text-muted-foreground">Need Immediate Fix</span>
-          </div>
-          <div className="w-full bg-muted rounded-full h-1.5 mt-2 overflow-hidden">
-            <div className="bg-rose-500 h-full rounded-full" style={{ width: `${Math.round((failed / total) * 100)}%` }} />
-          </div>
-        </div>
-
-        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-xs">
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-            Warnings / Notices
-          </span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-amber-500">{warnings}</span>
-            <span className="text-[11px] font-semibold text-muted-foreground">Optimization Recs</span>
-          </div>
-          <div className="w-full bg-muted rounded-full h-1.5 mt-2 overflow-hidden">
-            <div className="bg-amber-500 h-full rounded-full" style={{ width: `${Math.round((warnings / total) * 100)}%` }} />
-          </div>
-        </div>
-
-        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-xs">
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-            AI Readiness
-          </span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-cyan-500">88%</span>
-            <span className="text-[11px] font-semibold text-muted-foreground">Schema & Entities</span>
-          </div>
-          <div className="w-full bg-muted rounded-full h-1.5 mt-2 overflow-hidden">
-            <div className="bg-cyan-500 h-full rounded-full" style={{ width: `88%` }} />
-          </div>
-        </div>
-      </div>
-
-      {/* ── FILTER & CATEGORY CONTROLS ── */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card border border-border/70 rounded-xl p-3 shadow-xs">
-        
-        {/* Category Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-          {[
-            { id: "all", label: "All Checks", count: auditItems.length },
-            { id: "technical", label: "Technical SEO", icon: ShieldCheck },
-            { id: "ai_readiness", label: "AI Search Readiness", icon: Cpu },
-            { id: "on_page", label: "On-Page & Semantic", icon: FileText },
-            { id: "citations", label: "Citations & Authority", icon: Share2 },
-          ].map((tab) => {
-            const active = categoryFilter === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setCategoryFilter(tab.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-                  active
-                    ? "bg-primary text-primary-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                }`}
-              >
-                {tab.icon && <tab.icon size={13} />}
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Status filter & Search */}
-        <div className="flex items-center gap-2 shrink-0">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-background border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary font-medium"
-          >
-            <option value="all">All Statuses</option>
-            <option value="fail">Failed Only</option>
-            <option value="warning">Warnings Only</option>
-            <option value="pass">Passed Only</option>
-          </select>
-
-          <div className="relative w-full sm:w-52">
+          {/* Search Box */}
+          <div className="relative w-full sm:w-64 shrink-0">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search audit tests..."
+              placeholder="Search checks or pages..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+              className="w-full bg-muted/40 border border-border rounded-xl pl-9 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#FF5A1F]/30 focus:border-[#FF5A1F] transition-all font-medium"
             />
           </div>
         </div>
-      </div>
 
-      {/* ── AUDIT ITEMS LIST ── */}
-      <div className="space-y-3">
-        {filteredItems.map((item) => {
-          const isAdded = addedTasks.has(item.id);
-
-          const statusBadge = {
-            pass: { bg: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20", label: "PASS", icon: CheckCircle2 },
-            warning: { bg: "bg-amber-500/10 text-amber-500 border-amber-500/20", label: "WARNING", icon: AlertTriangle },
-            fail: { bg: "bg-rose-500/10 text-rose-500 border-rose-500/20", label: "FAIL", icon: XCircle },
-          }[item.status];
-
-          const impactBadge = {
-            high: "bg-rose-500/10 text-rose-500 border-rose-500/20",
-            medium: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-            low: "bg-muted text-muted-foreground border-border",
-          }[item.impact];
-
-          return (
-            <div
-              key={item.id}
-              className="bg-card border border-border/80 rounded-2xl p-5 shadow-xs space-y-3 hover:border-primary/40 transition-colors"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <button
-                    onClick={() => toggleStatus(item.id)}
-                    title="Click to toggle status"
-                    className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-black border cursor-pointer ${statusBadge.bg}`}
-                  >
-                    <statusBadge.icon size={12} />
-                    <span>{statusBadge.label}</span>
-                  </button>
-
-                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${impactBadge}`}>
-                    {item.impact} Impact
-                  </span>
-
-                  <span className="text-xs font-bold text-muted-foreground font-mono">
-                    [{item.id}]
-                  </span>
-
-                  <h3 className="text-sm font-bold text-foreground">
-                    {item.title}
-                  </h3>
-                </div>
-
-                {item.status !== "pass" && (
-                  <button
-                    onClick={() => handleCreateTask(item)}
-                    disabled={isAdded}
-                    className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      isAdded
-                        ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30"
-                        : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs"
-                    }`}
-                  >
-                    {isAdded ? (
-                      <><Check size={12} /> Task Created</>
-                    ) : (
-                      <><Plus size={12} /> Create Task</>
-                    )}
-                  </button>
-                )}
-              </div>
-
-              {/* Details & Recommendation */}
-              <div className="text-xs space-y-1.5 text-muted-foreground pl-0 sm:pl-1">
-                <p><strong className="text-foreground">Observed state:</strong> {item.details}</p>
-                <p><strong className="text-primary">Recommended fix:</strong> {item.recommendation}</p>
-              </div>
+        {/* Issue Cards Grid/List */}
+        <div className="space-y-3">
+          {filteredItems.length > 0 ? (
+            filteredItems.map((item) => (
+              <AuditIssueCard
+                key={item.id}
+                item={item}
+                isAdded={addedTasks.has(item.id)}
+                onCreateTask={handleCreateTask}
+                onViewPages={(it) => setSelectedAffectedItem(it)}
+                onToggleStatus={toggleStatus}
+              />
+            ))
+          ) : (
+            <div className="p-8 text-center bg-white dark:bg-card border border-border/80 rounded-2xl text-xs text-muted-foreground">
+              No audit checks match your selected filter criteria.
             </div>
-          );
-        })}
+          )}
+        </div>
       </div>
+
+      {/* ── AFFECTED PAGES MODAL / DRAWER ── */}
+      <AffectedPagesModal
+        item={selectedAffectedItem}
+        isOpen={!!selectedAffectedItem}
+        onClose={() => setSelectedAffectedItem(null)}
+      />
+
+      {/* ── RUN AUDIT PROGRESS MODAL ── */}
+      <AuditProgressModal
+        isOpen={showProgressModal}
+        score={healthScore}
+        criticalCount={failed}
+        needsAttentionCount={warnings}
+        passedCount={passed}
+        onClose={handleCloseProgressModal}
+      />
 
     </div>
   );
