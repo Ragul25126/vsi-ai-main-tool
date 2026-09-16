@@ -1,21 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
-  ShieldCheck, AlertTriangle, AlertCircle, CheckCircle2, RefreshCw, 
-  Search, Filter, Plus, ArrowRight, ExternalLink, Loader2, 
-  Check, Globe, Cpu, FileText, Share2, Layers, Zap
+  AlertTriangle, AlertCircle, CheckCircle2, 
+  Search, Plus, Check, Code2, ChevronDown, ChevronUp
 } from "lucide-react";
 import { getCustomClients, ClientItem } from "@/lib/client-store";
 import { getFriendlyAuditItem, FriendlyAuditItem } from "../lib/audit-translations";
 
-import AuditHeader from "./AuditHeader";
-import HealthScoreCard from "./HealthScoreCard";
-import AuditSummaryPillars from "./AuditSummaryPillars";
-import TopPrioritiesSection from "./TopPrioritiesSection";
-import CategoryHealthOverview from "./CategoryHealthOverview";
-import AuditIssueCard from "./AuditIssueCard";
-import AffectedPagesModal from "./AffectedPagesModal";
+import SiteAuditHeader from "./SiteAuditHeader";
+import WebsiteHealthHero from "./WebsiteHealthHero";
+import VisualIssueGrid from "./VisualIssueGrid";
+import AuditCategoryGrid from "./AuditCategoryGrid";
+import AuditProcessWorkflow from "./AuditProcessWorkflow";
+import IssueDetailDrawer from "./IssueDetailDrawer";
 import AuditProgressModal from "./AuditProgressModal";
 import EmptyAuditState from "./EmptyAuditState";
 
@@ -43,11 +41,11 @@ export const DEFAULT_AUDIT_ITEMS: AuditItem[] = [
   {
     id: "tech-2",
     category: "technical",
-    title: "XML Sitemap Valid & Accessible",
+    title: "Dead Ends & Broken Internal Links",
     impact: "high",
-    status: "pass",
-    details: "Sitemap index located at /sitemap.xml returns HTTP 200 with clean, canonicalized URLs.",
-    recommendation: "Ensure all new blog posts and service landing pages are automatically pinged to search engines upon publication.",
+    status: "fail",
+    details: "3 crawled internal URLs return HTTP 404 (Not Found) or 500 server errors, leaking crawl equity.",
+    recommendation: "Implement 301 permanent redirects to relevant canonical destinations or remove dead internal links.",
   },
   {
     id: "tech-3",
@@ -158,44 +156,47 @@ export const DEFAULT_AUDIT_ITEMS: AuditItem[] = [
 
 export default function SiteAuditView() {
   const [clients, setClients] = useState<ClientItem[]>([]);
-  const [selectedClientId, setSelectedClientId] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [auditItems, setAuditItems] = useState<AuditItem[]>(DEFAULT_AUDIT_ITEMS);
+  const [auditItems] = useState<AuditItem[]>(DEFAULT_AUDIT_ITEMS);
   const [isRunningAudit, setIsRunningAudit] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [addedTasks, setAddedTasks] = useState<Set<string>>(new Set());
-  const [selectedAffectedItem, setSelectedAffectedItem] = useState<FriendlyAuditItem | null>(null);
+  const [selectedIssue, setSelectedIssue] = useState<FriendlyAuditItem | null>(null);
+  const [expandedTechIds, setExpandedTechIds] = useState<Set<string>>(new Set());
+
+  const fullReportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const list = getCustomClients();
-    setClients(list);
+    const frame = requestAnimationFrame(() => {
+      setClients(list);
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
 
-  // Compute Active Client Context
-  const activeClient = clients.find((c) => c.id === selectedClientId) || clients[0];
+  // Active Client
+  const activeClient = clients[0];
   const clientName = activeClient?.name || "ValGrow Labs";
   const clientWebsite = activeClient?.website || "valgrow.com";
 
-  // Map raw items to Friendly items
+  // Map to Friendly items
   const friendlyItems: FriendlyAuditItem[] = auditItems.map(getFriendlyAuditItem);
 
-  // Top priorities: failed items + high-impact warnings (limit to 4)
+  // Top 4 priority issues (failed items first, then high-impact warnings)
   const priorityItems = friendlyItems.filter(
     (item) => item.rawItem.status === "fail" || (item.rawItem.status === "warning" && item.rawItem.impact === "high")
   ).slice(0, 4);
 
   // Health Score Calculation: 100 - (failed * 12) - (warnings * 4)
-  const total = auditItems.length;
   const passed = auditItems.filter((i) => i.status === "pass").length;
   const warnings = auditItems.filter((i) => i.status === "warning").length;
   const failed = auditItems.filter((i) => i.status === "fail").length;
   const healthScore = Math.max(0, Math.min(100, Math.round(100 - (failed * 12) - (warnings * 4))));
 
-  // Filter items for Issue Browser
-  const filteredItems = friendlyItems.filter((item) => {
-    // Category mapping:
+  // Filtered items for Full Report list
+  const filteredReportItems = friendlyItems.filter((item) => {
     if (categoryFilter !== "all") {
       if (categoryFilter === "technical" && item.category !== "technical") return false;
       if (categoryFilter === "content" && item.category !== "on_page") return false;
@@ -204,17 +205,14 @@ export default function SiteAuditView() {
       if (categoryFilter === "citations" && item.category !== "citations") return false;
     }
 
-    // Status filter
     if (statusFilter !== "all" && item.rawItem.status !== statusFilter) return false;
 
-    // Search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return (
         item.friendlyTitle.toLowerCase().includes(q) ||
+        item.shortExplanation.toLowerCase().includes(q) ||
         item.whyItMatters.toLowerCase().includes(q) ||
-        item.whatToDoNext.toLowerCase().includes(q) ||
-        item.affectedPages.some((p) => p.toLowerCase().includes(q)) ||
         item.rawItem.title.toLowerCase().includes(q)
       );
     }
@@ -232,10 +230,14 @@ export default function SiteAuditView() {
     setIsRunningAudit(false);
   };
 
+  const handleScrollToReport = () => {
+    fullReportRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   // Convert failed/warning item to task
   async function handleCreateTask(item: FriendlyAuditItem) {
     try {
-      const clientId = selectedClientId !== "all" ? selectedClientId : (clients[0]?.id || "valgrow-labs-001");
+      const clientId = clients[0]?.id || "valgrow-labs-001";
       await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -243,7 +245,7 @@ export default function SiteAuditView() {
           client_id: clientId,
           title: `[Site Audit] ${item.friendlyTitle}`,
           group_name: item.category === "technical" ? "technical_seo" : "on_page_seo",
-          description: `Friendly Diagnosis:\n${item.whyItMatters}\n\nRecommended Action:\n${item.whatToDoNext}\n\nTechnical Reference: ${item.rawItem.title} (${item.id})`,
+          description: `What we found:\n${item.shortExplanation}\n\nWhy it matters:\n${item.whyItMatters}\n\nWhat to do:\n${item.whatToDoNext}\n\nSource: Site Audit (${item.rawItem.title} - ${item.id})`,
           impact: item.rawItem.impact,
           effort: item.rawItem.impact === "high" ? "medium" : "low",
         }),
@@ -254,17 +256,13 @@ export default function SiteAuditView() {
     }
   }
 
-  // Toggle item status directly (for QA / interactive demo)
-  const toggleStatus = (id: string) => {
-    setAuditItems((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          const nextStatus = item.status === "pass" ? "warning" : item.status === "warning" ? "fail" : "pass";
-          return { ...item, status: nextStatus };
-        }
-        return item;
-      })
-    );
+  const toggleTechnicalDetail = (id: string) => {
+    setExpandedTechIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   if (auditItems.length === 0) {
@@ -272,10 +270,10 @@ export default function SiteAuditView() {
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn pb-8">
+    <div className="space-y-8 animate-fadeIn pb-12">
       
       {/* ── 1. COMPACT AUDIT HEADER ── */}
-      <AuditHeader
+      <SiteAuditHeader
         clientName={clientName}
         clientWebsite={clientWebsite}
         lastChecked="Today, 2:30 PM"
@@ -283,115 +281,223 @@ export default function SiteAuditView() {
         onRunAudit={handleRunAudit}
       />
 
-      {/* ── 2. PROMINENT HEALTH SCORE CARD ── */}
-      <HealthScoreCard
+      {/* ── 2. PROMINENT WEBSITE HEALTH HERO ── */}
+      <WebsiteHealthHero
         score={healthScore}
         criticalCount={failed}
-        needsWorkCount={warnings}
-        lastAudit="Today"
-      />
-
-      {/* ── 3. AT-A-GLANCE SUMMARY PILLARS ── */}
-      <AuditSummaryPillars
-        passedCount={passed}
         needsAttentionCount={warnings}
-        criticalCount={failed}
-        activeFilter={statusFilter}
-        onSelectFilter={(f) => setStatusFilter(f)}
+        passedCount={passed}
+        lastChecked="Today, 2:30 PM"
+        onRunAudit={handleRunAudit}
+        onViewReport={handleScrollToReport}
       />
 
-      {/* ── 4. WHAT NEEDS YOUR ATTENTION (TOP PRIORITIES) ── */}
-      <TopPrioritiesSection
-        priorityItems={priorityItems}
+      {/* ── 3. WHAT NEEDS YOUR ATTENTION (VISUAL 2-COLUMN GRID) ── */}
+      <VisualIssueGrid
+        items={priorityItems}
         addedTasks={addedTasks}
-        onCreateTask={handleCreateTask}
-        onViewPages={(item) => setSelectedAffectedItem(item)}
+        onSelectIssue={(item) => setSelectedIssue(item)}
       />
 
-      {/* ── 5. WEBSITE HEALTH BY CATEGORY ── */}
-      <CategoryHealthOverview
-        items={friendlyItems}
-        activeCategory={categoryFilter}
-        onSelectCategory={(cat) => setCategoryFilter(cat)}
+      {/* ── 4. YOUR WEBSITE AT A GLANCE (COMPACT CATEGORY CARDS) ── */}
+      <AuditCategoryGrid
+        onSelectCategory={(catId) => {
+          setCategoryFilter(catId);
+          handleScrollToReport();
+        }}
       />
 
-      {/* ── 6. ALL CHECKS & ISSUE BROWSER ── */}
-      <div className="space-y-4 pt-2">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-card border border-border/80 rounded-2xl p-3.5 shadow-xs">
-          
-          {/* Status Tab Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-            {[
-              { id: "all", label: "All Checks", count: friendlyItems.length },
-              { id: "fail", label: "Critical", count: failed },
-              { id: "warning", label: "Needs Attention", count: warnings },
-              { id: "pass", label: "Passed", count: passed },
-            ].map((tab) => {
-              const active = statusFilter === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setStatusFilter(tab.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-                    active
-                      ? "bg-[#FF5A1F] text-white shadow-xs"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                  }`}
-                >
-                  <span>{tab.label}</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-extrabold ${
-                    active ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
-                  }`}>
-                    {tab.count}
-                  </span>
-                </button>
-              );
-            })}
+      {/* ── 5. HOW VSI CHECKS YOUR WEBSITE (4-STEP CONNECTED PROCESS) ── */}
+      <AuditProcessWorkflow />
+
+      {/* ── 6. FULL REPORT & AUDIT DETAILS SECTION ── */}
+      <div ref={fullReportRef} className="space-y-4 pt-4 border-t border-border/80">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <h3 className="text-lg sm:text-xl font-black text-foreground tracking-tight">
+              All Audit Checks & Technical Details
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Review all verified checks or filter by severity and category.
+            </p>
           </div>
 
-          {/* Search Box */}
-          <div className="relative w-full sm:w-64 shrink-0">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search checks or pages..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-muted/40 border border-border rounded-xl pl-9 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#FF5A1F]/30 focus:border-[#FF5A1F] transition-all font-medium"
-            />
+          {/* Quick Filter Buttons & Search */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+            <div className="relative">
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search checks..."
+                className="pl-8 pr-3 py-1.5 text-xs rounded-xl bg-card border border-border/80 focus:border-[#FF5A1F] focus:outline-hidden text-foreground w-full sm:w-44"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+              {[
+                { id: "all", label: "All Checks", count: friendlyItems.length },
+                { id: "fail", label: "Critical", count: failed },
+                { id: "warning", label: "Needs Attention", count: warnings },
+                { id: "pass", label: "Passed", count: passed },
+              ].map((tab) => {
+                const active = statusFilter === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setStatusFilter(tab.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                      active
+                        ? "bg-[#FF5A1F] text-white shadow-xs"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    }`}
+                  >
+                    <span>{tab.label}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-extrabold ${
+                      active ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
+                    }`}>
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Issue Cards Grid/List */}
+        {/* Detailed Item List */}
         <div className="space-y-3">
-          {filteredItems.length > 0 ? (
-            filteredItems.map((item) => (
-              <AuditIssueCard
+          {filteredReportItems.map((item) => {
+            const isPassed = item.rawItem.status === "pass";
+            const isCritical = item.priority === "critical" || item.rawItem.status === "fail";
+            const isWarning = item.rawItem.status === "warning";
+            const isAdded = addedTasks.has(item.id);
+            const isTechExpanded = expandedTechIds.has(item.id);
+
+            return (
+              <div
                 key={item.id}
-                item={item}
-                isAdded={addedTasks.has(item.id)}
-                onCreateTask={handleCreateTask}
-                onViewPages={(it) => setSelectedAffectedItem(it)}
-                onToggleStatus={toggleStatus}
-              />
-            ))
-          ) : (
-            <div className="p-8 text-center bg-white dark:bg-card border border-border/80 rounded-2xl text-xs text-muted-foreground">
-              No audit checks match your selected filter criteria.
-            </div>
-          )}
+                className={`p-5 rounded-2xl bg-white dark:bg-card border transition-all shadow-xs space-y-3 ${
+                  isCritical
+                    ? "border-rose-200/80 dark:border-rose-900/40"
+                    : isWarning
+                    ? "border-amber-200/80 dark:border-amber-900/40"
+                    : "border-border/70"
+                }`}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                        isCritical
+                          ? "bg-rose-500/10 text-rose-600 border-rose-500/20"
+                          : isWarning
+                          ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                          : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                      }`}
+                    >
+                      {isCritical ? <AlertCircle size={11} /> : isWarning ? <AlertTriangle size={11} /> : <CheckCircle2 size={11} />}
+                      <span>{item.priorityLabel}</span>
+                    </span>
+
+                    <span className="text-[11px] font-semibold text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-md">
+                      {item.friendlyCategory}
+                    </span>
+
+                    <h4 className="text-sm font-bold text-foreground">
+                      {item.friendlyTitle}
+                    </h4>
+                  </div>
+
+                  {!isPassed && (
+                    <button
+                      type="button"
+                      onClick={() => handleCreateTask(item)}
+                      disabled={isAdded}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-xs ${
+                        isAdded
+                          ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30"
+                          : "bg-[#FF5A1F] hover:bg-[#E04810] text-white"
+                      }`}
+                    >
+                      {isAdded ? (
+                        <>
+                          <Check size={13} />
+                          <span>Task Created</span>
+                        </>
+                      ) : (
+                        <>
+                          <Plus size={13} />
+                          <span>Create Task</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {item.shortExplanation}
+                </p>
+
+                {/* Sub-actions: View Drawer + Collapsible Technical Telemetry */}
+                <div className="pt-2 border-t border-border/60 flex flex-wrap items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedIssue(item)}
+                    className="text-xs text-[#FF5A1F] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>View affected pages & recommendations →</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => toggleTechnicalDetail(item.id)}
+                    className="text-[11px] text-muted-foreground hover:text-foreground font-medium flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <Code2 size={12} className="text-muted-foreground/70" />
+                    <span>Advanced technical details</span>
+                    {isTechExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                  </button>
+                </div>
+
+                {isTechExpanded && (
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-2 font-sans animate-fadeIn">
+                    <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground pb-1 border-b border-border/60">
+                      <span>CHECK: {item.rawItem.title}</span>
+                      <span className="bg-muted px-1.5 py-0.5 rounded font-bold">[{item.id}]</span>
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        <strong className="text-foreground">Observed crawler state: </strong>
+                        {item.rawItem.details}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        <strong className="text-[#FF5A1F]">Developer remediation plan: </strong>
+                        {item.rawItem.recommendation}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* ── AFFECTED PAGES MODAL / DRAWER ── */}
-      <AffectedPagesModal
-        item={selectedAffectedItem}
-        isOpen={!!selectedAffectedItem}
-        onClose={() => setSelectedAffectedItem(null)}
+      {/* ── 7. SLIDE-OVER ISSUE DETAIL DRAWER ── */}
+      <IssueDetailDrawer
+        item={selectedIssue}
+        isOpen={!!selectedIssue}
+        isTaskAdded={selectedIssue ? addedTasks.has(selectedIssue.id) : false}
+        onClose={() => setSelectedIssue(null)}
+        onCreateTask={handleCreateTask}
       />
 
-      {/* ── RUN AUDIT PROGRESS MODAL ── */}
+      {/* ── 8. ANIMATED RUN AUDIT PROGRESS MODAL ── */}
       <AuditProgressModal
         isOpen={showProgressModal}
         score={healthScore}

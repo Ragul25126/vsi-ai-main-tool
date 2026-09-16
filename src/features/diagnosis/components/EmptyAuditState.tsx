@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { ShieldCheck, CheckCircle2, ArrowRight } from "lucide-react";
+import { CheckCircle2, ArrowRight } from "lucide-react";
+import AuditProcessIllustration from "./illustrations/AuditProcessIllustration";
 
 interface EmptyAuditStateProps {
   onRunFirstAudit: () => void;
@@ -9,25 +10,26 @@ interface EmptyAuditStateProps {
 
 export default function EmptyAuditState({ onRunFirstAudit }: EmptyAuditStateProps) {
   const highlights = [
-    "Overall website health and crawlability",
-    "Google search ranking readiness and meta descriptions",
-    "AI Overview and ChatGPT question-answering readiness",
+    "Website health and crawlability",
+    "Search readiness and meta descriptions",
+    "AI assistant readiness and direct answers",
     "Content structure and heading readability",
-    "Business citations and directory profile consistency",
+    "Business citations and directory consistency",
   ];
 
   return (
     <div className="bg-white dark:bg-card border border-border/80 rounded-3xl p-8 sm:p-12 text-center max-w-2xl mx-auto space-y-6 shadow-xs animate-fadeIn">
-      <div className="w-16 h-16 rounded-2xl bg-[#FF5A1F]/10 border border-[#FF5A1F]/20 flex items-center justify-center mx-auto text-[#FF5A1F]">
-        <ShieldCheck size={32} />
+      {/* Visual illustration */}
+      <div className="flex items-center justify-center">
+        <AuditProcessIllustration className="w-40 h-32" />
       </div>
 
       <div className="space-y-2">
         <h3 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
-          We haven&apos;t checked your website yet
+          Your website is ready to be checked
         </h3>
         <p className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
-          Run your first automated audit to understand your website health, identify critical issues, and discover opportunities to get cited in Google AI.
+          Run your first automated audit to understand your website&apos;s search and AI readiness, identify issues, and discover opportunities to get cited.
         </p>
       </div>
 
@@ -46,7 +48,7 @@ export default function EmptyAuditState({ onRunFirstAudit }: EmptyAuditStateProp
       <button
         type="button"
         onClick={onRunFirstAudit}
-        className="px-6 py-3 rounded-xl bg-[#FF5A1F] hover:bg-[#E04810] text-white text-xs font-bold transition-all shadow-xs hover:shadow-md cursor-pointer inline-flex items-center gap-2"
+        className="px-6 py-3.5 rounded-xl bg-[#FF5A1F] hover:bg-[#E04810] text-white text-xs font-bold transition-all shadow-xs hover:shadow-md cursor-pointer inline-flex items-center gap-2"
       >
         <span>Run First Audit</span>
         <ArrowRight size={14} />
