@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ButtonLink } from "@/components/ui/Button";
 import { OverviewScene } from "@/components/illustrations";
 import { AddWebsiteButton } from "@/components/intro/FeatureIntro";
+import { GuideTarget } from "@/components/onboarding/GuideTarget";
 
 export const metadata: Metadata = { title: "Projects" };
 export const dynamic = "force-dynamic";
@@ -63,7 +64,11 @@ export default async function ProjectsPage() {
       {error && <Notice tone="critical" title={error}>Refresh the page to try again.</Notice>}
 
       {!error && projects.length === 0 ? (
-        <EmptyState diagram={<OverviewScene />} title="No websites yet" action={<AddWebsiteButton />}>
+        <EmptyState diagram={<OverviewScene />} title="No websites yet" action={
+            <GuideTarget step="website">
+              <AddWebsiteButton />
+            </GuideTarget>
+          }>
           Add your website to start auditing it and checking how you appear in Google and AI answers. One website powers every part of VSI.
         </EmptyState>
       ) : (

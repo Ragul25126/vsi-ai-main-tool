@@ -16,6 +16,7 @@ import { searchConclusion, type SearchSummary, type RankedSearch } from "@/lib/s
 import type { Finding } from "@/lib/findings";
 import { cn } from "@/lib/utils";
 import { TrendLine, type TrendPoint } from "./TrajectoryChart";
+import { GuideTarget } from "@/components/onboarding/GuideTarget";
 
 export interface SearchViewData {
   project: { id: string; name: string; domain: string | null } | null;
@@ -113,9 +114,11 @@ export default function SearchVisibilityView({ data }: { data: SearchViewData })
           ]}
           action={
             searches === 0 ? (
-              <ButtonLink href={`/dashboard/clients/${project.id}/keywords/new`} variant="primary">
-                Add searches
-              </ButtonLink>
+              <GuideTarget step="searches">
+                <ButtonLink href={`/dashboard/clients/${project.id}/keywords/new`} variant="primary">
+                  Add searches
+                </ButtonLink>
+              </GuideTarget>
             ) : (
               <RunChecksButton clientId={project.id} searches={searches} label="Run first check" align="start" />
             )

@@ -173,6 +173,9 @@
   --animate-drawer-in: drawer-in 220ms var(--ease-out-soft);
   --animate-fade-in: fade-in 160ms ease-out;
   --animate-skeleton: skeleton 1.4s ease-in-out infinite;
+  /* First-use guide: one gentle move toward its button, then still. */
+  --animate-guide-in: guide-in 520ms var(--ease-out-soft) 250ms both;
+  --animate-guide-in-down: guide-in-down 520ms var(--ease-out-soft) 250ms both;
 
   @keyframes drawer-in {
     from { transform: translateX(24px); opacity: 0; }
@@ -181,6 +184,14 @@
   @keyframes fade-in {
     from { opacity: 0; }
     to { opacity: 1; }
+  }
+  @keyframes guide-in {
+    from { opacity: 0; transform: translate(10px, -4px); }
+    to { opacity: 1; transform: translate(0, 0); }
+  }
+  @keyframes guide-in-down {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   @keyframes skeleton {
     0%, 100% { opacity: 1; }

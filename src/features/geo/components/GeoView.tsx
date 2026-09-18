@@ -19,6 +19,7 @@ import type { AnswerEvidence } from "@/lib/geo-load";
 import type { Finding } from "@/lib/findings";
 import { cn } from "@/lib/utils";
 import { RunChecksButton } from "./RunChecksButton";
+import { GuideTarget } from "@/components/onboarding/GuideTarget";
 
 export interface GeoViewData {
   project: { id: string; name: string; domain: string | null } | null;
@@ -119,9 +120,11 @@ export default function GeoView({ data }: { data: GeoViewData }) {
           ]}
           action={
             searches === 0 ? (
-              <ButtonLink href={`/dashboard/clients/${project.id}/keywords/new`} variant="primary">
-                Add searches
-              </ButtonLink>
+              <GuideTarget step="searches">
+                <ButtonLink href={`/dashboard/clients/${project.id}/keywords/new`} variant="primary">
+                  Add searches
+                </ButtonLink>
+              </GuideTarget>
             ) : (
               <RunChecksButton clientId={project.id} searches={searches} label="Run first check" align="start" />
             )

@@ -7,6 +7,8 @@ import { ProjectProvider } from "@/components/layout/ProjectProvider";
 import { createClient } from "@/lib/supabase/server";
 import { requireAgency, isDummySupabase } from "@/lib/auth";
 import { getProjectContext } from "@/lib/project-context";
+import { loadOnboardingState } from "@/lib/onboarding-load";
+import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { MessagesProvider } from "@/contexts/MessagesContext";
@@ -24,6 +26,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const isSuperAdmin = session.role === "super_admin";
 
   const [projectContext, agency] = await Promise.all([getProjectContext(session), loadAgencyLimits(session.agencyId)]);
+  // First-use guidance comes from real project state. If the project list failed to load, show no guidance.
+  const onboarding = projectContext.error
+    ? { hasProject: true, known: false, searches: 0, competitors: null, auditDone: false, auditRunning: false }
+    : await loadOnboardingState(projectContext.active);
 
   const maxClients = agency?.max_clients;
   const atClientCap = !isSuperAdmin && typeof maxClients === "number" && projectContext.projects.length >= maxClients;
@@ -35,6 +41,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <MessagesProvider>
         <FeedbackProvider>
           <ProjectProvider project={projectContext.active}>
+            <OnboardingProvider state={onboarding} projectId={projectContext.active?.id ?? null}>
             <ScrollToTop />
             <div className="relative min-h-screen overflow-x-hidden bg-canvas font-sans text-ink md:flex md:h-screen">
               <Sidebar
@@ -57,6 +64,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               </div>
               <ChatFloating key={projectKey} />
             </div>
+            </OnboardingProvider>
           </ProjectProvider>
         </FeedbackProvider>
       </MessagesProvider>

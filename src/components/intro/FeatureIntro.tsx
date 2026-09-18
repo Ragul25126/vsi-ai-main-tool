@@ -4,6 +4,7 @@ import { ChevronRight, Plus, type LucideIcon } from "lucide-react";
 import { ButtonLink } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { SETUP_HREF, STORY, type StoryKey } from "./story";
+import { GuideTarget } from "@/components/onboarding/GuideTarget";
 
 /** The one primary action when there is no project yet. Same label on every page. */
 export function AddWebsiteButton({ className }: { className?: string }) {
@@ -51,7 +52,13 @@ export function IntroHero({
         <IntroTitle page={page} category={category} />
         <p className="max-w-[22ch] text-display font-semibold text-ink md:text-[2rem] md:leading-10">{headline}</p>
         <p className="max-w-[52ch] text-body text-ink-2 md:text-[0.9375rem] md:leading-6">{description}</p>
-        <div className="pt-2">{action ?? <AddWebsiteButton />}</div>
+        <div className="pt-2">
+          {action ?? (
+            <GuideTarget step="website">
+              <AddWebsiteButton />
+            </GuideTarget>
+          )}
+        </div>
       </div>
       <div className="mx-auto w-full max-w-[480px] rounded-panel bg-surface-2 px-6 py-5 text-ink-3 lg:max-w-none">{illustration}</div>
     </section>

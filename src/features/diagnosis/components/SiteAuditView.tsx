@@ -19,6 +19,7 @@ import type { CheckResult } from "@/lib/site-audit/types";
 import type { PageComparison } from "@/lib/site-audit/load";
 import type { Finding } from "@/lib/findings";
 import { RunAuditButton } from "./RunAuditButton";
+import { GuideTarget } from "@/components/onboarding/GuideTarget";
 
 export interface SiteAuditViewData {
   project: { id: string; name: string; domain: string | null } | null;
@@ -142,7 +143,11 @@ export default function SiteAuditView({ data }: { data: SiteAuditViewData }) {
               ? { state: "running", label: "First site audit", detail: "Running now. This page updates when it's done." }
               : { state: "todo", label: "First site audit", detail: "Not run yet" },
           ]}
-          action={<RunAuditButton clientId={project.id} runningId={data.running?.id} label="Run first audit" align="start" />}
+          action={
+            <GuideTarget step="audit">
+              <RunAuditButton clientId={project.id} runningId={data.running?.id} label="Run first audit" align="start" />
+            </GuideTarget>
+          }
           illustration={<SiteAuditScene />}
         />
         {INTROS.audit.capabilities && <CapabilityList {...INTROS.audit.capabilities} />}

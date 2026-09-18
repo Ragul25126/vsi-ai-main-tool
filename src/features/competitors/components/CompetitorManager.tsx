@@ -6,6 +6,7 @@ import { Loader2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { MAX_COMPETITORS, validateCompetitorDomain, type TrackedCompetitor } from "@/lib/project-competitors";
 import { addCompetitors, removeCompetitor } from "@/lib/competitor-client";
+import { GuideTarget } from "@/components/onboarding/GuideTarget";
 
 /**
  * Add and remove the competitors for the active project. Every change goes
@@ -94,10 +95,12 @@ export function CompetitorManager({
             placeholder="competitor.com"
             className="h-9 min-w-0 flex-1 rounded-control border border-line-strong bg-surface px-3 text-body text-ink placeholder:text-ink-3 focus:border-ink focus:outline-none"
           />
-          <Button type="submit" variant="secondary" disabled={pending !== null || !value.trim()}>
-            {pending === "add" ? <Loader2 size={15} className="animate-spin" aria-hidden /> : <Plus size={15} strokeWidth={2} aria-hidden />}
-            Add competitor
-          </Button>
+          <GuideTarget step="competitors">
+            <Button type="submit" variant="secondary" disabled={pending !== null || !value.trim()}>
+              {pending === "add" ? <Loader2 size={15} className="animate-spin" aria-hidden /> : <Plus size={15} strokeWidth={2} aria-hidden />}
+              Add competitor
+            </Button>
+          </GuideTarget>
         </form>
       )}
       {error && (

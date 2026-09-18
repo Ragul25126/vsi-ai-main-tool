@@ -4,7 +4,7 @@ import { PageContainer, PageHeader, Section, TextLink } from "@/components/ui/Pa
 import { Notice, StatusIcon } from "@/components/ui/Status";
 import { SetupChecklist, type SetupItem } from "@/components/intro/SetupPanel";
 import { Welcome } from "@/components/intro/Welcome";
-import { RunChecksButton } from "@/features/geo/components/RunChecksButton";
+import { OverviewNextStep } from "@/components/onboarding/OverviewNextStep";
 import { formatDate } from "@/lib/format";
 import { TrendLine, type TrendPoint } from "./TrajectoryChart";
 import type { Finding } from "@/lib/findings";
@@ -122,16 +122,7 @@ export default function OverviewView({ data }: { data: OverviewData }) {
         <Section title="Getting started" description="What has been set up for this project so far. Each step unlocks more of VSI.">
           <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
             <SetupChecklist items={setup} />
-            {!anyChecks && data.activeSearches > 0 && (
-              <div className="space-y-3 rounded-panel bg-surface-2 p-5">
-                <p className="text-body font-medium text-ink">Run your first search and AI check</p>
-                <p className="text-support text-ink-2">
-                  One check looks up your Google position and asks AI systems about each of your {data.activeSearches}{" "}
-                  {data.activeSearches === 1 ? "search" : "searches"}. It uses search credits, so VSI only runs it when you start it.
-                </p>
-                <RunChecksButton clientId={project.id} searches={data.activeSearches} label="Run first check" align="start" />
-              </div>
-            )}
+            <OverviewNextStep projectId={project.id} activeSearches={data.activeSearches} anyChecks={anyChecks} />
           </div>
         </Section>
       )}
