@@ -30,6 +30,8 @@ export interface GeoViewData {
   lastChecked?: string | null;
   staleDays?: number | null;
   findings: Finding[];
+  /** Competitor domains the user added to the project. */
+  trackedCompetitors?: string[];
   evidence: AnswerEvidence[];
   trend: TrendPoint[];
 }
@@ -244,7 +246,7 @@ export default function GeoView({ data }: { data: GeoViewData }) {
       </section>
 
       {/* You and competitors */}
-      <CompetitorComparison summary={summary} projectName={project.name} />
+      <CompetitorComparison summary={summary} projectName={project.name} tracked={data.trackedCompetitors ?? []} />
 
       {/* Searches */}
       <TrackedSearches summary={summary} projectId={project.id} showOverviews={data.enabled.ai_overviews || summary.engines.some((e) => e.id === "ai_overviews" && e.checked > 0)} />
@@ -398,23 +400,37 @@ function Evidence({ items, projectId }: { items: AnswerEvidence[]; projectId: st
   );
 }
 
-function CompetitorComparison({ summary: s, projectName }: { summary: GeoSummary; projectName: string }) {
+function CompetitorComparison({ summary: s, projectName, tracked }: { summary: GeoSummary; projectName: string; tracked: string[] }) {
   const rows = useMemo(() => {
-    const list = [{ name: `${projectName} (you)`, answers: s.citations, you: true }, ...s.competitors.slice(0, 4).map((c) => ({ name: c.domain, answers: c.answers, you: false }))];
-    return list;
-  }, [s, projectName]);
-  if (s.competitors.length === 0) return null;
+    const same = (a: string, b: string) => a === b || a.endsWith(`.${b}`);
+    // Competitors you added: their real count in the answers checked (0 means checked and not linked).
+    const yours = tracked.map((t) => ({
+      name: t,
+      answers: Math.max(0, ...s.competitors.filter((c) => same(c.domain, t)).map((c) => c.answers)),
+      you: false,
+      tracked: true,
+    }));
+    const discovered = s.competitors
+      .filter((c) => !tracked.some((t) => same(c.domain, t)))
+      .slice(0, Math.max(0, 5 - yours.length))
+      .map((c) => ({ name: c.domain, answers: c.answers, you: false, tracked: false }));
+    return [{ name: `${projectName} (you)`, answers: s.citations, you: true, tracked: false }, ...yours, ...discovered];
+  }, [s, projectName, tracked]);
+  if (rows.length === 1) return null;
   const max = Math.max(...rows.map((r) => r.answers), 1);
   return (
     <Section
       title="You and competitors"
-      description="How many AI answers link to each website, counted the same way for everyone."
+      description="How many of the AI answers VSI checked link to each website, counted the same way for everyone."
       action={{ label: "Where competitors appear and you don't", href: "/dashboard/competitors" }}
     >
       <ul className="space-y-3">
         {rows.map((r) => (
           <li key={r.name} className="grid grid-cols-[minmax(0,11rem)_1fr_auto] items-center gap-3 sm:grid-cols-[minmax(0,16rem)_1fr_auto]">
-            <span className={cn("truncate text-support", r.you ? "font-medium text-ink" : "text-ink-2")}>{r.name}</span>
+            <span className={cn("truncate text-support", r.you ? "font-medium text-ink" : "text-ink-2")}>
+              {r.name}
+              {r.tracked && <span className="ml-2 text-caption text-ink-3">Added by you</span>}
+            </span>
             <span className="h-2 overflow-hidden rounded-full bg-surface-2">
               <span className={cn("block h-full rounded-full", r.you ? "bg-brand" : "bg-ink-3")} style={{ width: `${(r.answers / max) * 100}%` }} />
             </span>

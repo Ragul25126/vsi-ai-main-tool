@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireAgency } from "@/lib/auth";
 import { buildReportContent, generateShareToken, type SnapshotRow } from "@/lib/report-builder";
+import { loadReportExtras } from "@/lib/report-extras";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
  // Fetch client. Super admin can act on any agency's client.
  let clientQuery = supabase
  .from("clients")
- .select("id, name, brand_name, website, service_type, agency_id")
+ .select("id, name, brand_name, website, service_type, default_location, agency_id")
  .eq("id", client_id);
  if (!isSuperAdmin) clientQuery = clientQuery.eq("agency_id", session.agencyId);
  const { data: client } = await clientQuery.single();
@@ -70,6 +71,23 @@ export async function POST(req: NextRequest) {
  previousSnapshots: previous,
  rangeLabel: `Last ${RANGE_DAYS} days`,
  });
+
+ // Website health, completed tasks and competitors come from the same
+ // tables as Site Audit, Tasks and Competitors. Missing data stays missing.
+ const extras = await loadReportExtras(
+ {
+ id: client.id as string,
+ name: client.name as string,
+ website: (client.website as string | null) ?? null,
+ brandName: (client.brand_name as string | null) ?? null,
+ serviceType: (client.service_type as string | null) ?? null,
+ defaultLocation: (client.default_location as string | null) ?? null,
+ agencyId: owningAgencyId,
+ agencyName: null,
+ },
+ new Date(splitTime),
+ );
+ Object.assign(content, extras);
 
  const shareToken = generateShareToken();
 

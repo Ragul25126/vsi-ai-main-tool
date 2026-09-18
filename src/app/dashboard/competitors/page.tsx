@@ -77,7 +77,7 @@ export default async function CompetitorsPage() {
     gaps,
     platforms: summary.platforms,
     namedByChatGPT: summary.namedByChatGPT.slice(0, 10),
-    finding: geoFindings(summary, active.id).find((f) => f.key === "geo:competitors_linked") ?? null,
+    finding: geoFindings(summary, active.id, tracked.competitors.map((c) => c.domain)).find((f) => f.key === "geo:competitors_linked") ?? null,
     setup: { searches: geo.activeSearches, checked: summary.searchesTracked > 0 || snapshots.length > 0 },
     tracked: tracked.competitors,
     trackedState: tracked.state,

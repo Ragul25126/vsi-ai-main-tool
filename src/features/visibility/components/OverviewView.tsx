@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { PageContainer, PageHeader, Section } from "@/components/ui/Page";
+import { PageContainer, PageHeader, Section, TextLink } from "@/components/ui/Page";
 import { Notice, StatusIcon } from "@/components/ui/Status";
 import { SetupChecklist, type SetupItem } from "@/components/intro/SetupPanel";
 import { Welcome } from "@/components/intro/Welcome";
@@ -22,7 +22,32 @@ export interface OverviewData {
   findingCount: number;
   urgentCount: number;
   trends: { website: TrendPoint[]; ai: TrendPoint[]; search: TrendPoint[] };
+  /** Competitors the user added ("setup_required" until migration 036 is applied). */
+  competitors: { state: "ok" | "setup_required" | "error"; domains: string[] };
+  /** Parts of project setup that didn't save, passed from the setup flow. */
+  setupNotices: string[];
 }
+
+const SETUP_NOTICE: Record<string, { title: string; body: string; href: string; label: string }> = {
+  searches_not_saved: {
+    title: "Your searches weren't saved",
+    body: "The project was created, but its searches couldn't be saved. Add them again to start checking Google and AI answers.",
+    href: "/dashboard/services/seo",
+    label: "Add searches",
+  },
+  competitors_not_saved: {
+    title: "Your competitors weren't saved",
+    body: "The project was created, but its competitors couldn't be saved. Add them on the Competitors page.",
+    href: "/dashboard/competitors",
+    label: "Competitors",
+  },
+  audit_not_started: {
+    title: "The site audit didn't start",
+    body: "Your project is ready, but the first site audit couldn't be started. Start it from Site Audit.",
+    href: "/dashboard/check",
+    label: "Site Audit",
+  },
+};
 
 function headline(d: OverviewData): string {
   const urgent = d.urgentCount;
@@ -54,6 +79,11 @@ export default function OverviewView({ data }: { data: OverviewData }) {
     data.activeSearches > 0
       ? { state: "done", label: "Searches to track", detail: `${data.activeSearches} ${data.activeSearches === 1 ? "search" : "searches"}` }
       : { state: "todo", label: "Searches to track", detail: "None yet", href: `/dashboard/clients/${project.id}/keywords/new`, hrefLabel: "Add searches" },
+    data.competitors.domains.length > 0
+      ? { state: "done", label: "Your competitors", detail: `${data.competitors.domains.length} ${data.competitors.domains.length === 1 ? "competitor" : "competitors"}` }
+      : data.competitors.state === "ok"
+        ? { state: "todo", label: "Your competitors", detail: "None yet", href: "/dashboard/competitors", hrefLabel: "Add competitors" }
+        : { state: "todo", label: "Your competitors", detail: "Needs a database update", href: "/dashboard/competitors", hrefLabel: "Details" },
     data.website.checkedAt
       ? { state: "done", label: "Site audit", detail: data.website.score !== null ? `Score ${data.website.score} / 100` : "Done" }
       : data.website.running
@@ -66,7 +96,8 @@ export default function OverviewView({ data }: { data: OverviewData }) {
       ? { state: "done", label: "AI visibility", detail: `Checked ${formatDate(data.ai.checkedAt)}` }
       : { state: "todo", label: "AI visibility", detail: "Not checked yet" },
   ];
-  const setupDone = setup.every((s) => s.state === "done");
+  // Competitors are optional, so they don't keep "Getting started" open on their own.
+  const setupDone = setup.filter((s) => s.label !== "Your competitors").every((s) => s.state === "done");
 
   return (
     <PageContainer>
@@ -75,6 +106,16 @@ export default function OverviewView({ data }: { data: OverviewData }) {
         description="See your website health, search visibility, AI visibility and the actions that can improve them, all in one place."
         meta={project.domain && <span>{project.domain}</span>}
       />
+
+      {data.setupNotices.map((key) => {
+        const n = SETUP_NOTICE[key];
+        if (!n) return null;
+        return (
+          <Notice key={key} tone="attention" title={n.title} action={<TextLink href={n.href}>{n.label}</TextLink>}>
+            {n.body}
+          </Notice>
+        );
+      })}
 
       {!setupDone && (
         <Section title="Getting started" description="What has been set up for this project so far. Each step unlocks more of VSI.">
@@ -188,21 +229,30 @@ export default function OverviewView({ data }: { data: OverviewData }) {
       </Section>
       )}
 
-      {data.ai.topCompetitor && (
+      {(data.ai.topCompetitor || data.competitors.domains.length > 0) && (
         <Section title="Competitors" action={{ label: "Competitors", href: "/dashboard/competitors" }}>
-          <p className="max-w-[65ch] text-body text-ink-2">
-            {data.ai.topCompetitor.answers > data.ai.yourCitations ? (
-              <>
-                <span className="font-medium text-ink">{data.ai.topCompetitor.domain}</span> is linked in {data.ai.topCompetitor.answers} AI
-                answers for your searches. Your website is linked in {data.ai.yourCitations}.
-              </>
-            ) : (
-              <>
-                Your website is linked in {data.ai.yourCitations} AI answers, at least as often as any competitor. The closest is{" "}
-                <span className="font-medium text-ink">{data.ai.topCompetitor.domain}</span> with {data.ai.topCompetitor.answers}.
-              </>
-            )}
-          </p>
+          {data.ai.topCompetitor && (
+            <p className="max-w-[65ch] text-body text-ink-2">
+              {data.ai.topCompetitor.answers > data.ai.yourCitations ? (
+                <>
+                  <span className="font-medium text-ink">{data.ai.topCompetitor.domain}</span> is linked in {data.ai.topCompetitor.answers} AI
+                  answers for your searches. Your website is linked in {data.ai.yourCitations}.
+                </>
+              ) : (
+                <>
+                  Your website is linked in {data.ai.yourCitations} AI answers, at least as often as any competitor. The closest is{" "}
+                  <span className="font-medium text-ink">{data.ai.topCompetitor.domain}</span> with {data.ai.topCompetitor.answers}.
+                </>
+              )}
+            </p>
+          )}
+          {data.competitors.domains.length > 0 && (
+            <p className="max-w-[65ch] text-support text-ink-3">
+              You&apos;re tracking {data.competitors.domains.slice(0, 3).join(", ")}
+              {data.competitors.domains.length > 3 ? ` and ${data.competitors.domains.length - 3} more` : ""}.
+              {!anyChecks && " They appear in the comparison after your first check."}
+            </p>
+          )}
         </Section>
       )}
 

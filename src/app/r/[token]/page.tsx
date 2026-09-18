@@ -108,6 +108,9 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  losses: raw.losses ?? [],
  opportunities: raw.opportunities ?? [],
  totalKeywords: raw.totalKeywords ?? 0,
+ websiteHealth: raw.websiteHealth ?? null,
+ completedTasks: raw.completedTasks ?? null,
+ competitors: raw.competitors ?? [],
  };
  const color = c.branding.primaryColor;
 
@@ -214,6 +217,42 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  {/* CONTENT SECTIONS */}
  <div className="px-8 sm:px-12 py-8 space-y-10">
 
+ {c.websiteHealth && (
+ <Section
+ title="Website health"
+ subtitle={`Site audit of ${c.websiteHealth.pagesChecked} pages on ${shortDate(c.websiteHealth.checkedAt)}`}
+ accent={color}
+ >
+ <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
+ <p className="text-4xl font-semibold text-gray-900 tabular-nums">
+ {c.websiteHealth.score}
+ <span className="ml-1 text-base font-normal text-gray-500">/ 100</span>
+ </p>
+ {c.websiteHealth.previousScore !== null && (
+ <p className="text-sm text-gray-600">
+ {c.websiteHealth.score === c.websiteHealth.previousScore
+ ? "No change since the previous audit"
+ : c.websiteHealth.score > c.websiteHealth.previousScore
+ ? `Up ${c.websiteHealth.score - c.websiteHealth.previousScore} since the previous audit (${c.websiteHealth.previousScore})`
+ : `Down ${c.websiteHealth.previousScore - c.websiteHealth.score} since the previous audit (${c.websiteHealth.previousScore})`}
+ </p>
+ )}
+ </div>
+ {c.websiteHealth.issues.length > 0 ? (
+ <ul className="mt-4 space-y-1.5 text-sm text-gray-700">
+ {c.websiteHealth.issues.map((issue) => (
+ <li key={issue} className="flex gap-2">
+ <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-gray-400" />
+ {issue}
+ </li>
+ ))}
+ </ul>
+ ) : (
+ <p className="mt-3 text-sm text-gray-600">Every check passed in the latest audit.</p>
+ )}
+ </Section>
+ )}
+
  {c.wins.length > 0 && (
  <Section
  title="Wins this period"
@@ -243,7 +282,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  {c.opportunities.length > 0 && (
  <Section
  title="Opportunities to capture"
- subtitle="Competitors are visible here but you aren't — each is a content investment with a known target"
+ subtitle="Competitors are visible here but you aren't. Each one is a page worth improving, with a known target."
  accent={color}
  badge={String(c.opportunities.length)}
  badgeBg="bg-amber-100"
@@ -253,11 +292,53 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  </Section>
  )}
 
+ {c.competitors && c.competitors.length > 0 && (
+ <Section
+ title="Competitors in AI answers"
+ subtitle="How many of the AI answers checked link to each competitor. Competitors chosen for this report's business are listed first."
+ accent={color}
+ >
+ <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200">
+ {c.competitors.map((comp) => (
+ <li key={comp.domain} className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm">
+ <span className="text-gray-900">
+ {comp.domain}
+ {comp.tracked && <span className="ml-2 text-xs text-gray-500">Tracked competitor</span>}
+ </span>
+ <span className="tabular-nums text-gray-600">
+ {comp.aiAnswers} {comp.aiAnswers === 1 ? "answer" : "answers"}
+ </span>
+ </li>
+ ))}
+ </ul>
+ </Section>
+ )}
+
+ {c.completedTasks && (
+ <Section
+ title="Work completed this period"
+ subtitle={`${c.completedTasks.total} ${c.completedTasks.total === 1 ? "task" : "tasks"} finished${c.completedTasks.verified > 0 ? `, ${c.completedTasks.verified} confirmed by a re-check` : ""}`}
+ accent="#16a34a"
+ >
+ <ul className="space-y-2 text-sm">
+ {c.completedTasks.items.map((t, i) => (
+ <li key={i} className="flex items-start justify-between gap-4">
+ <span className="text-gray-800">{t.title}</span>
+ <span className="shrink-0 text-xs text-gray-500">
+ {shortDate(t.completedAt)}
+ {t.verified ? " · Confirmed" : ""}
+ </span>
+ </li>
+ ))}
+ </ul>
+ </Section>
+ )}
+
  {c.wins.length === 0 && c.losses.length === 0 && c.opportunities.length === 0 && (
  <div className="rounded-[20px] border border-dashed border-gray-300 p-10 text-center">
- <p className="text-sm text-gray-500">No comparable changes this period.</p>
+ <p className="text-sm text-gray-500">No ranking or AI citation changes to compare this period.</p>
  <p className="text-xs text-gray-400 mt-1">
- Run more snapshots over the next 7 days and this section will populate with concrete wins and opportunities.
+ Wins, drops and opportunities appear here once there are checks from two consecutive weeks to compare.
  </p>
  </div>
  )}

@@ -37,6 +37,27 @@ export interface KeywordRow {
   gap: string;
 }
 
+export interface ReportWebsiteHealth {
+  score: number;
+  previousScore: number | null;
+  checkedAt: string;
+  pagesChecked: number;
+  /** Plain-language headlines of the checks that need fixing or improving. */
+  issues: string[];
+}
+
+export interface ReportCompletedTasks {
+  total: number;
+  verified: number;
+  items: { title: string; completedAt: string; verified: boolean }[];
+}
+
+export interface ReportCompetitor {
+  domain: string;
+  aiAnswers: number;
+  tracked: boolean;
+}
+
 export interface ReportContent {
   schema: "vsi-report-v1";
   generatedAt: string;
@@ -48,6 +69,12 @@ export interface ReportContent {
   losses: KeywordRow[];
   opportunities: KeywordRow[];
   totalKeywords: number;
+  /** Latest completed site audit. Absent in reports made before it was added. */
+  websiteHealth?: ReportWebsiteHealth | null;
+  /** Tasks finished during the report period. */
+  completedTasks?: ReportCompletedTasks | null;
+  /** Competitors in the AI answers checked: the user's own first, then the most linked. */
+  competitors?: ReportCompetitor[];
 }
 
 // ─── Snapshot row shape we read from the DB ─────────────────────

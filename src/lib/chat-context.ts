@@ -275,6 +275,24 @@ async function projectFindingsContext(project: Parameters<typeof loadProjectOver
       lines.push("(No Google ranking checks yet.)");
     }
 
+    lines.push("", "# Competitors the user added to this project");
+    const tracked = o.competitors.competitors.map((c) => c.domain);
+    if (o.competitors.state === "setup_required") lines.push("(Saving competitors isn't set up in this environment yet.)");
+    else if (tracked.length === 0) lines.push("(None added. VSI still lists competitors it discovers in checks.)");
+    else {
+      const aiCounts = o.geo.state === "ok" ? o.geo.summary.competitors : [];
+      for (const d of tracked) {
+        const seen = aiCounts.filter((c) => c.domain === d || c.domain.endsWith(`.${d}`));
+        lines.push(`- ${d}: ${seen.length ? `linked in ${Math.max(...seen.map((c) => c.answers))} AI answers checked` : "not linked in any AI answer checked so far"}`);
+      }
+    }
+
+    lines.push("", "# Tasks");
+    if (o.tasks) {
+      const t = o.tasks;
+      lines.push(`${t.todo} to do, ${t.inProgress} in progress, ${t.doneLast30} done in the last 30 days, ${t.verified} confirmed by a re-check.`);
+    } else lines.push("(No tasks yet.)");
+
     lines.push("", "# Findings, most urgent first (what VSI recommends)");
     if (o.findings.length === 0) lines.push("(No open findings.)");
     for (const f of o.findings.slice(0, 12)) lines.push(`- [${f.sourceLabel}] ${f.title}: ${f.whatWeFound} What to do: ${f.whatToDo}`);

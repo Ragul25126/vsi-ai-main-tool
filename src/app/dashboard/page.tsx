@@ -18,6 +18,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     return <KeywordResearchView key={`${q}|${loc}`} query={q} location={loc} />;
   }
 
+  const setupNotices = typeof params.setup === "string" ? params.setup.split(",").filter(Boolean) : [];
   const session = await requireAgency();
   const { active, error } = await getProjectContext(session);
 
@@ -33,6 +34,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     findingCount: 0,
     urgentCount: 0,
     trends: { website: [], ai: [], search: [] },
+    competitors: { state: "ok", domains: [] },
+    setupNotices: [],
   };
   if (!active) return <OverviewView data={empty} />;
 
@@ -79,6 +82,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       ai: (geo?.trend ?? []).map((t) => ({ label: formatShortDate(t.date), value: t.value })),
       search: (search?.trend ?? []).map((t) => ({ label: formatShortDate(t.date), value: t.value })),
     },
+    competitors: { state: o.competitors.state, domains: o.competitors.competitors.map((c) => c.domain) },
+    setupNotices,
   };
 
   return <OverviewView data={data} />;

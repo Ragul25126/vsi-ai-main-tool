@@ -165,6 +165,14 @@ describe("geoFindings", () => {
   it("uses only valid task groups", () => {
     for (const f of findings) expect(["Content", "Technical", "Off-page"]).toContain(f.draft?.group);
   });
+
+  it("names competitors you track and ranks them higher, without changing the task key", () => {
+    const plain = findings.find((f) => f.key === "geo:competitors_linked")!;
+    const withTracked = geoFindings(s, "client-1", ["rival.com"]).find((f) => f.key === "geo:competitors_linked")!;
+    expect(withTracked.title).toBe("Competitors you track are linked in AI answers instead of you");
+    expect(withTracked.priority).toBeGreaterThan(plain.priority);
+    expect(withTracked.draft?.findingKey).toBe(plain.draft?.findingKey);
+  });
 });
 
 describe("highlightBrand", () => {

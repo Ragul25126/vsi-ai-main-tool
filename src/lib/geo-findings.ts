@@ -83,7 +83,11 @@ function listNames(names: string[]): string {
  * Each one maps to a task in the shared task system. When a finding concerns
  * a single search, the task is linked to it so the next check verifies it.
  */
-export function geoFindings(s: GeoSummary, clientId: string): Finding[] {
+/**
+ * `tracked` holds the competitor domains the user added to the project;
+ * those are named first and raise the finding's priority.
+ */
+export function geoFindings(s: GeoSummary, clientId: string, tracked: string[] = []): Finding[] {
   const out: Finding[] = [];
   const base = { source: "geo" as const, sourceLabel: TASK_SOURCE_LABEL.geo, href: "/dashboard/geo" };
 
@@ -169,11 +173,14 @@ export function geoFindings(s: GeoSummary, clientId: string): Finding[] {
   }
 
   // 3. Competitors linked where you are not
-  const gapCompetitors = s.competitors.filter((c) => c.gapSearches > 0).slice(0, 3);
+  const isTracked = (d: string) => tracked.some((t) => d === t || d.endsWith(`.${t}`));
+  const gapAll = s.competitors.filter((c) => c.gapSearches > 0);
+  const gapCompetitors = [...gapAll.filter((c) => isTracked(c.domain)), ...gapAll.filter((c) => !isTracked(c.domain))].slice(0, 3);
+  const anyTracked = gapCompetitors.some((c) => isTracked(c.domain));
   if (gapCompetitors.length > 0) {
     const names = gapCompetitors.map((c) => c.domain);
     const gapSearches = s.searches.filter((x) => x.answered && x.competitorsLinked.some((d) => names.includes(d)) && !Object.values(x.states).some((st) => st === "linked" || st === "named_and_linked"));
-    const title = "Competitors are linked in AI answers instead of you";
+    const title = anyTracked ? "Competitors you track are linked in AI answers instead of you" : "Competitors are linked in AI answers instead of you";
     const found = `AI answers link to ${listNames(names)} in ${plural(gapSearches.length, "search", "searches")} where your website isn't linked.`;
     const why = "Every link AI gives a competitor is a customer who may visit them first.";
     const todo =
@@ -184,7 +191,7 @@ export function geoFindings(s: GeoSummary, clientId: string): Finding[] {
       title,
       tone: "attention",
       statusText: "Needs attention",
-      priority: Math.min(80, 50 + gapSearches.length * 3),
+      priority: Math.min(anyTracked ? 88 : 80, 50 + gapSearches.length * 3 + (anyTracked ? 8 : 0)),
       whatWeFound: found,
       whyItMatters: why,
       whatToDo: todo,
