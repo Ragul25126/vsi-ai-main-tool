@@ -327,7 +327,7 @@ export function ReportScene({ className }: { className?: string }) {
 export function ChatScene({ className }: { className?: string }) {
   return (
     <Scene className={className} label="A question about your website and an answer with its sources listed underneath">
-      <rect x={176} y={24} width={228} height={50} rx={12} fill={FILL} />
+      <rect x={176} y={24} width={228} height={50} rx={12} {...line} fill={SURFACE} />
       <Magnifier x={200} y={48} r={7} />
       <path d="M218 44h150M218 56h110" {...line} opacity={0.6} />
       <rect x={36} y={96} width={300} height={130} rx={12} {...line} fill={SURFACE} />

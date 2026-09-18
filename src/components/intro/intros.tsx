@@ -44,6 +44,8 @@ export interface IntroContent {
   capabilities?: { title: string; items: Capability[]; example?: boolean };
   steps: string[];
   stepsTitle?: string;
+  /** One true, page-specific line under the steps, next to the CTA. */
+  stepsNote: string;
   /** Example questions (AI Chat only). Shown as quotes, never as answers. */
   questions?: string[];
 }
@@ -72,6 +74,7 @@ export const INTROS: Record<IntroKey, IntroContent> = {
       ],
     },
     steps: ["Add your website", "VSI checks your pages", "We find important issues", "You get simple recommendations"],
+    stepsNote: "The site audit is free. It runs as soon as you add your website.",
   },
   search: {
     page: "Search Visibility",
@@ -86,6 +89,7 @@ export const INTROS: Record<IntroKey, IntroContent> = {
       ],
     },
     steps: ["Add searches", "VSI checks", "See changes", "Act on what matters"],
+    stepsNote: "One list of searches powers both Search Visibility and AI Visibility.",
   },
   ai: {
     page: "AI Visibility",
@@ -102,6 +106,7 @@ export const INTROS: Record<IntroKey, IntroContent> = {
       ],
     },
     steps: ["Choose important searches", "VSI checks AI answers", "Compare your visibility", "Find ways to improve"],
+    stepsNote: "Search and AI checks run together, and only when you start them.",
   },
   competitors: {
     page: "Competitors",
@@ -116,6 +121,7 @@ export const INTROS: Record<IntroKey, IntroContent> = {
       ],
     },
     steps: ["Add competitors", "VSI compares visibility", "Find the gaps", "Turn gaps into actions"],
+    stepsNote: "Add competitors while setting up your website, or here any time later.",
   },
   actions: {
     page: "Next Actions",
@@ -133,6 +139,7 @@ export const INTROS: Record<IntroKey, IntroContent> = {
     },
     stepsTitle: "How an action is made",
     steps: ["VSI finds something", "Explains why it matters", "Recommends what to do", "You create a task", "Track progress"],
+    stepsNote: "Every action can become a task for your team in one step.",
   },
   tasks: {
     page: "Tasks",
@@ -149,6 +156,7 @@ export const INTROS: Record<IntroKey, IntroContent> = {
       ],
     },
     steps: ["Open a finding", "Create a task", "Do the work", "VSI checks the result"],
+    stepsNote: "When a task is done, VSI checks again and shows whether it worked.",
   },
   reports: {
     page: "Reports",
@@ -166,6 +174,7 @@ export const INTROS: Record<IntroKey, IntroContent> = {
       ],
     },
     steps: ["Add your website", "Run your checks", "Create a report", "Share the link"],
+    stepsNote: "Each report has its own link you can share.",
   },
   chat: {
     page: "AI Chat",
@@ -173,6 +182,7 @@ export const INTROS: Record<IntroKey, IntroContent> = {
     description: "Ask VSI about your website, search visibility, AI visibility, competitors and recommended actions.",
     questions: CHAT_QUESTIONS,
     steps: ["Add your website", "Run your first checks", "Ask a question", "Get answers from your own data"],
+    stepsNote: "Answers come only from your own website's data.",
   },
 };
 
@@ -229,6 +239,7 @@ export function Intro({ name }: { name: IntroKey }) {
       middle={c.questions ? <ExampleQuestions questions={c.questions} /> : undefined}
       steps={c.steps}
       stepsTitle={c.stepsTitle}
+      stepsNote={c.stepsNote}
       story={name}
     />
   );

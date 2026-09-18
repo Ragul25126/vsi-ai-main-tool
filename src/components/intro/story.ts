@@ -24,6 +24,44 @@ export const STORY: StoryStep[] = [
   { key: "chat", label: "AI Chat", href: "/dashboard/chat", question: "Help me understand all of this." },
 ];
 
+/** One link in a page's "Where this fits" chain. */
+export interface ChainNode {
+  key: string;
+  label: string;
+  /** null for "Website", which isn't a page of its own. */
+  href: string | null;
+  /** Shown quietly under the chain for the current or hovered part. */
+  question: string;
+}
+
+const WEBSITE: ChainNode = { key: "website", label: "Website", href: null, question: "Everything starts with your website. You add it once." };
+const CHECKS: ChainNode = {
+  key: "checks",
+  label: "Your checks",
+  href: "/dashboard",
+  question: "Site Audit, Search Visibility, AI Visibility and Competitors, together on the Overview.",
+};
+const node = (key: StoryKey): ChainNode => {
+  const s = STORY.find((x) => x.key === key)!;
+  return { key: s.key, label: s.label, href: s.href, question: s.question };
+};
+const CHECK_PAGES = [node("audit"), node("search"), node("ai"), node("competitors")];
+
+/**
+ * Each page's own chain. The four check pages share one chain; later pages
+ * group those checks into one step so the chain stays short and readable.
+ */
+export const STORY_CHAINS: Record<StoryKey, ChainNode[]> = {
+  audit: [WEBSITE, ...CHECK_PAGES],
+  search: [WEBSITE, ...CHECK_PAGES],
+  ai: [WEBSITE, ...CHECK_PAGES],
+  competitors: [WEBSITE, ...CHECK_PAGES],
+  actions: [WEBSITE, ...CHECK_PAGES, node("actions")],
+  tasks: [WEBSITE, CHECKS, node("actions"), node("tasks"), node("reports")],
+  reports: [WEBSITE, CHECKS, node("actions"), node("tasks"), node("reports")],
+  chat: [WEBSITE, CHECKS, node("actions"), node("reports"), node("chat")],
+};
+
 export const SETUP_HREF = "/dashboard/clients/new";
 
 /** Example questions for AI Chat. Shown as examples before a project exists, as starters after. */

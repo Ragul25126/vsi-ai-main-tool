@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { ChevronRight, Plus, type LucideIcon } from "lucide-react";
 import { ButtonLink } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { SETUP_HREF, STORY, type StoryKey } from "./story";
+import { SETUP_HREF, type StoryKey } from "./story";
+import { ProductStory } from "./ProductStory";
 import { GuideTarget } from "@/components/onboarding/GuideTarget";
 
 /** The one primary action when there is no project yet. Same label on every page. */
@@ -141,44 +141,6 @@ export function StepRail({ title = "How it works", steps, footer }: { title?: st
 }
 
 /**
- * Shows where this page sits in the VSI story: your website, then the parts
- * of VSI around this one (two before, two after), each linking to its page.
- */
-export function ProductStory({ current }: { current: StoryKey }) {
-  const index = STORY.findIndex((s) => s.key === current);
-  const from = Math.max(0, index - 2);
-  const shown = STORY.slice(from, index + 3);
-  return (
-    <section className="space-y-4 border-t border-line pt-8">
-      <h2 className="text-section font-semibold text-ink">Where this fits</h2>
-      <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-2 text-support" aria-label="Where this page fits in VSI">
-        <li className="text-ink-3">Website</li>
-        {from > 0 && (
-          <li className="flex items-center gap-1.5 text-ink-3" aria-hidden>
-            <ChevronRight size={13} strokeWidth={1.75} className="text-line-strong" />
-            …
-          </li>
-        )}
-        {shown.map((s) => (
-          <li key={s.key} className="flex items-center gap-1.5">
-            <ChevronRight size={13} strokeWidth={1.75} className="text-line-strong" aria-hidden />
-            {s.key === current ? (
-              <span aria-current="page" title={s.question} className="font-medium text-ink underline decoration-brand decoration-2 underline-offset-[6px]">
-                {s.label}
-              </span>
-            ) : (
-              <Link href={s.href} title={s.question} className="text-ink-3 hover:text-ink hover:underline">
-                {s.label}
-              </Link>
-            )}
-          </li>
-        ))}
-      </ol>
-    </section>
-  );
-}
-
-/**
  * The first-use page for a feature: what it is, what you learn, how it works,
  * how it connects, and one way to start.
  */
@@ -192,6 +154,7 @@ export function FeatureIntro({
   middle,
   steps,
   stepsTitle,
+  stepsNote,
   story,
 }: {
   page: string;
@@ -204,6 +167,7 @@ export function FeatureIntro({
   middle?: ReactNode;
   steps: string[];
   stepsTitle?: string;
+  stepsNote: string;
   story: StoryKey;
 }) {
   return (
@@ -216,7 +180,7 @@ export function FeatureIntro({
         steps={steps}
         footer={
           <>
-            <p className="text-body text-ink-2">Everything starts with your website. You add it once and every part of VSI uses it.</p>
+            <p className="text-body text-ink-2">{stepsNote}</p>
             <AddWebsiteButton />
           </>
         }

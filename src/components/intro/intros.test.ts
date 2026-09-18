@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { COMING_SOON_ENGINES, ENGINES } from "@/lib/geo";
 import { NAV_GROUPS } from "@/components/layout/nav";
 import { ENGINE_COVERAGE, INTROS } from "./intros";
-import { CHAT_QUESTIONS, SETUP_HREF, STORY } from "./story";
+import { CHAT_QUESTIONS, SETUP_HREF, STORY, STORY_CHAINS } from "./story";
 
 function strings(value: unknown): string[] {
   if (typeof value === "string") return [value];
@@ -47,6 +47,18 @@ describe("first-use intros", () => {
     expect(ENGINE_COVERAGE.live).toHaveLength(ENGINES.length);
     ENGINES.forEach((e, i) => expect(ENGINE_COVERAGE.live[i]).toContain(e.label));
     expect(ENGINE_COVERAGE.soon).toEqual(COMING_SOON_ENGINES);
+  });
+
+  it("gives every page a chain that starts with the website and includes the page itself", () => {
+    for (const step of STORY) {
+      const chain = STORY_CHAINS[step.key];
+      expect(chain[0].key, step.key).toBe("website");
+      expect(chain.some((n) => n.key === step.key), step.key).toBe(true);
+      expect(chain.length, step.key).toBeLessThanOrEqual(6);
+    }
+    const checks = ["website", "audit", "search", "ai", "competitors"];
+    for (const k of ["audit", "search", "ai", "competitors"] as const) expect(STORY_CHAINS[k].map((n) => n.key)).toEqual(checks);
+    expect(STORY_CHAINS.actions.map((n) => n.key)).toEqual([...checks, "actions"]);
   });
 
   it("marks next-action samples as examples", () => {
