@@ -130,7 +130,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  <div className="no-print sticky top-0 z-20 bg-card border-b border-gray-200">
  <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
  <p className="text-xs text-gray-500">
- Confidential · Generated {shortDate(c.generatedAt)}
+ Generated {shortDate(c.generatedAt)}
  </p>
  <PrintButton color={color} />
  </div>
@@ -138,20 +138,19 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
 
  {/* The actual "paper" */}
  <div className="max-w-4xl mx-auto my-6 print:my-0">
- <div className="print-page bg-card rounded-[20px] shadow-sm border border-gray-200 overflow-hidden">
+ <div className="print-page bg-card rounded-xl border border-gray-200 overflow-hidden">
 
  {/* HEADER — full-bleed brand bar */}
  <div
  className="relative px-8 sm:px-12 pt-10 pb-8 print:py-6"
  style={{
- background: `linear-gradient(135deg, ${color}10 0%, ${color}05 50%, transparent 100%)`,
  borderBottom: `3px solid ${color}`,
  }}
  >
  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
  <div className="flex items-center gap-4 min-w-0">
  {c.branding.logoUrl ? (
- <div className="h-16 w-16 rounded-[20px] bg-card border border-gray-200 p-2 shadow-sm shrink-0 flex items-center justify-center">
+ <div className="h-16 w-16 rounded-xl bg-card border border-gray-200 p-2 shrink-0 flex items-center justify-center">
  <Image
  src={c.branding.logoUrl}
  alt={c.branding.displayName}
@@ -163,24 +162,24 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  </div>
  ) : (
  <div
- className="h-16 w-16 rounded-[20px] flex items-center justify-center text-white font-bold text-xl shrink-0"
+ className="h-16 w-16 rounded-xl flex items-center justify-center text-white font-bold text-xl shrink-0"
  style={{ backgroundColor: color }}
  >
  {c.branding.displayName.charAt(0).toUpperCase()}
  </div>
  )}
  <div className="min-w-0">
- <p className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color }}>
+ <p className="text-sm font-medium" style={{ color }}>
  {c.branding.displayName}
  </p>
- <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1 leading-tight">
+ <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 mt-1 leading-tight">
  Search Visibility Report
  </h1>
  <p className="text-sm text-gray-600 mt-1">{c.rangeLabel}</p>
  </div>
  </div>
  <div className="text-left sm:text-right shrink-0 border-l-0 sm:border-l border-gray-200 sm:pl-6">
- <p className="text-[11px] uppercase tracking-wider text-gray-500 font-medium">Prepared for</p>
+ <p className="text-xs text-gray-500">Prepared for</p>
  <p className="text-lg font-bold text-gray-900 mt-0.5">{c.client.name}</p>
  {c.client.website && (
  <p className="text-xs text-gray-500 mt-0.5">{c.client.website}</p>
@@ -197,9 +196,9 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  return (
  <div
  key={i}
- className={`rounded-[20px] bg-card p-5 ring-1 ${tone?.ring ?? "ring-gray-200"}`}
+ className={`rounded-xl bg-card p-5 ring-1 ${tone?.ring ?? "ring-gray-200"}`}
  >
- <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+ <p className="text-xs text-gray-500 font-medium">
  {m.label}
  </p>
  <p className={`text-3xl font-bold mt-2 ${tone?.text ?? "text-gray-900"}`}>
@@ -335,7 +334,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  )}
 
  {c.wins.length === 0 && c.losses.length === 0 && c.opportunities.length === 0 && (
- <div className="rounded-[20px] border border-dashed border-gray-300 p-10 text-center">
+ <div className="rounded-xl border border-dashed border-gray-300 p-10 text-center">
  <p className="text-sm text-gray-500">No ranking or AI citation changes to compare this period.</p>
  <p className="text-xs text-gray-400 mt-1">
  Wins, drops and opportunities appear here once there are checks from two consecutive weeks to compare.
@@ -348,7 +347,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  <footer className="px-8 sm:px-12 py-6 border-t border-gray-200 bg-gray-50">
  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
  <div>
- <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
+ <p className="text-sm text-gray-700 font-medium">
  {c.branding.displayName}
  </p>
  {c.branding.footer && (
@@ -400,7 +399,7 @@ function Section({
  className="inline-block w-1.5 h-6 rounded-full mt-0.5"
  style={{ backgroundColor: accent }}
  />
- <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+ <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
  {badge && (
  <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${badgeBg} ${badgeText}`}>
  {badge}
@@ -425,8 +424,8 @@ function KeywordTable({
  highlightDelta?: "good" | "bad";
 }) {
  return (
- <div className="rounded-[20px] border border-gray-200 overflow-hidden bg-card">
- <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2.5 bg-gray-50 text-[11px] uppercase tracking-wider text-gray-500 font-semibold border-b border-gray-200">
+ <div className="rounded-xl border border-gray-200 overflow-hidden bg-card">
+ <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2.5 bg-gray-50 text-xs text-gray-500 font-medium border-b border-gray-200">
  <div className="col-span-5">Keyword</div>
  <div className="col-span-2 text-center">Rank</div>
  <div className="col-span-2 text-center">AI Mode</div>
@@ -453,7 +452,7 @@ function KeywordTable({
  {r.rank ? (
  <span className="text-blue-700 font-semibold">#{r.rank}</span>
  ) : (
- <span className="text-gray-400">—</span>
+ <span className="text-gray-400">Not checked</span>
  )}
  {showDelta && r.rankDelta != null && r.rankDelta !== 0 && (
  <span
@@ -476,7 +475,7 @@ function KeywordTable({
  ) : r.aioPresent ? (
  <span className="text-red-700 font-medium">✗ Invisible</span>
  ) : (
- <span className="text-gray-400">—</span>
+ <span className="text-gray-400">Not checked</span>
  )}
  </div>
 
@@ -487,7 +486,7 @@ function KeywordTable({
  ) : r.chatgptMentioned ? (
  <span className="text-blue-700 font-medium">~ Mentioned</span>
  ) : (
- <span className="text-gray-400">—</span>
+ <span className="text-gray-400">Not checked</span>
  )}
  </div>
 

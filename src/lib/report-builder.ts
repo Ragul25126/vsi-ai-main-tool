@@ -178,7 +178,7 @@ export function buildReportContent(opts: {
     },
     {
       label: "Avg Google rank",
-      value: avgRank != null ? `#${avgRank}` : "—",
+      value: avgRank != null ? `#${avgRank}` : "Not ranked",
       sub: `${rankCount} of ${totalKeywords} ranking`,
     },
     aioVisibility != null
@@ -188,7 +188,7 @@ export function buildReportContent(opts: {
           sub: `${aioCited} cited · ${aioMentioned} mentioned · ${aioInvisible} invisible (of ${aioChecked} checked)`,
           tone: aioVisibility >= 50 ? "good" : aioVisibility >= 20 ? "neutral" : "bad",
         }
-      : { label: "AI Mode visibility", value: "—", sub: "Not enabled for this client" },
+      : { label: "AI Mode visibility", value: "Off", sub: "Not turned on for this project" },
     chatgptVisibility != null
       ? {
           label: "ChatGPT visibility",
@@ -196,7 +196,7 @@ export function buildReportContent(opts: {
           sub: `${chatgptCited} cited · ${chatgptMentioned} mentioned (of ${chatgptChecked} checked)`,
           tone: chatgptVisibility >= 50 ? "good" : chatgptVisibility >= 20 ? "neutral" : "bad",
         }
-      : { label: "ChatGPT visibility", value: "—", sub: "Disabled" },
+      : { label: "ChatGPT visibility", value: "Off", sub: "Not turned on for this project" },
   ];
 
   // Wins + losses: compare current rank to previous rank per keyword

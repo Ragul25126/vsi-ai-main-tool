@@ -57,7 +57,7 @@ function renderMarkdown(text: string): string {
     .replace(/>/g, "&gt;");
   
   // Format tables
-  let formatted = escaped.replace(
+  const formatted = escaped.replace(
     /\|(.+)\|[\r\n]+\|[-:| ]+\|[\r\n]+((?:\|.+\|[\r\n]*)+)/g,
     (match) => {
       const rows = match.trim().split("\n");
@@ -337,7 +337,10 @@ export default function ChatFloating() {
 
   // Pages can open the chat with a question: window.dispatchEvent(new CustomEvent("vsi:ask", { detail: { question } }))
   const sendRef = useRef(send);
-  sendRef.current = send;
+  // Keep the latest send() for the event listener; updated after render, not during it.
+  useEffect(() => {
+    sendRef.current = send;
+  });
   useEffect(() => {
     const onAsk = (e: Event) => {
       const question = (e as CustomEvent<{ question?: string }>).detail?.question;

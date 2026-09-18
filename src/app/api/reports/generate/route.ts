@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
  try {
  const { client_id } = (await req.json()) as { client_id?: string };
  if (!client_id) {
- return NextResponse.json({ error: "client_id required" }, { status: 400 });
+ return NextResponse.json({ error: "Choose a project first." }, { status: 400 });
  }
 
  const session = await requireAgency();
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
  if (!isSuperAdmin) clientQuery = clientQuery.eq("agency_id", session.agencyId);
  const { data: client } = await clientQuery.single();
  if (!client) {
- return NextResponse.json({ error: "Client not found" }, { status: 404 });
+ return NextResponse.json({ error: "That project isn't available." }, { status: 404 });
  }
  const owningAgencyId = (client.agency_id as string) ?? session.agencyId;
 
@@ -105,7 +105,8 @@ export async function POST(req: NextRequest) {
  .single();
 
  if (error || !inserted) {
- return NextResponse.json({ error: error?.message ?? "Failed to save report" }, { status: 500 });
+ console.error("[reports] save failed", { code: error?.code });
+ return NextResponse.json({ error: "We couldn't save the report. Please try again." }, { status: 500 });
  }
 
  const origin = req.headers.get("origin") ?? "https://searchintel.valgrowlabs.com";
@@ -115,8 +116,9 @@ export async function POST(req: NextRequest) {
  share_url: `${origin}/r/${inserted.share_token}`,
  });
  } catch (err) {
+ console.error("[reports] generate failed", err instanceof Error ? err.message : err);
  return NextResponse.json(
- { error: err instanceof Error ? err.message : "Failed" },
+ { error: "We couldn't create the report. Please try again." },
  { status: 500 }
  );
  }

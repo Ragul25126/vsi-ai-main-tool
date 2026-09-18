@@ -1,4 +1,5 @@
 import { Location } from "@/types/search";
+import { safeFetch } from "@/lib/net/safe-fetch";
 
 export interface GeneratedQueryItem {
   id: string;
@@ -41,23 +42,14 @@ export async function scrapeWebsiteMetadata(domain: string): Promise<WebsiteMeta
   const url = `https://${cleanDomain}`;
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
-
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) SearchIntelBot/1.0",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9",
-      },
-    });
-    clearTimeout(timeoutId);
+    // Public addresses only, with a timeout and size cap (never internal hosts).
+    const res = await safeFetch(url, { timeoutMs: 5000, maxBytes: 1_000_000 });
 
     if (!res.ok) {
-      return { scraped: false, errorMessage: `HTTP ${res.status}: Unable to directly scrape website` };
+      return { scraped: false, errorMessage: `The website answered with status ${res.status}` };
     }
 
-    const html = await res.text();
+    const html = res.body;
 
     const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
     const title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : undefined;
@@ -79,7 +71,7 @@ export async function scrapeWebsiteMetadata(domain: string): Promise<WebsiteMeta
   } catch {
     return {
       scraped: false,
-      errorMessage: "Website un-reachable directly. Using AI contextual intelligence based on domain & industry.",
+      errorMessage: "The website couldn't be reached. Suggestions are based on the industry and location only.",
     };
   }
 }

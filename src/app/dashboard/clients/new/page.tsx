@@ -6,8 +6,9 @@ import { ArrowLeft, ArrowRight, Check, CheckCircle2, Circle, Loader2, Plus, X } 
 import { createClient } from "@/lib/supabase/client";
 import { normaliseDomain } from "@/lib/url-input";
 import { INDUSTRIES, COUNTRIES, LOCATIONS } from "@/types/search";
-import type { Location, TrackType } from "@/types/search";
-import type { GeneratedQueryItem } from "@/lib/ai-keyword-generator";
+import type { Location } from "@/types/search";
+import { useSearchSuggestions, type SearchItem } from "@/features/searches/search-suggestions";
+import { SearchPicker } from "@/features/searches/components/SearchPicker";
 import { MAX_COMPETITORS, validateCompetitorDomain } from "@/lib/project-competitors";
 import { addCompetitors } from "@/lib/competitor-client";
 import { PageContainer } from "@/components/ui/Page";
@@ -17,7 +18,6 @@ import { Disclosure } from "@/components/ui/Disclosure";
 import { cn } from "@/lib/utils";
 
 const STEPS = ["Website", "Searches", "Competitors", "Start VSI"] as const;
-const MAX_SEARCHES = 50;
 
 interface Details {
   website: string;
@@ -27,19 +27,6 @@ interface Details {
   country: string;
   location: Location;
 }
-
-interface SearchItem {
-  keyword: string;
-  trackType: TrackType;
-  /** Where it came from, shown so suggestions are never mistaken for the user's own list. */
-  origin: "suggested" | "yours";
-}
-
-type Suggestions =
-  | { kind: "idle" }
-  | { kind: "loading" }
-  | { kind: "ok"; items: SearchItem[] }
-  | { kind: "failed" };
 
 type StartStep = "project" | "searches" | "competitors" | "select" | "audit";
 const START_LABEL: Record<StartStep, string> = {
@@ -66,10 +53,8 @@ export default function NewProjectPage() {
   });
   const [touched, setTouched] = useState(false);
 
-  const [suggestions, setSuggestions] = useState<Suggestions>({ kind: "idle" });
-  const [suggestedFor, setSuggestedFor] = useState<string | null>(null);
+  const { suggestions, loadSuggestions } = useSearchSuggestions();
   const [searches, setSearches] = useState<SearchItem[]>([]);
-  const [searchInput, setSearchInput] = useState("");
 
   const [competitors, setCompetitors] = useState<string[]>([]);
   const [competitorInput, setCompetitorInput] = useState("");
@@ -85,70 +70,19 @@ export default function NewProjectPage() {
     setDetails((d) => ({ ...d, [key]: value }));
   }
 
-  /** Real request to the suggestion service. Nothing is shown as progress except that request. */
-  async function loadSuggestions() {
-    if (!domain || suggestedFor === domain) return;
-    setSuggestedFor(domain);
-    setSuggestions({ kind: "loading" });
-    try {
-      const res = await fetch("/api/clients/ai-keywords", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          domain,
-          brandName: details.brandName.trim() || details.name.trim(),
-          industry: details.industry || undefined,
-          location: details.location,
-        }),
-      });
-      const json = (await res.json().catch(() => null)) as { success?: boolean; analysis?: { queries?: GeneratedQueryItem[] } } | null;
-      const queries = json?.success ? json.analysis?.queries ?? [] : null;
-      if (!res.ok || !queries || queries.length === 0) {
-        setSuggestions({ kind: "failed" });
-        return;
-      }
-      const seen = new Set<string>();
-      const items: SearchItem[] = [];
-      for (const q of queries) {
-        const k = q.keyword.trim();
-        if (!k || seen.has(k.toLowerCase())) continue;
-        seen.add(k.toLowerCase());
-        items.push({ keyword: k, trackType: q.trackType, origin: "suggested" });
-      }
-      setSuggestions({ kind: "ok", items: items.slice(0, 24) });
-    } catch {
-      setSuggestions({ kind: "failed" });
-    }
-  }
-
   function next() {
     setError(null);
     if (step === 0) {
       setTouched(true);
-      if (!step1Valid) return;
-      void loadSuggestions();
+      if (!step1Valid || !domain) return;
+      void loadSuggestions({
+        domain,
+        brandName: details.brandName.trim() || details.name.trim(),
+        industry: details.industry || undefined,
+        location: details.location,
+      });
     }
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
-  }
-
-  function toggleSearch(item: SearchItem) {
-    setSearches((list) =>
-      list.some((s) => s.keyword.toLowerCase() === item.keyword.toLowerCase())
-        ? list.filter((s) => s.keyword.toLowerCase() !== item.keyword.toLowerCase())
-        : list.length >= MAX_SEARCHES
-          ? list
-          : [...list, item],
-    );
-  }
-
-  function addOwnSearch(e: FormEvent) {
-    e.preventDefault();
-    const k = searchInput.trim().replace(/\s+/g, " ");
-    if (!k || k.length > 200) return;
-    if (!searches.some((s) => s.keyword.toLowerCase() === k.toLowerCase()) && searches.length < MAX_SEARCHES) {
-      setSearches((list) => [...list, { keyword: k, trackType: "both", origin: "yours" }]);
-    }
-    setSearchInput("");
   }
 
   function addCompetitor(e: FormEvent) {
@@ -266,8 +200,6 @@ export default function NewProjectPage() {
     }
   }
 
-  const suggestedItems = suggestions.kind === "ok" ? suggestions.items : [];
-
   return (
     <PageContainer className="max-w-[880px]">
       <header className="space-y-2">
@@ -354,75 +286,7 @@ export default function NewProjectPage() {
           title="What searches matter to your business?"
           why="These are the searches VSI checks in Google and in AI answers. Choose the ones your customers really use. You can change them later."
         >
-          <form onSubmit={addOwnSearch} className="flex max-w-xl flex-col gap-2 sm:flex-row">
-            <label htmlFor="own-search" className="sr-only">
-              Add a search
-            </label>
-            <input id="own-search" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="e.g. best accountant in Dubai" className={inputClass} />
-            <Button type="submit" variant="secondary" disabled={!searchInput.trim() || searches.length >= MAX_SEARCHES}>
-              <Plus size={15} strokeWidth={2} aria-hidden />
-              Add search
-            </Button>
-          </form>
-
-          {searches.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-support font-medium text-ink">
-                Your searches ({searches.length})
-              </p>
-              <ul className="flex flex-wrap gap-2">
-                {searches.map((s) => (
-                  <li key={s.keyword} className="inline-flex h-8 items-center gap-1.5 rounded-control border border-line bg-surface pl-3 pr-1 text-support text-ink">
-                    {s.keyword}
-                    <button type="button" onClick={() => toggleSearch(s)} aria-label={`Remove ${s.keyword}`} className="rounded p-1 text-ink-3 hover:bg-surface-2 hover:text-ink">
-                      <X size={13} strokeWidth={1.75} aria-hidden />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <div className="space-y-3 border-t border-line pt-5">
-            <p className="text-support font-medium text-ink">Suggested searches</p>
-            {suggestions.kind === "loading" && (
-              <p className="flex items-center gap-2 text-support text-ink-3" role="status">
-                <Loader2 size={14} className="animate-spin" aria-hidden />
-                Getting suggestions for {domain}
-              </p>
-            )}
-            {suggestions.kind === "failed" && (
-              <p className="text-support text-ink-2">Couldn&apos;t suggest searches right now. Add the searches your customers use above.</p>
-            )}
-            {suggestions.kind === "ok" && (
-              <>
-                <p className="text-support text-ink-3">
-                  Ideas based on your website and industry. Pick only the ones that fit your business; nothing is added until you choose it.
-                </p>
-                <ul className="flex flex-wrap gap-2">
-                  {suggestedItems.map((item) => {
-                    const on = searches.some((s) => s.keyword.toLowerCase() === item.keyword.toLowerCase());
-                    return (
-                      <li key={item.keyword}>
-                        <button
-                          type="button"
-                          onClick={() => toggleSearch(item)}
-                          aria-pressed={on}
-                          className={cn(
-                            "inline-flex h-8 items-center gap-1.5 rounded-control border px-3 text-support",
-                            on ? "border-ink bg-ink text-white" : "border-dashed border-line-strong text-ink-2 hover:border-ink-3 hover:text-ink",
-                          )}
-                        >
-                          {on ? <Check size={13} strokeWidth={2} aria-hidden /> : <Plus size={13} strokeWidth={2} aria-hidden />}
-                          {item.keyword}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </>
-            )}
-          </div>
+          <SearchPicker value={searches} onChange={setSearches} suggestions={suggestions} domain={domain} />
         </StepBody>
       )}
 

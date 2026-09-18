@@ -61,8 +61,9 @@ export async function POST(req: NextRequest) {
 
  return NextResponse.json(result);
  } catch (err) {
+ console.error("[run-client] run failed", err instanceof Error ? err.message : err);
  return NextResponse.json(
- { error: err instanceof Error ? err.message : "Run failed" },
+ { error: "The check couldn't run. Please try again." },
  { status: 500 }
  );
  }

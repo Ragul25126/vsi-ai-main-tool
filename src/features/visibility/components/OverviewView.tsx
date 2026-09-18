@@ -72,6 +72,7 @@ export default function OverviewView({ data }: { data: OverviewData }) {
   const searchChecked = data.search.checkedAt !== null;
   const aiChecked = data.ai.checkedAt !== null;
   const anyChecks = searchChecked || aiChecked;
+  const hasAnyResult = anyChecks || data.website.checkedAt !== null;
   const setup: SetupItem[] = [
     project.domain
       ? { state: "done", label: "Website added", detail: project.domain }
@@ -138,7 +139,9 @@ export default function OverviewView({ data }: { data: OverviewData }) {
       {/* Only claim "nothing needs attention" once something has actually been checked. */}
       {(anyChecks || data.website.checkedAt) && <p className="max-w-[60ch] text-title font-medium text-ink">{headline(data)}</p>}
 
-      {/* At a glance */}
+      {/* At a glance and next actions: shown once something has been checked; before that, "Getting started" says it all. */}
+      {hasAnyResult && (
+      <>
       <section aria-label="At a glance" className="grid grid-cols-1 border-y border-line sm:grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-line">
         <Glance
           label="Website health"
@@ -217,6 +220,9 @@ export default function OverviewView({ data }: { data: OverviewData }) {
           </ol>
         )}
       </Section>
+
+      </>
+      )}
 
       {/* Progress: only once there is something to track. */}
       {(anyChecks || data.website.checkedAt) && (

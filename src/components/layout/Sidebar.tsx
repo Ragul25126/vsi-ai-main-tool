@@ -350,7 +350,7 @@ function ProjectSwitcher({
         ) : (
           <Link
             href="/dashboard/clients/new"
-            className="flex h-8 w-full items-center justify-center gap-1.5 rounded-control bg-ink text-support font-medium text-white hover:bg-ink-2"
+            className="flex h-8 w-full items-center justify-center gap-1.5 rounded-control border border-line-strong bg-surface text-support font-medium text-ink hover:border-ink-3 hover:bg-surface-2"
           >
             <Plus size={14} strokeWidth={2} aria-hidden />
             Add your website
