@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchSerpApi } from "@/lib/serpapi-service";
-import { createClient } from "@/lib/supabase/server";
+import { requireAgency } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -278,244 +278,64 @@ const LOCALIZED_CONTENT: Record<string, LocalizedItem> = {
   },
 };
 
-/**
- * Deterministic hash helper for stable seed-based generation
- */
-function hashString(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
-
 export async function POST(req: NextRequest) {
   try {
+    await requireAgency();
     const body = (await req.json()) as ResearchRequestBody;
     const keyword = body.keyword?.trim();
     const location = body.location || "India";
     const language = body.language || "English";
-    const service = body.service || "all-services";
 
     if (!keyword) {
-      return NextResponse.json(
-        { success: false, error: "Keyword parameter is required." },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "Enter a search to look up." }, { status: 400 });
     }
 
     const gl = GL_MAP[location] || "in";
     const hl = HL_MAP[language] || "en";
 
-    // 1. Query SERP API for real Google SERP results & signals
-    let serpData = null;
-    let serpError = null;
+    // Live Google results. Only real data is returned: no estimated volumes,
+    // difficulty scores or AI percentages.
+    let organicResults: { position?: number; title: string; link: string; snippet?: string }[] = [];
+    let knowledgeGraph = false;
+    let serpError: string | null = null;
     try {
-      serpData = await searchSerpApi(keyword, { engine: "google", gl, hl, num: 10 });
+      const serpData = await searchSerpApi(keyword, { engine: "google", gl, hl, num: 10 });
+      organicResults = serpData?.results ?? [];
+      knowledgeGraph = Boolean(serpData?.knowledge_graph);
     } catch (err: unknown) {
-      serpError = err instanceof Error ? err.message : "Failed to fetch live SERP data.";
+      serpError = err instanceof Error ? err.message : "Live results aren't available right now.";
     }
 
-interface DbSearchResult {
-  id: string;
-  keyword: string;
-  rank_position: number | null;
-  aio_present: boolean | null;
-  gap_label: string | null;
-  created_at: string;
-}
+    // The search client returns placeholder results when no API key is set.
+    const isDemo = organicResults.some((r) => r.link.includes("industry-leader.com"));
+    if (isDemo) organicResults = [];
 
-    // 2. Query Supabase database for any existing tracked keyword data
-    let databaseRecords: DbSearchResult[] = [];
-    try {
-      const supabase = await createClient();
-      const { data } = await supabase
-        .from("search_results")
-        .select("id, keyword, rank_position, aio_present, gap_label, created_at")
-        .ilike("keyword", keyword)
-        .order("created_at", { ascending: false })
-        .limit(5);
-      databaseRecords = (data as DbSearchResult[]) ?? [];
-    } catch {
-      databaseRecords = [];
-    }
-
-    const seed = hashString(`${keyword.toLowerCase()}-${gl}-${hl}`);
-
-    // 3. Compute dynamic metrics based on SERP signals & keyword characteristics
-    const totalResults = serpData?.total_results ?? 1000;
-    const organicResults = serpData?.results ?? [];
-    const hasKnowledgeGraph = Boolean(serpData?.knowledge_graph);
-
-    // Dynamic Search Volume Estimation (Derived from SERP total results & keyword scope)
-    const baseVolumeRaw = Math.floor(
-      Math.max(500, Math.min(250000, (totalResults * 15) + (seed % 9000)))
-    );
-    let volumeFormatted = "";
-    if (baseVolumeRaw >= 1000000) {
-      volumeFormatted = `${(baseVolumeRaw / 1000000).toFixed(1)}M`;
-    } else if (baseVolumeRaw >= 1000) {
-      volumeFormatted = `${(baseVolumeRaw / 1000).toFixed(1)}K`;
-    } else {
-      volumeFormatted = `${baseVolumeRaw}`;
-    }
-
-    // Volume level indicator
-    const volumeTag = baseVolumeRaw > 50000 ? "VERY HIGH" : baseVolumeRaw > 10000 ? "HIGH" : baseVolumeRaw > 2000 ? "MEDIUM" : "LOW";
-    const volumeTagColor = baseVolumeRaw > 10000 ? "emerald" : baseVolumeRaw > 2000 ? "amber" : "slate";
-
-    // Dynamic Keyword Difficulty (Calculated from domain competition in top SERP results)
-    const highAuthorityDomains = ["wikipedia.org", "amazon", "youtube.com", "gov", "edu", "apple.com", "microsoft.com", "reddit.com", "linkedin.com"];
-    let hardDomainCount = 0;
-    organicResults.forEach((res) => {
-      const linkLower = res.link.toLowerCase();
-      if (highAuthorityDomains.some((dom) => linkLower.includes(dom))) {
-        hardDomainCount++;
-      }
-    });
-
-    const calculatedDifficulty = Math.min(
-      98,
-      Math.max(12, Math.floor(25 + hardDomainCount * 12 + (seed % 20)))
-    );
-
-    const difficultyTag = calculatedDifficulty > 65 ? "HARD" : calculatedDifficulty > 35 ? "MEDIUM" : "EASY";
-    const difficultyTagColor = calculatedDifficulty > 65 ? "red" : calculatedDifficulty > 35 ? "amber" : "emerald";
-
-    // Dynamic Intent Classification
+    // Likely intent: a rule-based reading of the words, shown as an estimate.
     const kwLower = keyword.toLowerCase();
     let rawIntent = "Informational";
-
-    if (/\b(buy|price|cost|pricing|cheap|discount|order|deal|shop|store)\b/.test(kwLower)) {
+    if (/(buy|price|cost|pricing|cheap|discount|order|deal|shop|store)/.test(kwLower)) {
       rawIntent = "Transactional";
-    } else if (/\b(best|top|vs|compare|review|agency|company|services|provider|firm)\b/.test(kwLower)) {
+    } else if (/(best|top|vs|compare|review|agency|company|services|provider|firm)/.test(kwLower)) {
       rawIntent = "Commercial";
-    } else if (hasKnowledgeGraph || /\b(official|login|website|portal|app)\b/.test(kwLower)) {
+    } else if (knowledgeGraph || /(official|login|website|portal|app)/.test(kwLower)) {
       rawIntent = "Navigational";
     }
-
     const localized = LOCALIZED_CONTENT[language] || LOCALIZED_CONTENT.English;
     const intentObj = localized.intents[rawIntent] || localized.intents.Informational;
-    const primaryIntent = intentObj.primary;
-    const intentDesc = intentObj.desc;
-
-    // Dynamic AI Visibility Trigger
-    const aioTriggered = Boolean(
-      databaseRecords?.some((r) => r.aio_present) ||
-      organicResults.some((r) => r.snippet?.toLowerCase().includes("ai") || r.snippet?.toLowerCase().includes("overview")) ||
-      (seed % 3 !== 0)
-    );
-
-    const aiVisibilityPercent = Math.min(
-      98,
-      Math.max(35, Math.floor(aioTriggered ? 75 + (seed % 20) : 40 + (seed % 30)))
-    );
-
-    const aiVisibilityTag = aiVisibilityPercent > 70 ? "ACTIVE" : aiVisibilityPercent > 45 ? "MODERATE" : "LOW";
-
-    // Keyword-Specific AI Prompts & Variations localized per language
-    const suggestedPrompts: string[] = localized.getPrompts(keyword, location, rawIntent);
-
-    // Add organic SERP title variations if present
-    if (organicResults.length > 0) {
-      const topTitle = organicResults[0].title.replace(/[-|:].*$/, "").trim();
-      if (topTitle && topTitle.length > 4 && !suggestedPrompts.includes(topTitle.toLowerCase())) {
-        suggestedPrompts.unshift(
-          language === "Tamil"
-            ? `"${topTitle.toLowerCase()}"-க்கு உகந்ததாக்குவது எவ்வாறு`
-            : language === "German"
-            ? `Wie man für "${topTitle.toLowerCase()}" optimiert`
-            : language === "Sinhala"
-            ? `"${topTitle.toLowerCase()}" සඳහා ප්‍රශස්ත කරන්නේ කෙසේද`
-            : `how to optimize for "${topTitle.toLowerCase()}"`
-        );
-      }
-    }
-
-    // Dynamic 12-Month Search Volume Trend SVG path points
-    const monthlyPoints: number[] = [];
-    for (let i = 0; i < 12; i++) {
-      const variance = Math.sin((i + seed % 7) * 0.8) * 15 + ((seed + i * 13) % 25);
-      monthlyPoints.push(Math.round(Math.max(20, Math.min(100, 50 + variance))));
-    }
-
-    // YoY Trend calculation
-    const yoyChange = Math.round(((monthlyPoints[11] - monthlyPoints[0]) / monthlyPoints[0]) * 100);
-    const yoyFormatted = yoyChange >= 0 ? `+${yoyChange}% YoY` : `${yoyChange}% YoY`;
-
-    // Dynamic AI Inclusion Rates across AI engines
-    const googleAiPercent = Math.min(99, Math.max(50, aiVisibilityPercent + 8));
-    const chatGptPercent = Math.min(99, Math.max(45, aiVisibilityPercent - 2 + (seed % 10)));
-    const perplexityPercent = Math.min(99, Math.max(50, aiVisibilityPercent + 4 - (seed % 8)));
-    const geminiPercent = Math.min(99, Math.max(40, aiVisibilityPercent - 6 + (seed % 12)));
-
-    const inclusionRates = [
-      { engine: "Google AI Overview", percent: `${googleAiPercent}%` },
-      { engine: "ChatGPT Web Search", percent: `${chatGptPercent}%` },
-      { engine: "Perplexity AI", percent: `${perplexityPercent}%` },
-      { engine: "Gemini Pro Grounding", percent: `${geminiPercent}%` },
-    ];
-
-    const aiOverviewText = localized.aiOverview(keyword, location);
-
-    let dataSourceText = serpData ? "SerpAPI Live Google Search" : "SearchIntel Engine Data";
-    if (service === "seo" || service === "seo-tracked") {
-      dataSourceText = "SEO Tracked • Live Organic SERP Data";
-    } else if (service === "geo" || service === "geo-tracked") {
-      dataSourceText = "GEO Tracked • Generative Engine Citation Data";
-    }
 
     return NextResponse.json({
       success: true,
       keyword,
       location,
       language,
-      service,
-      aiOverview: aiOverviewText,
-      dataSource: dataSourceText,
-      serpError: serpError ?? null,
-      metrics: {
-        searches: {
-          value: volumeFormatted,
-          tag: volumeTag,
-          tagColor: volumeTagColor,
-          description: localized.searchesDesc(location),
-        },
-        difficulty: {
-          score: calculatedDifficulty,
-          tag: difficultyTag,
-          tagColor: difficultyTagColor,
-          description: localized.difficultyDesc,
-        },
-        aiVisibility: {
-          percent: `${aiVisibilityPercent}%`,
-          tag: aiVisibilityTag,
-          tagColor: "indigo",
-          description: localized.aiVisibilityDesc,
-        },
-        intent: {
-          primary: primaryIntent,
-          description: intentDesc,
-        },
-      },
-      prompts: suggestedPrompts.slice(0, 4),
-      trend: {
-        yoy: yoyFormatted,
-        isPositive: yoyChange >= 0,
-        monthlyPoints,
-      },
-      inclusionRates,
-      organicResultsCount: organicResults.length,
-      topOrganicResults: organicResults.slice(0, 5),
-      databaseMatchCount: databaseRecords?.length ?? 0,
+      liveResultsAvailable: !isDemo && !serpError,
+      liveResultsNote: isDemo ? "Live results need a search provider key, which isn't set up in this environment." : serpError,
+      intent: { primary: intentObj.primary, description: intentObj.desc },
+      prompts: localized.getPrompts(keyword, location, rawIntent).slice(0, 4),
+      topOrganicResults: organicResults.slice(0, 10),
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "An error occurred during keyword research.";
-    return NextResponse.json(
-      { success: false, error: message },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : "Something went wrong while looking up this search.";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

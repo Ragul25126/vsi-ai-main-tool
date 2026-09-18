@@ -1,57 +1,77 @@
-"use client";
-
-import React, { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
-
-import NextActionsView from "@/features/citation-strategy/components/NextActionsView";
-import AIVisibilityView from "@/features/visibility/components/AIVisibilityView";
-import SiteAuditView from "@/features/diagnosis/components/SiteAuditView";
+import type { Metadata } from "next";
+import { requireAgency } from "@/lib/auth";
+import { getProjectContext } from "@/lib/project-context";
+import { displayDomain } from "@/lib/project-types";
+import { loadPageComparisons, loadSiteAudits } from "@/lib/site-audit/load";
+import { formatDate, formatDateTime, formatShortDate } from "@/lib/format";
+import { PageContainer, PageHeader } from "@/components/ui/Page";
 import LiveSearchCheckView from "@/features/diagnosis/components/LiveSearchCheckView";
+import SiteAuditView, { type SiteAuditViewData } from "@/features/diagnosis/components/SiteAuditView";
 
-function CheckPageContent() {
-  const searchParams = useSearchParams();
-  const tab = searchParams.get("tab");
+export const metadata: Metadata = { title: "Site Audit" };
+export const dynamic = "force-dynamic";
 
-  // Determine active tab
-  const activeTab = tab === "opportunities" 
-    ? "opportunities" 
-    : tab === "aivisibility" 
-    ? "aivisibility" 
-    : tab === "quick-check" 
-    ? "quick-check" 
-    : "audit";
+export default async function CheckPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const { tab } = await searchParams;
+  const session = await requireAgency();
+  const { active, error } = await getProjectContext(session);
 
-  return (
-    <div className="w-full max-w-[1600px] mx-auto p-6 sm:p-7 lg:p-8 font-sans text-foreground">
-      {/* ── PERSISTENT FAST TAB VIEWS ── */}
-      <div className={activeTab === "audit" ? "block" : "hidden"}>
-        <SiteAuditView />
-      </div>
-      <div className={activeTab === "opportunities" ? "block" : "hidden"}>
-        <NextActionsView />
-      </div>
-      <div className={activeTab === "aivisibility" ? "block" : "hidden"}>
-        <AIVisibilityView />
-      </div>
-      <div className={activeTab === "quick-check" ? "block" : "hidden"}>
+  if (tab === "quick-check") {
+    return (
+      <PageContainer>
+        <PageHeader
+          title="Check a search"
+          description="See right now who Google and its AI answer show for any search, and whether your business is among them."
+        />
         <LiveSearchCheckView />
-      </div>
-    </div>
-  );
-}
+      </PageContainer>
+    );
+  }
 
-export default function CheckPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="p-12 text-center text-xs font-semibold text-muted-foreground flex items-center justify-center min-h-[400px]">
-          <Loader2 className="w-5 h-5 animate-spin mr-2 text-primary" />
-          Loading Intelligence Hub…
-        </div>
-      }
-    >
-      <CheckPageContent />
-    </Suspense>
-  );
+  const project = active ? { id: active.id, name: active.name, domain: displayDomain(active.website) } : null;
+  let data: SiteAuditViewData;
+
+  if (!active) {
+    data = { project, state: error ? "error" : "no_project", errorMessage: error ?? undefined, completed: null, running: null, lastFailed: null, history: [], previous: null, comparisons: [] };
+  } else {
+    const [load, comparisons] = await Promise.all([loadSiteAudits(active.id), loadPageComparisons(active.id)]);
+    if (load.state !== "ok") {
+      data = {
+        project,
+        state: load.state,
+        errorMessage: load.state === "error" ? load.message : undefined,
+        completed: null,
+        running: null,
+        lastFailed: null,
+        history: [],
+        previous: null,
+        comparisons: [],
+      };
+    } else {
+      const history = load.history.map((h) => ({ label: formatShortDate(h.created_at), value: h.score ?? 0 }));
+      const prev = load.history.length >= 2 ? load.history[load.history.length - 2] : null;
+      data = {
+        project,
+        state: "ok",
+        completed: load.completed
+          ? {
+              id: load.completed.id,
+              score: load.completed.score ?? 0,
+              pagesScanned: load.completed.pages_scanned,
+              checkedAt: formatDateTime(load.completed.completed_at ?? load.completed.created_at),
+              checks: load.completed.checks ?? [],
+            }
+          : null,
+        running: load.running ? { id: load.running.id } : null,
+        lastFailed: load.lastFailed
+          ? { message: load.lastFailed.error_message ?? "The audit couldn't finish.", when: formatDateTime(load.lastFailed.created_at) }
+          : null,
+        history,
+        previous: prev ? { score: prev.score ?? 0, when: formatDate(prev.created_at) } : null,
+        comparisons: comparisons.map((c) => ({ ...c, checkedAt: formatDate(c.checkedAt) })),
+      };
+    }
+  }
+
+  return <SiteAuditView data={data} />;
 }

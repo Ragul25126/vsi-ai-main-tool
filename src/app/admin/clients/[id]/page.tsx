@@ -65,7 +65,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
 
  <Link
  href={`/dashboard/clients/${id}`}
- className="inline-block text-xs text-[#FF4500] hover:text-[#E03E00] transition-colors"
+ className="inline-block text-xs text-brand-strong hover:text-[#E03E00] transition-colors"
  >
  Open this client&rsquo;s dashboard →
  </Link>

@@ -2,95 +2,127 @@
 
 @variant dark (&:where(.dark, .dark *));
 
+/*
+ * VSI design tokens.
+ * Neutrals: one cool family. Brand gold comes from the logo and marks
+ * identity and "your business" in comparisons; it is never a status color.
+ * Status: positive (green), attention (orange), critical (red), info (blue).
+ * Legacy tokens (--card-bg, --muted-bg, --border, ...) are remapped onto
+ * the same palette so pages that haven't been migrated stay coherent.
+ */
 @layer base {
   :root {
-    --background: #F8FAFC;
+    /* Neutrals */
+    --canvas: #F6F7F9;
     --surface: #FFFFFF;
-    --surface-2: #F1F5F9;
-    --foreground: #0F172A;
-    --dark: #0F172A;
-    --dark-secondary: #475569;
+    --surface-2: #F1F3F6;
+    --ink: #14171F;
+    --ink-2: #4A5160;
+    --ink-3: #697080;
+    --line: #E3E6EB;
+    --line-strong: #CDD2DA;
 
-    --card-bg: #FFFFFF;
-    --card-border: #E2E8F0;
-    --card-hover-border: #CBD5E1;
-    --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
-    
-    --primary: #FF2B2B;
-    --primary-light: #FF5555;
+    /* Brand (logo gold) */
+    --brand: #B07F22;
+    --brand-strong: #8A6414;
+    --brand-soft: #FBF4E2;
+    --brand-light: #F0CC6C;
+
+    /* Status */
+    --positive: #1E7D46;
+    --positive-soft: #EAF5EE;
+    --attention: #C2410C;
+    --attention-soft: #FFF1E8;
+    --critical: #C0262D;
+    --critical-soft: #FDECEC;
+    --info: #1D5FD1;
+    --info-soft: #EAF1FD;
+
+    /* Legacy tokens, remapped */
+    --background: var(--canvas);
+    --foreground: var(--ink);
+    --dark: var(--ink);
+    --dark-secondary: var(--ink-2);
+    --card-bg: var(--surface);
+    --card-border: var(--line);
+    --card-hover-border: var(--line-strong);
+    --card-shadow: none;
+    --primary: var(--ink);
+    --primary-light: var(--ink-2);
     --primary-foreground: #FFFFFF;
-    
     --signal: #FF2B2B;
     --gradient-signal: linear-gradient(135deg, #FF4D4D 0%, #FF2B2B 50%, #D61C1C 100%);
-    
-    --success: #16A34A;
-    --warning: #D97706;
-    --danger: #DC2626;
-    --error: #DC2626;
-    --info: #2563EB;
-    
-    --chart-orange: #FF2B2B;
-    --chart-black: #E2E8F0;
-    
-    --muted-bg: #F1F5F9;
-    --muted-foreground: #64748B;
-    
-    --border: #E2E8F0;
-    
-    --radius: 20px;
-    --radius-button: 999px;
+    --success: var(--positive);
+    --warning: var(--attention);
+    --danger: var(--critical);
+    --error: var(--critical);
+    --chart-orange: var(--brand);
+    --chart-black: var(--line);
+    --muted-bg: var(--surface-2);
+    --muted-foreground: var(--ink-3);
+    --border: var(--line);
+    --popover: var(--surface);
 
+    --radius: 10px;
+    --radius-button: 6px;
     --glow-signal: 0 0 0 1px rgba(255, 43, 43, 0.25), 0 10px 30px -10px rgba(255, 43, 43, 0.35);
-    --shadow-panel: 0 20px 50px -20px rgba(0, 0, 0, 0.08);
+    --shadow-panel: 0 12px 32px -12px rgb(20 23 31 / 0.14);
   }
 
   .dark {
-    --background: #000000;
-    --surface: #0a0a0c;
-    --surface-2: #121215;
-    --foreground: #f4f4f5;
-    --dark: #FFFFFF;
-    --dark-secondary: #9CA3AF;
-
-    --card-bg: #09090b;
-    --card-border: rgba(255, 255, 255, 0.08);
-    --card-hover-border: rgba(255, 255, 255, 0.16);
-    --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.9);
-    
-    --primary: #FF2B2B;
-    --primary-light: #FF5555;
-    --primary-foreground: #FFFFFF;
-    
-    --signal: #FF2B2B;
-    --gradient-signal: linear-gradient(135deg, #FF4D4D 0%, #FF2B2B 50%, #D61C1C 100%);
-    
-    --success: #22C55E;
-    --warning: #F59E0B;
-    --danger: #EF4444;
-    --error: #EF4444;
-    --info: #3B82F6;
-
-    --chart-orange: #FF2B2B;
-    --chart-black: #F3F4F6;
-    
-    --muted-bg: #121215;
-    --muted-foreground: #a1a1aa;
-    
-    --border: rgba(255, 255, 255, 0.08);
-
-    --glow-signal: 0 0 0 1px rgba(255, 43, 43, 0.35), 0 20px 60px -20px rgba(255, 43, 43, 0.5);
-    --shadow-panel: 0 30px 80px -40px oklch(0 0 0 / 0.9);
+    --canvas: #0E1014;
+    --surface: #16191F;
+    --surface-2: #1C2027;
+    --ink: #EDEFF3;
+    --ink-2: #B6BCC8;
+    --ink-3: #8C93A1;
+    --line: #2A2F38;
+    --line-strong: #3A404B;
+    --brand: #D4A445;
+    --brand-strong: #E6BE68;
+    --brand-soft: #2A2314;
+    --positive: #4CB77A;
+    --positive-soft: #14271C;
+    --attention: #F08A4B;
+    --attention-soft: #2E1C12;
+    --critical: #F0686D;
+    --critical-soft: #301618;
+    --info: #6C9CF0;
+    --info-soft: #152238;
+    --primary-foreground: #14171F;
+    --shadow-panel: 0 12px 32px -12px rgb(0 0 0 / 0.6);
   }
 }
 
 @theme inline {
-  --color-background: var(--background);
+  /* New semantic palette */
+  --color-canvas: var(--canvas);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-light: var(--brand-light);
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
+  --color-attention: var(--attention);
+  --color-attention-soft: var(--attention-soft);
+  --color-critical: var(--critical);
+  --color-critical-soft: var(--critical-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-popover: var(--popover);
+
+  /* Legacy names */
+  --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-dark: var(--dark);
   --color-dark-secondary: var(--dark-secondary);
-
   --color-card: var(--card-bg);
   --color-primary: var(--primary);
   --color-primary-light: var(--primary-light);
@@ -103,16 +135,54 @@
   --color-warning: var(--warning);
   --color-danger: var(--danger);
   --color-error: var(--error);
-  --color-info: var(--info);
   --color-border: var(--border);
-
   --color-chart-orange: var(--chart-orange);
   --color-chart-black: var(--chart-black);
-  
-  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-heading: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Archivo", "Helvetica Neue", sans-serif;
-  --font-mono: var(--font-geist-mono), "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Type */
+  --font-sans: var(--font-geist), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-heading: var(--font-geist), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-geist), "Helvetica Neue", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+
+  --text-metric: 2.75rem;
+  --text-metric--line-height: 3rem;
+  --text-metric--letter-spacing: -0.02em;
+  --text-title: 1.375rem;
+  --text-title--line-height: 1.75rem;
+  --text-title--letter-spacing: -0.01em;
+  --text-section: 0.9375rem;
+  --text-section--line-height: 1.375rem;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.3125rem;
+  --text-support: 0.8125rem;
+  --text-support--line-height: 1.1875rem;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
+
+  /* Shape and elevation */
+  --radius-control: 6px;
+  --radius-panel: 10px;
+  --shadow-overlay: 0 16px 40px -12px rgb(20 23 31 / 0.22), 0 2px 6px rgb(20 23 31 / 0.06);
+
+  /* Motion */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-drawer-in: drawer-in 220ms var(--ease-out-soft);
+  --animate-fade-in: fade-in 160ms ease-out;
+  --animate-skeleton: skeleton 1.4s ease-in-out infinite;
+
+  @keyframes drawer-in {
+    from { transform: translateX(24px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes skeleton {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
 }
 
 @layer base {
@@ -120,17 +190,31 @@
     background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
   }
 
-  div, header, aside, section, main, card, nav, button, input, select, textarea, table, tr, th, td {
-    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
-  }
-  
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -170,8 +254,6 @@
 
 .enterprise-card:hover {
   border-color: var(--card-hover-border);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.08);
 }
 
 /* Buttons */
@@ -212,8 +294,7 @@
 }
 
 .interactive-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  border-color: var(--card-hover-border);
 }
 
 /* ValGrow Custom Utilities */

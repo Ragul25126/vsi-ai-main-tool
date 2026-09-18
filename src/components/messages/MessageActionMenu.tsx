@@ -483,7 +483,7 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
         aria-label="More Actions"
         className={`p-2 rounded-full transition-all duration-200 ${
           isOpen
-            ? "bg-[#FF6B00]/10 text-[#FF6B00] ring-2 ring-[#FF6B00]/30"
+            ? "bg-brand-soft text-brand-strong ring-2 ring-ink/10"
             : "hover:bg-card text-muted-foreground hover:text-foreground"
         }`}
       >
@@ -507,7 +507,7 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
                 transformOrigin: menuPosition.transformOrigin,
                 zIndex: 9999
               }}
-              className="w-[220px] rounded-[12px] bg-white dark:bg-[#1E1E23] text-slate-900 dark:text-foreground border border-slate-200 dark:border-border/80 shadow-2xl backdrop-blur-xl overflow-hidden py-1.5 focus:outline-none"
+              className="w-[220px] rounded-panel bg-white dark:bg-[#1E1E23] text-slate-900 dark:text-foreground border border-slate-200 dark:border-border/80 shadow-overlay backdrop-blur-xl overflow-hidden py-1.5 focus:outline-none"
               role="menu"
             >
               {menuSections.map((section, sIndex) => (
@@ -533,10 +533,10 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
                         className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold transition-colors outline-none cursor-pointer ${
                           isDanger
                             ? "text-rose-500 hover:bg-rose-500/10 focus:bg-rose-500/10"
-                            : "text-slate-700 dark:text-foreground/90 hover:bg-slate-100 dark:hover:bg-card focus:bg-slate-100 dark:focus:bg-card hover:text-[#FF6B00]"
+                            : "text-slate-700 dark:text-foreground/90 hover:bg-slate-100 dark:hover:bg-card focus:bg-slate-100 dark:focus:bg-card hover:text-brand-strong"
                         }`}
                       >
-                        <Icon size={15} className={isDanger ? "text-rose-500 shrink-0" : "text-muted-foreground shrink-0 group-hover:text-[#FF6B00]"} />
+                        <Icon size={15} className={isDanger ? "text-rose-500 shrink-0" : "text-muted-foreground shrink-0 group-hover:text-brand-strong"} />
                         <span className="truncate flex-1 text-left">{item.label}</span>
                       </button>
                     );
@@ -557,7 +557,7 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="w-full max-w-sm bg-white dark:bg-[#1E1E23] rounded-[20px] border border-slate-200 dark:border-border shadow-2xl p-6 text-slate-900 dark:text-foreground relative"
+              className="w-full max-w-sm bg-white dark:bg-[#1E1E23] rounded-panel border border-slate-200 dark:border-border shadow-overlay p-6 text-slate-900 dark:text-foreground relative"
             >
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
@@ -580,7 +580,7 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
                 <button
                   type="button"
                   onClick={confirmDeletePermanently}
-                  className="px-5 py-2 text-xs font-bold rounded-full bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-600/20 transition-all"
+                  className="px-5 py-2 text-xs font-bold rounded-full bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20 transition-all"
                 >
                   Delete
                 </button>
@@ -598,11 +598,11 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-white dark:bg-[#1E1E23] rounded-[24px] border border-slate-200 dark:border-border shadow-2xl p-6 text-slate-900 dark:text-foreground relative overflow-hidden"
+              className="w-full max-w-md bg-white dark:bg-[#1E1E23] rounded-panel border border-slate-200 dark:border-border shadow-overlay p-6 text-slate-900 dark:text-foreground relative overflow-hidden"
             >
               <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-border/50 mb-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#FF6B00]/10 text-[#FF6B00] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-brand-soft text-brand-strong flex items-center justify-center">
                     <Info size={18} />
                   </div>
                   <h3 className="text-base font-bold">Message Details</h3>
@@ -642,7 +642,7 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
                 </div>
                 <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-border/30">
                   <span className="text-muted-foreground font-medium">Status</span>
-                  <span className="px-2 py-0.5 rounded bg-[#FF6B00]/10 text-[#FF6B00] font-bold uppercase text-[10px]">
+                  <span className="px-2 py-0.5 rounded bg-brand-soft text-brand-strong font-bold text-caption">
                     {message.status}
                   </span>
                 </div>
@@ -665,7 +665,7 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => setShowDetailsModal(false)}
-                  className="px-5 py-2 text-xs font-bold rounded-full bg-[#FF6B00] text-white hover:bg-[#FF6B00]/90 transition-colors"
+                  className="px-5 py-2 text-xs font-bold rounded-full bg-ink text-white hover:bg-brand-soft transition-colors"
                 >
                   Close
                 </button>
@@ -683,11 +683,11 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-white dark:bg-[#1E1E23] rounded-[24px] border border-slate-200 dark:border-border shadow-2xl p-6 text-slate-900 dark:text-foreground relative"
+              className="w-full max-w-md bg-white dark:bg-[#1E1E23] rounded-panel border border-slate-200 dark:border-border shadow-overlay p-6 text-slate-900 dark:text-foreground relative"
             >
               <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-border/50 mb-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#FF6B00]/10 text-[#FF6B00] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-brand-soft text-brand-strong flex items-center justify-center">
                     <Share2 size={18} />
                   </div>
                   <h3 className="text-base font-bold">Share Message</h3>
@@ -702,7 +702,7 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-1">
+                  <label className="text-xs font-bold text-muted-foreground block mb-1">
                     Shareable Link
                   </label>
                   <div className="flex gap-2">
@@ -710,11 +710,11 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
                       type="text"
                       readOnly
                       value={typeof window !== "undefined" ? window.location.href : ""}
-                      className="flex-1 bg-slate-100 dark:bg-card border border-slate-200 dark:border-border rounded-xl px-3 py-2 text-xs text-foreground outline-none font-mono"
+                      className="flex-1 bg-slate-100 dark:bg-card border border-slate-200 dark:border-border rounded-panel px-3 py-2 text-xs text-foreground outline-none font-mono"
                     />
                     <button
                       onClick={handleCopyLink}
-                      className="px-4 py-2 bg-[#FF6B00] text-white text-xs font-bold rounded-xl hover:bg-[#FF6B00]/90 transition-colors flex items-center gap-1"
+                      className="px-4 py-2 bg-ink text-white text-xs font-bold rounded-panel hover:bg-brand-soft transition-colors flex items-center gap-1"
                     >
                       <Copy size={14} /> Copy
                     </button>
@@ -722,7 +722,7 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
                 </div>
 
                 <div className="pt-2">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
+                  <span className="text-xs font-bold text-muted-foreground block mb-2">
                     Quick Options
                   </span>
                   <div className="grid grid-cols-2 gap-2">
@@ -731,15 +731,15 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
                         window.location.href = `mailto:?subject=${encodeURIComponent(message.subject)}&body=${encodeURIComponent(window.location.href)}`;
                         setToastMessage("Opening email app...");
                       }}
-                      className="flex items-center justify-center gap-2 p-3 rounded-xl border border-slate-200 dark:border-border/60 hover:bg-slate-100 dark:hover:bg-card text-xs font-semibold transition-colors"
+                      className="flex items-center justify-center gap-2 p-3 rounded-panel border border-slate-200 dark:border-border/60 hover:bg-slate-100 dark:hover:bg-card text-xs font-semibold transition-colors"
                     >
-                      <Mail size={16} className="text-[#FF6B00]" /> Email Client
+                      <Mail size={16} className="text-brand-strong" /> Email Client
                     </button>
                     <button
                       onClick={handleCopyMessage}
-                      className="flex items-center justify-center gap-2 p-3 rounded-xl border border-slate-200 dark:border-border/60 hover:bg-slate-100 dark:hover:bg-card text-xs font-semibold transition-colors"
+                      className="flex items-center justify-center gap-2 p-3 rounded-panel border border-slate-200 dark:border-border/60 hover:bg-slate-100 dark:hover:bg-card text-xs font-semibold transition-colors"
                     >
-                      <ExternalLink size={16} className="text-[#FF6B00]" /> Copy Content
+                      <ExternalLink size={16} className="text-brand-strong" /> Copy Content
                     </button>
                   </div>
                 </div>
@@ -766,11 +766,11 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-sm bg-white dark:bg-[#1E1E23] rounded-[24px] border border-slate-200 dark:border-border shadow-2xl p-6 text-slate-900 dark:text-foreground relative"
+              className="w-full max-w-sm bg-white dark:bg-[#1E1E23] rounded-panel border border-slate-200 dark:border-border shadow-overlay p-6 text-slate-900 dark:text-foreground relative"
             >
               <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-border/50 mb-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#FF6B00]/10 text-[#FF6B00] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-brand-soft text-brand-strong flex items-center justify-center">
                     <Tag size={18} />
                   </div>
                   <h3 className="text-base font-bold">Manage Labels</h3>
@@ -790,16 +790,16 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
                     <button
                       key={label}
                       onClick={() => toggleLabel(label)}
-                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-panel text-xs font-semibold transition-all ${
                         isSelected
-                          ? "bg-[#FF6B00]/10 border border-[#FF6B00]/40 text-[#FF6B00]"
+                          ? "bg-brand-soft border border-line-strong text-brand-strong"
                           : "bg-slate-50 dark:bg-card border border-slate-200 dark:border-border/50 text-foreground hover:bg-slate-100 dark:hover:bg-card/80"
                       }`}
                     >
                       <span className="flex items-center gap-2">
                         <Tag size={14} /> {label}
                       </span>
-                      {isSelected && <Check size={16} className="text-[#FF6B00]" />}
+                      {isSelected && <Check size={16} className="text-brand-strong" />}
                     </button>
                   );
                 })}
@@ -808,7 +808,7 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => setShowLabelModal(false)}
-                  className="px-5 py-2 text-xs font-bold rounded-full bg-[#FF6B00] text-white hover:bg-[#FF6B00]/90 transition-colors"
+                  className="px-5 py-2 text-xs font-bold rounded-full bg-ink text-white hover:bg-brand-soft transition-colors"
                 >
                   Done
                 </button>

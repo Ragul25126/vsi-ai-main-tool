@@ -44,7 +44,7 @@ export default function TaskFilterBar({ counts, groups, owners }: Props) {
  onClick={() => setParam("status", s.value === "open" ? null : s.value)}
  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
  status === s.value
- ? "bg-amber-500 text-white"
+ ? "bg-ink text-white"
  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
  }`}
  >
@@ -59,7 +59,7 @@ export default function TaskFilterBar({ counts, groups, owners }: Props) {
  <select
  value={group}
  onChange={(e) => setParam("group", e.target.value || null)}
- className="rounded-md border border-gray-300 bg-card px-2.5 py-1.5 text-xs text-gray-700 focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+ className="rounded-md border border-gray-300 bg-card px-2.5 py-1.5 text-xs text-gray-700 focus:ring-2 focus:ring-ink/10 focus:border-transparent"
  >
  <option value="">All groups</option>
  {groups.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
@@ -68,7 +68,7 @@ export default function TaskFilterBar({ counts, groups, owners }: Props) {
  <select
  value={owner}
  onChange={(e) => setParam("owner", e.target.value || null)}
- className="rounded-md border border-gray-300 bg-card px-2.5 py-1.5 text-xs text-gray-700 focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+ className="rounded-md border border-gray-300 bg-card px-2.5 py-1.5 text-xs text-gray-700 focus:ring-2 focus:ring-ink/10 focus:border-transparent"
  >
  <option value="">All owners</option>
  {owners.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}

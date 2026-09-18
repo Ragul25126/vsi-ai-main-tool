@@ -54,9 +54,9 @@ export default function KeywordRunButton({ clientId, keywordId }: Props) {
 
  if (running) {
  return (
- <div className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2">
- <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
- <span className="text-sm text-amber-700 font-medium">Running...</span>
+ <div className="flex items-center gap-2 rounded-lg border border-line bg-attention-soft px-4 py-2">
+ <span className="h-2 w-2 rounded-full bg-ink animate-pulse" />
+ <span className="text-sm text-attention font-medium">Running...</span>
  </div>
  );
  }
@@ -64,7 +64,7 @@ export default function KeywordRunButton({ clientId, keywordId }: Props) {
  if (done) {
  return (
  <div className="rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-sm font-medium text-green-700">
- ✓ Snapshot captured{summary ? ` — ${summary}` : ""}
+ ✓ Snapshot captured{summary ? ` - ${summary}` : ""}
  </div>
  );
  }

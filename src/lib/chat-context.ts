@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { loadProjectOverview } from "@/lib/project-summary";
+import { CHECK_COPY, checkHeadline } from "@/lib/site-audit/copy";
 import type { AIOCitation, OrganicResult } from "@/types/search";
 
 export type ChatScope =
@@ -162,6 +164,17 @@ export async function buildChatContext(opts: {
         return `- "${r.keyword}" [${r.track_type}] rank ${rank} · AI: ${ai} · gap: ${(r.gap_label as string).replace(/_/g, " ")} · cited: ${top3}`;
       }),
       ``,
+      await projectFindingsContext({
+        id: client.id as string,
+        name: client.name as string,
+        website: (client.website as string | null) ?? null,
+        brandName: (client.brand_name as string | null) ?? null,
+        serviceType: (client.service_type as string | null) ?? null,
+        defaultLocation: null,
+        agencyId,
+        agencyName: null,
+      }),
+      ``,
       `# Open tasks for this client`,
       await fetchOpenTasksFor({ client_id: scope.clientId }),
     ].join("\n");
@@ -209,4 +222,65 @@ export async function buildChatContext(opts: {
   ].join("\n");
 
   return { contextText: context, scopeLabel: "All clients" };
+}
+
+/**
+ * Site audit, AI visibility, rankings and ranked findings for one project,
+ * from the same aggregation the Overview and Next Actions pages use.
+ * Anything not checked yet is stated as such so the model never guesses.
+ */
+async function projectFindingsContext(project: Parameters<typeof loadProjectOverview>[0]): Promise<string> {
+  try {
+    const o = await loadProjectOverview(project);
+    const lines: string[] = [];
+
+    lines.push("# Latest site audit");
+    if (o.audit.state === "ok" && o.audit.completed) {
+      const a = o.audit.completed;
+      lines.push(`Website health ${a.score}/100 from ${(a.completed_at ?? a.created_at).slice(0, 10)}, ${a.pages_scanned} pages checked.`);
+      for (const c of a.checks.filter((x) => x.status !== "pass")) {
+        lines.push(`- (${c.status === "fail" ? "needs fixing" : "could improve"}) ${checkHeadline(c)} [${CHECK_COPY[c.id].technical}]`);
+      }
+      if (o.audit.history.length >= 2) {
+        const prev = o.audit.history[o.audit.history.length - 2];
+        lines.push(`Previous audit score: ${prev.score} on ${prev.created_at.slice(0, 10)}.`);
+      }
+    } else {
+      lines.push(o.audit.state === "setup_required" ? "(Site Audit is not set up in this environment.)" : "(No site audit has been run yet.)");
+    }
+
+    lines.push("", "# AI visibility (GEO)");
+    if (o.geo.state === "ok" && o.geo.summary.searchesTracked > 0) {
+      const g = o.geo.summary;
+      lines.push(
+        g.visibility === null
+          ? "None of the checked searches produced an AI answer."
+          : `Appears in ${g.appears} of ${g.answered} AI answers (${g.visibility}%). Named ${g.mentions} times, linked ${g.citations} times. Last checked ${g.lastCheckedAt?.slice(0, 10)}.`,
+      );
+      for (const e of g.engines) {
+        lines.push(`- ${e.label}: ${!e.enabled && e.checked === 0 ? "not turned on" : e.checked === 0 ? "not checked yet" : `${e.appears} of ${e.answered} answers mention the brand`}`);
+      }
+      lines.push("- Gemini and Perplexity: not checked by VSI.");
+      if (g.competitors.length) lines.push(`Competitors linked in AI answers: ${g.competitors.slice(0, 5).map((c) => `${c.domain} (${c.answers})`).join(", ")}.`);
+      if (g.trend.length >= 2) lines.push(`AI visibility trend: ${g.trend.map((t) => `${t.date} ${t.value}%`).join(", ")}.`);
+    } else {
+      lines.push("(No AI answer checks have been run yet.)");
+    }
+
+    lines.push("", "# Google rankings");
+    if (o.search.state === "ok" && o.search.summary.tracked > 0) {
+      const r = o.search.summary;
+      lines.push(`${r.top10} of ${r.tracked} searches on Google's first page. ${r.improved} moved up and ${r.declined} moved down since the previous check.`);
+    } else {
+      lines.push("(No Google ranking checks yet.)");
+    }
+
+    lines.push("", "# Findings, most urgent first (what VSI recommends)");
+    if (o.findings.length === 0) lines.push("(No open findings.)");
+    for (const f of o.findings.slice(0, 12)) lines.push(`- [${f.sourceLabel}] ${f.title}: ${f.whatWeFound} What to do: ${f.whatToDo}`);
+    return lines.join("\n");
+  } catch (e) {
+    console.error("[chat-context] project findings failed", e);
+    return "(Project findings could not be loaded. Say so if asked about audits, AI visibility or rankings.)";
+  }
 }

@@ -106,8 +106,8 @@ export default function PromptEditor({
   return (
     <div className="space-y-6">
       {/* Variables reference */}
-      <div className="rounded-[22px] border border-slate-200/80 bg-white p-6 shadow-xs text-slate-900">
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Available template variables</p>
+      <div className="rounded-panel border border-slate-200/80 bg-white p-6 text-slate-900">
+        <p className="text-xs font-bold text-slate-400 mb-3">Available template variables</p>
         <div className="flex flex-wrap gap-2">
           {variables.map((v) => {
             const used = placeholdersUsed.has(v);
@@ -130,10 +130,10 @@ export default function PromptEditor({
       </div>
 
       {/* Editor */}
-      <div className="rounded-[22px] border border-slate-200/80 bg-white p-6 shadow-xs space-y-4">
+      <div className="rounded-panel border border-slate-200/80 bg-white p-6 space-y-4">
         <div className="flex items-center justify-between">
           <p className="text-base font-bold text-slate-900">Template</p>
-          <span className={`text-xs font-bold px-3 py-1 rounded-full ${isOverride ? "bg-orange-50 text-[#FF5500] border border-orange-200" : "bg-slate-100 text-slate-500 border border-slate-200"}`}>
+          <span className={`text-xs font-bold px-3 py-1 rounded-full ${isOverride ? "bg-orange-50 text-brand-strong border border-orange-200" : "bg-slate-100 text-slate-500 border border-slate-200"}`}>
             {isOverride ? "Editing override" : "Editing default copy"}
           </span>
         </div>
@@ -142,48 +142,48 @@ export default function PromptEditor({
           onChange={(e) => setDraft(e.target.value)}
           rows={22}
           spellCheck={false}
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-900 font-mono leading-relaxed focus:border-[#FF5500] focus:bg-white focus:outline-none transition-colors"
+          className="w-full rounded-panel border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-900 font-mono leading-relaxed focus:border-line-strong focus:bg-white focus:outline-none transition-colors"
         />
 
         {unknownPlaceholders.length > 0 && (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700">
+          <div className="rounded-panel border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700">
             <strong>Unknown placeholders:</strong>{" "}
-            {unknownPlaceholders.map((p) => `{{${p}}}`).join(", ")} — these will render as empty strings. Remove or fix them.
+            {unknownPlaceholders.map((p) => `{{${p}}}`).join(", ")} - these will render as empty strings. Remove or fix them.
           </div>
         )}
         {missingPlaceholders.length > 0 && (
-          <div className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-xs font-semibold text-[#FF5500]">
+          <div className="rounded-panel border border-orange-200 bg-orange-50 px-4 py-3 text-xs font-semibold text-brand-strong">
             <strong>Not referenced:</strong>{" "}
-            {missingPlaceholders.map((p) => `{{${p}}}`).join(", ")} — these variables won&rsquo;t appear in the prompt. That&rsquo;s fine if intentional.
+            {missingPlaceholders.map((p) => `{{${p}}}`).join(", ")} - these variables won&rsquo;t appear in the prompt. That&rsquo;s fine if intentional.
           </div>
         )}
       </div>
 
       {/* Preview */}
-      <div className="rounded-[22px] border border-slate-200/80 bg-white p-6 shadow-xs">
+      <div className="rounded-panel border border-slate-200/80 bg-white p-6">
         <button
           onClick={() => setPreviewOpen((v) => !v)}
-          className="flex items-center gap-2 text-sm font-bold text-slate-900 hover:text-[#FF5500] transition-colors"
+          className="flex items-center gap-2 text-sm font-bold text-slate-900 hover:text-brand-strong transition-colors"
         >
           <span>{previewOpen ? "▼" : "▶"}</span>
           Preview rendered prompt (with sample values)
         </button>
         {previewOpen && (
-          <pre className="mt-4 text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-xl p-4 overflow-x-auto max-h-96 overflow-y-auto whitespace-pre-wrap leading-relaxed font-mono">
+          <pre className="mt-4 text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-panel p-4 overflow-x-auto max-h-96 overflow-y-auto whitespace-pre-wrap leading-relaxed font-mono">
             {samplePreview}
           </pre>
         )}
       </div>
 
       {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{error}</div>
+        <div className="rounded-panel border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{error}</div>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <button
           onClick={resetToDefault}
           disabled={saving || !isOverride}
-          className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors shadow-xs"
+          className="rounded-panel border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors"
         >
           Reset to default
         </button>
@@ -192,7 +192,7 @@ export default function PromptEditor({
           <button
             onClick={save}
             disabled={saving || !dirty}
-            className="rounded-xl bg-[#FF5500] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#e04800] disabled:opacity-40 transition-colors shadow-md shadow-[#FF5500]/20"
+            className="rounded-panel bg-ink px-5 py-2.5 text-sm font-bold text-white hover:bg-[#e04800] disabled:opacity-40 transition-colors /20"
           >
             {saving ? "Saving..." : dirty ? "Save override" : "No changes"}
           </button>

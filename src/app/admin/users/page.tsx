@@ -8,7 +8,7 @@ const MOCK_USERS = [
 ];
 
 const ROLE_BADGE: Record<string, string> = {
-  super_admin: "bg-orange-50 text-[#FF5500] border-orange-200",
+  super_admin: "bg-orange-50 text-brand-strong border-orange-200",
   admin: "bg-blue-50 text-blue-600 border-blue-200",
   member: "bg-emerald-50 text-emerald-600 border-emerald-200",
   viewer: "bg-slate-100 text-slate-600 border-slate-200",
@@ -39,7 +39,7 @@ export default function UsersPage() {
 
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-panel bg-blue-50 border border-blue-200 flex items-center justify-center">
           <Users className="w-5 h-5 text-blue-600" />
         </div>
         <div>
@@ -54,15 +54,15 @@ export default function UsersPage() {
           { label: "Total", value: counts.total, Icon: Users, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200" },
           { label: "Active", value: counts.active, Icon: UserCheck, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200" },
           { label: "Disabled", value: counts.disabled, Icon: UserX, color: "text-rose-600", bg: "bg-rose-50", border: "border-rose-200" },
-          { label: "Admins", value: counts.admins, Icon: Shield, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200" },
+          { label: "Admins", value: counts.admins, Icon: Shield, color: "text-attention", bg: "bg-attention-soft", border: "border-line" },
         ].map(({ label, value, Icon, color, bg, border }) => (
-          <div key={label} className={`bg-white border ${border} rounded-2xl p-5 flex items-center gap-3 shadow-xs hover:shadow-md transition-shadow`}>
-            <div className={`w-10 h-10 rounded-2xl ${bg} flex items-center justify-center shrink-0`}>
+          <div key={label} className={`bg-white border ${border} rounded-panel p-5 flex items-center gap-3   transition-shadow`}>
+            <div className={`w-10 h-10 rounded-panel ${bg} flex items-center justify-center shrink-0`}>
               <Icon className={`w-5 h-5 ${color}`} />
             </div>
             <div>
-              <p className="text-2xl font-extrabold text-slate-900">{value}</p>
-              <p className="text-[11px] text-slate-500 uppercase tracking-wide font-bold">{label}</p>
+              <p className="text-2xl font-semibold text-slate-900">{value}</p>
+              <p className="text-caption text-slate-500 tracking-wide font-bold">{label}</p>
             </div>
           </div>
         ))}
@@ -78,7 +78,7 @@ export default function UsersPage() {
               onClick={() => setRoleFilter(role)}
               className={`px-3.5 py-1.5 text-[12px] font-bold rounded-full transition-all capitalize ${
                 roleFilter === role
-                  ? "bg-[#FF5500] text-white shadow-sm"
+                  ? "bg-ink text-white "
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -95,15 +95,15 @@ export default function UsersPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search users…"
-            className="bg-white border border-slate-200/80 rounded-2xl pl-10 pr-4 py-2 text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#FF5500] w-64 shadow-xs transition-colors"
+            className="bg-white border border-slate-200/80 rounded-panel pl-10 pr-4 py-2 text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-line-strong w-64 transition-colors"
           />
         </div>
       </div>
 
       {/* Users table */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
+      <div className="bg-white border border-slate-200/80 rounded-panel overflow-hidden">
         {/* Table header */}
-        <div className="grid grid-cols-12 gap-2 px-6 py-3 border-b border-slate-100 text-[11px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/60">
+        <div className="grid grid-cols-12 gap-2 px-6 py-3 border-b border-slate-100 text-caption text-slate-400 font-bold bg-slate-50/60">
           <div className="col-span-3">Name</div>
           <div className="col-span-3">Email</div>
           <div className="col-span-2">Agency</div>
@@ -126,27 +126,27 @@ export default function UsersPage() {
                   <span className="text-xs font-bold text-slate-600">{(user.full_name ?? "?").charAt(0)}</span>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[13px] font-bold text-slate-800 truncate">{user.full_name ?? "—"}</p>
+                  <p className="text-[13px] font-bold text-slate-800 truncate">{user.full_name ?? "-"}</p>
                 </div>
               </div>
 
               {/* Email */}
               <div className="col-span-3 flex items-center gap-1.5">
                 <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                <span className="text-[12px] text-slate-600 truncate">{user.email ?? "—"}</span>
+                <span className="text-[12px] text-slate-600 truncate">{user.email ?? "-"}</span>
               </div>
 
               {/* Agency */}
               <div className="col-span-2">
                 <div className="flex items-center gap-1.5">
                   <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span className="text-[12px] text-slate-600 truncate">{user.agency_name ?? "—"}</span>
+                  <span className="text-[12px] text-slate-600 truncate">{user.agency_name ?? "-"}</span>
                 </div>
               </div>
 
               {/* Role badge */}
               <div className="col-span-1 flex justify-center">
-                <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${ROLE_BADGE[user.role ?? "member"] ?? ROLE_BADGE.member}`}>
+                <span className={`text-caption font-bold px-2.5 py-0.5 rounded-full border ${ROLE_BADGE[user.role ?? "member"] ?? ROLE_BADGE.member}`}>
                   {(user.role ?? "member").replace("_", " ")}
                 </span>
               </div>
@@ -154,12 +154,12 @@ export default function UsersPage() {
               {/* Status */}
               <div className="col-span-1 flex justify-center">
                 {user.is_disabled ? (
-                  <span className="flex items-center gap-1 text-[11px] font-bold text-rose-600">
+                  <span className="flex items-center gap-1 text-caption font-bold text-rose-600">
                     <UserX className="w-3.5 h-3.5" />
                     Off
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600">
+                  <span className="flex items-center gap-1 text-caption font-bold text-emerald-600">
                     <UserCheck className="w-3.5 h-3.5" />
                     On
                   </span>
@@ -168,7 +168,7 @@ export default function UsersPage() {
 
               {/* Joined */}
               <div className="col-span-2 flex justify-end">
-                <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
+                <div className="flex items-center gap-1 text-caption text-slate-400 font-medium">
                   <Calendar className="w-3.5 h-3.5" />
                   {user.created_at}
                 </div>

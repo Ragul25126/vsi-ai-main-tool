@@ -35,9 +35,9 @@ export default function FrequencySelector({ clientId, current }: { clientId: str
  }
 
  return (
- <div className="rounded-[20px] border border-gray-200 bg-card p-5">
+ <div className="rounded-panel border border-gray-200 bg-card p-5">
  <div className="flex items-center justify-between mb-3">
- <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Check Frequency</h2>
+ <h2 className="text-xs font-medium text-gray-500">Check Frequency</h2>
  {saving && <span className="text-xs text-gray-500 animate-pulse">Saving...</span>}
  {saved && <span className="text-xs text-green-700">✓ Saved</span>}
  </div>
@@ -49,13 +49,13 @@ export default function FrequencySelector({ clientId, current }: { clientId: str
  onClick={() => handleChange(opt.value)}
  className={`rounded-lg border p-3 text-left transition-all ${
  selected === opt.value
- ? "border-amber-500 bg-amber-50"
+ ? "border-line bg-attention-soft"
  : "border-gray-300 hover:border-gray-400"
  }`}
  >
  <div className="flex items-center justify-between mb-1">
  <p className="text-xs font-semibold text-gray-900">{opt.label}</p>
- {selected === opt.value && <span className="text-amber-700 text-xs">✓</span>}
+ {selected === opt.value && <span className="text-attention text-xs">✓</span>}
  </div>
  <p className="text-xs text-gray-500 leading-tight">{opt.desc}</p>
  </button>
@@ -64,7 +64,7 @@ export default function FrequencySelector({ clientId, current }: { clientId: str
 
  {selected !== "manual" && (
  <p className="mt-3 text-xs text-gray-500">
- Auto-run requires the daily pipeline to be configured. For now, use <span className="text-amber-700">Run Now</span> to trigger manually.
+ Auto-run requires the daily pipeline to be configured. For now, use <span className="text-attention">Run Now</span> to trigger manually.
  </p>
  )}
  </div>

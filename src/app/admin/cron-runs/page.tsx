@@ -16,17 +16,17 @@ export default async function CronRunsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Cron history</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Last 50 automatic runs of <code className="text-[#FF5500] bg-orange-50 px-1.5 py-0.5 rounded font-mono font-bold">/api/cron/run-due-clients</code>. Useful for verifying the scheduler is firing and spotting failing clients.</p>
+        <p className="text-sm text-slate-500 mt-0.5">Last 50 automatic runs of <code className="text-brand-strong bg-orange-50 px-1.5 py-0.5 rounded font-mono font-bold">/api/cron/run-due-clients</code>. Useful for verifying the scheduler is firing and spotting failing clients.</p>
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-[22px] border border-dashed border-slate-200 bg-white p-12 text-center shadow-xs">
+        <div className="rounded-panel border border-dashed border-slate-200 bg-white p-12 text-center">
           <p className="text-sm font-semibold text-slate-400">No cron runs yet.</p>
           <p className="text-xs text-slate-400 mt-1">Configure the scheduled task to hit the cron endpoint hourly.</p>
         </div>
       ) : (
-        <div className="rounded-[22px] border border-slate-200/80 bg-white overflow-hidden shadow-xs">
-          <div className="hidden sm:grid grid-cols-12 gap-2 px-6 py-3 bg-slate-50/70 border-b border-slate-100 text-xs text-slate-400 font-bold uppercase tracking-wider">
+        <div className="rounded-panel border border-slate-200/80 bg-white overflow-hidden">
+          <div className="hidden sm:grid grid-cols-12 gap-2 px-6 py-3 bg-slate-50/70 border-b border-slate-100 text-xs text-slate-400 font-bold">
             <div className="col-span-3">Started</div>
             <div className="col-span-2">Duration</div>
             <div className="col-span-2 text-center">Clients</div>

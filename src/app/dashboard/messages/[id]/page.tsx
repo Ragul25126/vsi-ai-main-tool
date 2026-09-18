@@ -28,7 +28,7 @@ export default function MessageDetailsPage() {
         <p className="text-muted-foreground mb-6">This message may have been deleted or moved.</p>
         <button 
           onClick={() => router.push("/dashboard/messages")}
-          className="px-6 py-2 bg-[#FF6B00] text-white font-bold rounded-full hover:bg-[#FF6B00]/90 transition-colors"
+          className="px-6 py-2 bg-ink text-white font-bold rounded-full hover:bg-brand-soft transition-colors"
         >
           Return to Inbox
         </button>
@@ -97,7 +97,7 @@ export default function MessageDetailsPage() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-full bg-emerald-500 text-white font-semibold text-sm shadow-xl flex items-center gap-3"
+            className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-full bg-emerald-500 text-white font-semibold text-sm shadow-overlay flex items-center gap-3"
           >
             <CheckCircle2 size={18} />
             <span>{typeof toastMessage === "string" ? toastMessage : toastMessage.text}</span>
@@ -183,30 +183,30 @@ export default function MessageDetailsPage() {
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-4xl mx-auto bg-card rounded-[24px] border border-border shadow-lg p-6 sm:p-8 overflow-hidden relative"
+          className="max-w-4xl mx-auto bg-card rounded-panel border border-border p-6 sm:p-8 overflow-hidden relative"
         >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF6B00]/5 rounded-full blur-[80px]" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-soft rounded-full blur-[80px]" />
 
           {/* Subject & Tags */}
           <div className="flex items-start justify-between gap-4 mb-8 relative z-10">
             <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">{message.subject}</h1>
               <div className="flex flex-wrap gap-2">
-                <span className="px-2.5 py-0.5 rounded-md bg-[#FF6B00]/10 text-[#FF6B00] text-[10px] font-bold uppercase tracking-wider border border-[#FF6B00]/20">
+                <span className="px-2.5 py-0.5 rounded-md bg-brand-soft text-brand-strong text-caption font-bold border border-line-strong">
                   {message.folder}
                 </span>
                 {message.relatedClient && (
-                  <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20">
+                  <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 text-caption font-bold border border-emerald-500/20">
                     Client: {message.relatedClient}
                   </span>
                 )}
                 {message.priority === "high" && (
-                  <span className="px-2.5 py-0.5 rounded-md bg-rose-500/10 text-rose-500 text-[10px] font-bold uppercase tracking-wider border border-rose-500/20">
+                  <span className="px-2.5 py-0.5 rounded-md bg-rose-500/10 text-rose-500 text-caption font-bold border border-rose-500/20">
                     High Priority
                   </span>
                 )}
                 {message.labels && message.labels.map(l => (
-                  <span key={l} className="px-2.5 py-0.5 rounded-md bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-wider border border-blue-500/20 flex items-center gap-1">
+                  <span key={l} className="px-2.5 py-0.5 rounded-md bg-blue-500/10 text-blue-400 text-caption font-bold border border-blue-500/20 flex items-center gap-1">
                     <Tag size={10} /> {l}
                   </span>
                 ))}
@@ -240,7 +240,7 @@ export default function MessageDetailsPage() {
                 {formattedDate}
                 <button 
                   onClick={() => toggleStar(message.id)}
-                  className={`ml-2 p-1 rounded-full transition-colors ${message.isStarred ? 'text-amber-400 hover:text-amber-500' : 'text-muted-foreground hover:text-amber-400'}`}
+                  className={`ml-2 p-1 rounded-full transition-colors ${message.isStarred ? 'text-brand-strong hover:text-ink' : 'text-muted-foreground hover:text-ink'}`}
                 >
                   <Star size={16} fill={message.isStarred ? "currentColor" : "none"} />
                 </button>
@@ -258,10 +258,10 @@ export default function MessageDetailsPage() {
 
           {/* AI Summary */}
           {message.aiSummary && (
-            <div className="mb-8 p-4 rounded-xl bg-[#FF6B00]/5 border border-[#FF6B00]/20 flex gap-3 relative z-10">
-              <Sparkles className="w-5 h-5 text-[#FF6B00] shrink-0 mt-0.5" />
+            <div className="mb-8 p-4 rounded-panel bg-brand-soft border border-line-strong flex gap-3 relative z-10">
+              <Sparkles className="w-5 h-5 text-brand-strong shrink-0 mt-0.5" />
               <div>
-                <h4 className="text-xs font-bold text-[#FF6B00] uppercase tracking-wider mb-1">AI Summary</h4>
+                <h4 className="text-xs font-bold text-brand-strong mb-1">AI Summary</h4>
                 <p className="text-sm text-foreground/90 leading-relaxed">{message.aiSummary}</p>
               </div>
             </div>
@@ -273,17 +273,17 @@ export default function MessageDetailsPage() {
           {/* Attachments */}
           {message.attachments && message.attachments.length > 0 && (
             <div className="border-t border-border pt-6 relative z-10">
-              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+              <h4 className="text-xs font-bold text-muted-foreground mb-3">
                 {message.attachments.length} Attachments
               </h4>
               <div className="flex flex-wrap gap-3">
                 {message.attachments.map(att => (
-                  <a key={att.id} href={att.url} onClick={(e) => { e.preventDefault(); handleDownloadPDF(); }} className="flex items-center gap-3 p-3 pr-4 rounded-xl border border-border bg-muted-bg/60 hover:bg-muted-bg transition-colors group">
-                    <div className="w-10 h-10 rounded-lg bg-[#FF6B00]/10 text-[#FF6B00] flex items-center justify-center">
+                  <a key={att.id} href={att.url} onClick={(e) => { e.preventDefault(); handleDownloadPDF(); }} className="flex items-center gap-3 p-3 pr-4 rounded-panel border border-border bg-muted-bg/60 hover:bg-muted-bg transition-colors group">
+                    <div className="w-10 h-10 rounded-lg bg-brand-soft text-brand-strong flex items-center justify-center">
                       <Paperclip size={18} />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-foreground group-hover:text-[#FF6B00] transition-colors line-clamp-1">{att.name}</p>
+                      <p className="text-sm font-semibold text-foreground group-hover:text-brand-strong transition-colors line-clamp-1">{att.name}</p>
                       <p className="text-xs text-muted-foreground">{att.size}</p>
                     </div>
                   </a>

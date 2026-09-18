@@ -34,16 +34,16 @@ export default async function PromptsListPage() {
           <Link
             key={def.key}
             href={`/admin/prompts/${def.key}`}
-            className="block rounded-[22px] border border-slate-200/80 bg-white p-5 shadow-xs hover:border-[#FF5500]/50 hover:shadow-md transition-all group"
+            className="block rounded-panel border border-slate-200/80 bg-white p-5 hover:border-line-strong transition-all group"
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <p className="text-base font-bold text-slate-900 group-hover:text-[#FF5500] transition-colors">{def.title}</p>
+                  <p className="text-base font-bold text-slate-900 group-hover:text-brand-strong transition-colors">{def.title}</p>
                   {saved ? (
-                    <span className="rounded-full bg-orange-50 border border-orange-200 px-2.5 py-0.5 text-[10px] font-extrabold text-[#FF5500] uppercase tracking-wider">Override active</span>
+                    <span className="rounded-full bg-orange-50 border border-orange-200 px-2.5 py-0.5 text-caption font-semibold text-brand-strong">Override active</span>
                   ) : (
-                    <span className="rounded-full bg-slate-100 border border-slate-200 px-2.5 py-0.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Default</span>
+                    <span className="rounded-full bg-slate-100 border border-slate-200 px-2.5 py-0.5 text-caption font-semibold text-slate-500">Default</span>
                   )}
                 </div>
                 <p className="text-xs text-slate-500 font-medium mt-1.5 leading-relaxed">{def.description}</p>
@@ -53,7 +53,7 @@ export default async function PromptsListPage() {
                   </p>
                 )}
               </div>
-              <span className="text-xs font-bold text-[#FF5500] shrink-0 pt-0.5 group-hover:translate-x-0.5 transition-transform">Edit →</span>
+              <span className="text-xs font-bold text-brand-strong shrink-0 pt-0.5 group-hover:translate-x-0.5 transition-transform">Edit →</span>
             </div>
           </Link>
         ))}

@@ -132,15 +132,15 @@ export default function HelpCenterPage() {
             This page provides a unified summary of how your brand shows up when people search on Google or ask AI engines.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-muted/40 border border-slate-200/70 dark:border-border space-y-1">
+            <div className="p-3 rounded-panel bg-slate-50 dark:bg-muted/40 border border-slate-200/70 dark:border-border space-y-1">
               <span className="font-bold text-slate-900 dark:text-foreground">Direct AI Citations</span>
-              <p className="text-[11px] text-slate-500 dark:text-muted-foreground">
+              <p className="text-caption text-slate-500 dark:text-muted-foreground">
                 When an AI model (like ChatGPT, Gemini, or Perplexity) generates an answer and links directly to your website as a clickable source link.
               </p>
             </div>
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-muted/40 border border-slate-200/70 dark:border-border space-y-1">
+            <div className="p-3 rounded-panel bg-slate-50 dark:bg-muted/40 border border-slate-200/70 dark:border-border space-y-1">
               <span className="font-bold text-slate-900 dark:text-foreground">Organic SERP Rank</span>
-              <p className="text-[11px] text-slate-500 dark:text-muted-foreground">
+              <p className="text-caption text-slate-500 dark:text-muted-foreground">
                 Your standard numerical ranking on traditional Google search results for target keywords (e.g. Position #1 or #3).
               </p>
             </div>
@@ -163,9 +163,9 @@ export default function HelpCenterPage() {
           <p>
             Traditional search bots (Googlebot) read HTML. Modern AI search bots (like <code>GPTBot</code>, <code>PerplexityBot</code>, and <code>ClaudeBot</code>) require permission in your <code>robots.txt</code> file and clean structured data to cite you.
           </p>
-          <div className="bg-orange-50/70 dark:bg-orange-950/20 border border-orange-200/70 dark:border-orange-900/40 p-3.5 rounded-2xl space-y-1 text-orange-950 dark:text-orange-200">
+          <div className="bg-orange-50/70 dark:bg-orange-950/20 border border-orange-200/70 dark:border-orange-900/40 p-3.5 rounded-panel space-y-1 text-orange-950 dark:text-orange-200">
             <p className="font-bold">Common Doubt: &quot;Why is my AI audit score low?&quot;</p>
-            <p className="text-[11px] text-orange-800 dark:text-orange-300">
+            <p className="text-caption text-orange-800 dark:text-orange-300">
               The most common reason is a wildcard <code>Disallow: /</code> in your robots.txt file blocking AI user-agents, or missing JSON-LD Organization and FAQ schema.
             </p>
           </div>
@@ -278,7 +278,7 @@ export default function HelpCenterPage() {
           <p>
             If your site audit shows an AI crawler block, check your website&apos;s <code>robots.txt</code> file (located at <code>yourwebsite.com/robots.txt</code>).
           </p>
-          <div className="p-3 rounded-xl bg-slate-900 text-emerald-400 font-mono text-[11px] leading-relaxed">
+          <div className="p-3 rounded-panel bg-slate-900 text-emerald-400 font-mono text-caption leading-relaxed">
             User-agent: GPTBot<br />
             Allow: /<br /><br />
             User-agent: PerplexityBot<br />
@@ -286,7 +286,7 @@ export default function HelpCenterPage() {
             User-agent: ClaudeBot<br />
             Allow: /
           </div>
-          <p className="text-[11px] text-slate-500">
+          <p className="text-caption text-slate-500">
             Adding the snippet above allows AI search engines to crawl and cite your content in real-time answers.
           </p>
         </div>
@@ -303,27 +303,27 @@ export default function HelpCenterPage() {
       content: (
         <div className="space-y-3 text-xs text-slate-600 dark:text-muted-foreground leading-relaxed">
           <div className="grid grid-cols-1 gap-2.5">
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-muted/40 border border-slate-200/70 dark:border-border">
+            <div className="p-3 rounded-panel bg-slate-50 dark:bg-muted/40 border border-slate-200/70 dark:border-border">
               <span className="font-bold text-slate-900 dark:text-foreground">GEO (Generative Engine Optimization)</span>
-              <p className="text-[11px] text-slate-500 dark:text-muted-foreground mt-0.5">
+              <p className="text-caption text-slate-500 dark:text-muted-foreground mt-0.5">
                 The modern evolution of SEO focused on getting recommended and cited inside AI-generated responses (ChatGPT, Google AI, Perplexity).
               </p>
             </div>
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-muted/40 border border-slate-200/70 dark:border-border">
+            <div className="p-3 rounded-panel bg-slate-50 dark:bg-muted/40 border border-slate-200/70 dark:border-border">
               <span className="font-bold text-slate-900 dark:text-foreground">AI Overview (AIO)</span>
-              <p className="text-[11px] text-slate-500 dark:text-muted-foreground mt-0.5">
+              <p className="text-caption text-slate-500 dark:text-muted-foreground mt-0.5">
                 Google&apos;s AI-generated snapshot shown at the very top of Google Search results, summarizing information from multiple web sources.
               </p>
             </div>
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-muted/40 border border-slate-200/70 dark:border-border">
+            <div className="p-3 rounded-panel bg-slate-50 dark:bg-muted/40 border border-slate-200/70 dark:border-border">
               <span className="font-bold text-slate-900 dark:text-foreground">Citation Share of Voice</span>
-              <p className="text-[11px] text-slate-500 dark:text-muted-foreground mt-0.5">
+              <p className="text-caption text-slate-500 dark:text-muted-foreground mt-0.5">
                 The percentage of times your website is cited by AI models compared to your competitors for target keyword clusters.
               </p>
             </div>
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-muted/40 border border-slate-200/70 dark:border-border">
+            <div className="p-3 rounded-panel bg-slate-50 dark:bg-muted/40 border border-slate-200/70 dark:border-border">
               <span className="font-bold text-slate-900 dark:text-foreground">JSON-LD Schema Markup</span>
-              <p className="text-[11px] text-slate-500 dark:text-muted-foreground mt-0.5">
+              <p className="text-caption text-slate-500 dark:text-muted-foreground mt-0.5">
                 Hidden machine-readable code on your webpage that explicitly tells AI models who you are, what products you sell, and your verified pricing.
               </p>
             </div>
@@ -360,14 +360,14 @@ export default function HelpCenterPage() {
         {/* Top Header */}
         <div className="p-5 border-b border-slate-100 dark:border-border space-y-1">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-[#FF5A1F] flex items-center justify-center font-bold shadow-2xs">
+            <div className="w-9 h-9 rounded-panel bg-orange-50 dark:bg-orange-950/40 text-brand-strong flex items-center justify-center font-bold">
               <HelpCircle size={18} className="stroke-[2.5]" />
             </div>
             <div>
-              <h2 className="text-sm font-black text-slate-900 dark:text-foreground">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-foreground">
                 Help &amp; Doubts Hub
               </h2>
-              <p className="text-[11px] text-slate-400 dark:text-muted-foreground font-medium">
+              <p className="text-caption text-slate-400 dark:text-muted-foreground font-medium">
                 Guides, FAQs &amp; Explanations
               </p>
             </div>
@@ -388,21 +388,21 @@ export default function HelpCenterPage() {
                   setActiveCategory(cat.id);
                   setExpandedArticleId(null);
                 }}
-                className={`w-full p-3 rounded-2xl text-left transition-all flex items-center gap-3 cursor-pointer ${
+                className={`w-full p-3 rounded-panel text-left transition-all flex items-center gap-3 cursor-pointer ${
                   isActive
-                    ? "bg-[#FFF9F5] dark:bg-orange-950/30 border-2 border-[#FF5A1F] shadow-2xs text-[#FF5A1F]"
+                    ? "bg-[#FFF9F5] dark:bg-orange-950/30 border-2 border-line-strong  text-brand-strong"
                     : "bg-transparent hover:bg-slate-50 dark:hover:bg-muted/50 text-slate-600 dark:text-slate-300 border border-transparent"
                 }`}
               >
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                <div className={`w-8 h-8 rounded-panel flex items-center justify-center shrink-0 ${
                   isActive
-                    ? "bg-orange-100 dark:bg-orange-900/50 text-[#FF5A1F]"
+                    ? "bg-orange-100 dark:bg-orange-900/50 text-brand-strong"
                     : "bg-slate-100 dark:bg-muted text-slate-500"
                 }`}>
                   <Icon size={16} className="stroke-[2.2]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className={`text-xs font-extrabold truncate ${isActive ? "text-[#FF5A1F]" : "text-slate-900 dark:text-foreground"}`}>
+                  <p className={`text-xs font-semibold truncate ${isActive ? "text-brand-strong" : "text-slate-900 dark:text-foreground"}`}>
                     {cat.label}
                   </p>
                   <p className="text-[10.5px] text-slate-400 dark:text-muted-foreground font-medium truncate mt-0.5">
@@ -416,17 +416,17 @@ export default function HelpCenterPage() {
 
         {/* Bottom AI Assistant Callout */}
         <div className="p-4 border-t border-slate-100 dark:border-border">
-          <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 dark:from-orange-950/30 dark:to-orange-900/10 border border-orange-200/80 dark:border-orange-900/40 rounded-2xl p-3.5 space-y-2">
+          <div className="bg-surface-2 dark:from-orange-950/30 dark:to-orange-900/10 border border-orange-200/80 dark:border-orange-900/40 rounded-panel p-3.5 space-y-2">
             <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-foreground">
-              <Bot size={15} className="text-[#FF5A1F]" />
+              <Bot size={15} className="text-brand-strong" />
               <span>Have an instant question?</span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-muted-foreground font-medium leading-tight">
+            <p className="text-caption text-slate-500 dark:text-muted-foreground font-medium leading-tight">
               Ask our AI Assistant to explain any metric or ranking issue in real-time.
             </p>
             <Link
               href="/dashboard/chat"
-              className="inline-flex items-center gap-1 text-xs font-extrabold text-[#FF5A1F] hover:underline pt-0.5"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-brand-strong hover:underline pt-0.5"
             >
               <span>Ask in AI Chat</span>
               <ArrowRight size={12} />
@@ -440,13 +440,13 @@ export default function HelpCenterPage() {
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto custom-scrollbar">
         
         {/* Top Search Bar & Header Banner */}
-        <div className="p-6 sm:p-8 bg-gradient-to-b from-slate-50 via-white to-transparent dark:from-muted/20 dark:via-background dark:to-transparent border-b border-slate-200/70 dark:border-border space-y-4">
+        <div className="p-6 sm:p-8 bg-surface-2 dark:from-muted/20 dark:via-background dark:to-transparent border-b border-slate-200/70 dark:border-border space-y-4">
           <div className="max-w-4xl mx-auto space-y-2">
-            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#FF5A1F]">
+            <div className="flex items-center gap-2 text-xs font-semibold text-brand-strong">
               <Sparkles size={14} />
               <span>VSI Help &amp; Understanding Hub</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-foreground tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-foreground tracking-tight">
               Got doubts? Everything is explained simply here.
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-muted-foreground font-normal max-w-2xl">
@@ -461,7 +461,7 @@ export default function HelpCenterPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search any doubt (e.g. 'what is a citation', 'site audit score', 'how to test prompts')..."
-                className="w-full bg-white dark:bg-card border border-slate-200 dark:border-border rounded-2xl pl-11 pr-4 py-3 text-xs text-foreground placeholder:text-slate-400 focus:outline-none focus:border-[#FF5A1F] shadow-xs"
+                className="w-full bg-white dark:bg-card border border-slate-200 dark:border-border rounded-panel pl-11 pr-4 py-3 text-xs text-foreground placeholder:text-slate-400 focus:outline-none focus:border-line-strong"
               />
             </div>
           </div>
@@ -479,7 +479,7 @@ export default function HelpCenterPage() {
                 onClick={() => setActiveCategory(cat.id)}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
                   activeCategory === cat.id
-                    ? "bg-[#FF5A1F] text-white"
+                    ? "bg-ink text-white"
                     : "bg-slate-100 dark:bg-muted text-slate-600 dark:text-slate-300"
                 }`}
               >
@@ -492,7 +492,7 @@ export default function HelpCenterPage() {
           {activeCategory === "contact" ? (
             <div className="space-y-6 animate-fadeIn">
               <div className="space-y-1">
-                <h2 className="text-xl font-extrabold text-slate-900 dark:text-foreground">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-foreground">
                   💬 Contact Support &amp; Technical Help
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-muted-foreground font-medium">
@@ -501,13 +501,13 @@ export default function HelpCenterPage() {
               </div>
 
               {ticketSent && (
-                <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
+                <div className="p-4 rounded-panel bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
                   <CheckCircle2 size={16} />
                   <span>Support request submitted! We will respond to your email within 2-4 hours.</span>
                 </div>
               )}
 
-              <form onSubmit={handleSendTicket} className="bg-white dark:bg-card border border-slate-200/80 dark:border-border rounded-3xl p-6 shadow-xs space-y-4">
+              <form onSubmit={handleSendTicket} className="bg-white dark:bg-card border border-slate-200/80 dark:border-border rounded-panel p-6 space-y-4">
                 <div>
                   <label className="text-xs font-bold text-slate-800 dark:text-foreground block mb-1">
                     Subject / What you need help with
@@ -518,7 +518,7 @@ export default function HelpCenterPage() {
                     placeholder="e.g. Help understanding my citation ranking results"
                     value={contactSubject}
                     onChange={(e) => setContactSubject(e.target.value)}
-                    className="w-full bg-slate-50/70 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-xl px-3.5 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-[#FF5A1F] shadow-2xs"
+                    className="w-full bg-slate-50/70 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-panel px-3.5 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-line-strong"
                   />
                 </div>
 
@@ -532,14 +532,14 @@ export default function HelpCenterPage() {
                     placeholder="Describe your question or doubt..."
                     value={contactMessage}
                     onChange={(e) => setContactMessage(e.target.value)}
-                    className="w-full bg-slate-50/70 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-xl p-3 text-xs text-foreground focus:outline-none focus:border-[#FF5A1F] shadow-2xs resize-none"
+                    className="w-full bg-slate-50/70 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-panel p-3 text-xs text-foreground focus:outline-none focus:border-line-strong resize-none"
                   />
                 </div>
 
                 <div className="flex items-center justify-end">
                   <button
                     type="submit"
-                    className="px-6 py-2.5 rounded-xl bg-[#FF5A1F] hover:bg-[#E04D16] text-white text-xs font-black shadow-xs transition-colors cursor-pointer flex items-center gap-2"
+                    className="px-6 py-2.5 rounded-panel bg-ink hover:bg-ink-2 text-white text-xs font-semibold transition-colors cursor-pointer flex items-center gap-2"
                   >
                     <Send size={13} />
                     <span>Send Support Ticket</span>
@@ -551,7 +551,7 @@ export default function HelpCenterPage() {
             /* ARTICLES ACCORDION LIST */
             <div className="space-y-4 animate-fadeIn">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-extrabold text-slate-900 dark:text-foreground">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-foreground">
                   {categories.find((c) => c.id === activeCategory)?.label || "Guides & Doubts"}
                 </h2>
                 <span className="text-xs font-bold text-slate-400">
@@ -560,7 +560,7 @@ export default function HelpCenterPage() {
               </div>
 
               {filteredArticles.length === 0 ? (
-                <div className="bg-white dark:bg-card border border-slate-200/80 dark:border-border rounded-3xl p-10 text-center space-y-2">
+                <div className="bg-white dark:bg-card border border-slate-200/80 dark:border-border rounded-panel p-10 text-center space-y-2">
                   <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
                     No articles found matching &quot;{searchQuery}&quot;
                   </p>
@@ -577,7 +577,7 @@ export default function HelpCenterPage() {
                     return (
                       <div
                         key={art.id}
-                        className="bg-white dark:bg-card border border-slate-200/80 dark:border-border rounded-2xl shadow-2xs overflow-hidden transition-all"
+                        className="bg-white dark:bg-card border border-slate-200/80 dark:border-border rounded-panel overflow-hidden transition-all"
                       >
                         {/* Accordion Header */}
                         <button
@@ -586,21 +586,21 @@ export default function HelpCenterPage() {
                           className="w-full p-4.5 text-left flex items-center justify-between gap-4 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-muted/30 transition-colors"
                         >
                           <div className="flex items-center gap-3.5 min-w-0">
-                            <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-[#FF5A1F] flex items-center justify-center shrink-0 shadow-2xs">
+                            <div className="w-10 h-10 rounded-panel bg-orange-50 dark:bg-orange-950/40 text-brand-strong flex items-center justify-center shrink-0">
                               <Icon size={18} className="stroke-[2.2]" />
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-foreground truncate">
+                                <h3 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-foreground truncate">
                                   {art.title}
                                 </h3>
                                 {art.badge && (
-                                  <span className="text-[9px] font-bold uppercase tracking-wider bg-orange-100 text-[#FF5A1F] dark:bg-orange-950/60 px-2 py-0.5 rounded-full shrink-0">
+                                  <span className="text-caption font-bold bg-orange-100 text-brand-strong dark:bg-orange-950/60 px-2 py-0.5 rounded-full shrink-0">
                                     {art.badge}
                                   </span>
                                 )}
                               </div>
-                              <p className="text-[11px] text-slate-400 dark:text-muted-foreground font-medium truncate mt-0.5">
+                              <p className="text-caption text-slate-400 dark:text-muted-foreground font-medium truncate mt-0.5">
                                 {art.subtitle}
                               </p>
                             </div>

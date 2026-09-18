@@ -1,313 +1,288 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { getCustomClients, ClientItem } from "@/lib/client-store";
-import { getFriendlyAuditItem, FriendlyAuditItem } from "../lib/audit-translations";
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
+import { PageContainer, PageHeader, Section } from "@/components/ui/Page";
+import { Notice, StatusIcon, StatusLabel } from "@/components/ui/Status";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ButtonLink } from "@/components/ui/Button";
+import { Disclosure } from "@/components/ui/Disclosure";
+import { SiteDiagram } from "@/components/diagrams";
+import { TrendLine, type TrendPoint } from "@/features/visibility/components/TrajectoryChart";
+import { FindingDrawer } from "@/features/actions/components/FindingDrawer";
+import { AREA_LABEL, auditConclusion, CHECK_COPY, checkHeadline, type AuditArea } from "@/lib/site-audit/copy";
+import { auditFinding, auditPriority } from "@/lib/site-audit/findings";
+import type { CheckResult } from "@/lib/site-audit/types";
+import type { PageComparison } from "@/lib/site-audit/load";
+import type { Finding } from "@/lib/findings";
+import { RunAuditButton } from "./RunAuditButton";
 
-import SiteAuditHeader from "./SiteAuditHeader";
-import WebsiteHealthHero from "./WebsiteHealthHero";
-import VisualIssueGrid from "./VisualIssueGrid";
-import AuditCategoryGrid from "./AuditCategoryGrid";
-import AuditProcessWorkflow from "./AuditProcessWorkflow";
-import AuditChecksSection from "./AuditChecksSection";
-import IssueDetailDrawer from "./IssueDetailDrawer";
-import AuditProgressModal from "./AuditProgressModal";
-import EmptyAuditState from "./EmptyAuditState";
-
-export interface AuditItem {
-  id: string;
-  category: "technical" | "ai_readiness" | "on_page" | "citations";
-  title: string;
-  impact: "high" | "medium" | "low";
-  status: "pass" | "warning" | "fail";
-  details: string;
-  recommendation: string;
+export interface SiteAuditViewData {
+  project: { id: string; name: string; domain: string | null } | null;
+  state: "ok" | "setup_required" | "error" | "no_project";
+  errorMessage?: string;
+  completed: { id: string; score: number; pagesScanned: number; checkedAt: string; checks: CheckResult[] } | null;
+  running: { id: string } | null;
+  lastFailed: { message: string; when: string } | null;
+  history: TrendPoint[];
+  previous: { score: number; when: string } | null;
+  comparisons: PageComparison[];
 }
 
-export const DEFAULT_AUDIT_ITEMS: AuditItem[] = [
-  // ── Technical SEO ──
-  {
-    id: "tech-1",
-    category: "technical",
-    title: "AI Crawlers Permitted in robots.txt",
-    impact: "high",
-    status: "pass",
-    details: "GPTBot, ClaudeBot, Google-Extended, and PerplexityBot are explicitly permitted without wildcard disallow blocking.",
-    recommendation: "Ensure robots.txt maintains User-agent: GPTBot and User-agent: Google-Extended rules set to Allow: /.",
-  },
-  {
-    id: "tech-2",
-    category: "technical",
-    title: "Dead Ends & Broken Internal Links",
-    impact: "high",
-    status: "fail",
-    details: "3 crawled internal URLs return HTTP 404 (Not Found) or 500 server errors, leaking crawl equity.",
-    recommendation: "Implement 301 permanent redirects to relevant canonical destinations or remove dead internal links.",
-  },
-  {
-    id: "tech-3",
-    category: "technical",
-    title: "Core Web Vitals & TTFB Performance",
-    impact: "medium",
-    status: "warning",
-    details: "Time to First Byte (TTFB) is 380ms (target <200ms). LCP on mobile measures 2.6s (target <2.5s).",
-    recommendation: "Enable edge caching via CDN and optimize hero image preloading using <link rel='preload'>.",
-  },
-  {
-    id: "tech-4",
-    category: "technical",
-    title: "Broken Internal Links & Redirect Chains",
-    impact: "high",
-    status: "fail",
-    details: "3 internal links pointing to deprecated /features/v1 URLs result in 301 redirect chains.",
-    recommendation: "Update internal href links across the navigation and footer to point directly to current target paths.",
-  },
+const AREA_ORDER: AuditArea[] = ["access", "search", "content", "business"];
 
-  // ── AI Search Readiness ──
-  {
-    id: "ai-1",
-    category: "ai_readiness",
-    title: "Schema.org Organization & WebSite JSON-LD",
-    impact: "high",
-    status: "pass",
-    details: "Structured schema is present in <head> containing name, url, logo, and sameAs social profile entity links.",
-    recommendation: "Add 'knowsAbout' array to Organization schema detailing proprietary expertise domains.",
-  },
-  {
-    id: "ai-2",
-    category: "ai_readiness",
-    title: "FAQPage Structured Data for AI Overview Snippets",
-    impact: "high",
-    status: "fail",
-    details: "High-value commercial landing pages lack structured FAQPage schema, reducing chances of AI direct answering.",
-    recommendation: "Implement JSON-LD FAQ schema for top 5 commercial landing pages with concise question-and-answer pairs.",
-  },
-  {
-    id: "ai-3",
-    category: "ai_readiness",
-    title: "Information Gain & Direct Quotability",
-    impact: "medium",
-    status: "warning",
-    details: "Content density is solid, but definition paragraphs exceed 75 words, making sentence-level LLM extraction difficult.",
-    recommendation: "Front-load primary answer blocks: place a 40-50 word definition paragraph directly under each H2 topic query.",
-  },
-  {
-    id: "ai-4",
-    category: "ai_readiness",
-    title: "Author Persona & E-E-A-T Credential Anchors",
-    impact: "medium",
-    status: "pass",
-    details: "Articles feature verified author bylines with linked LinkedIn profiles and verified editorial review notices.",
-    recommendation: "Add Person schema with verified external publisher citations to author profile pages.",
-  },
+export default function SiteAuditView({ data }: { data: SiteAuditViewData }) {
+  const { project } = data;
+  const [open, setOpen] = useState<Finding | null>(null);
+  const [created, setCreated] = useState<Set<string>>(new Set());
 
-  // ── On-Page & Semantic ──
-  {
-    id: "page-1",
-    category: "on_page",
-    title: "Semantic Heading Hierarchy (Single H1)",
-    impact: "high",
-    status: "pass",
-    details: "All indexed pages contain exactly one H1 element followed by logical, descending H2 and H3 structures.",
-    recommendation: "Maintain semantic nesting and avoid using heading tags solely for typographic styling.",
-  },
-  {
-    id: "page-2",
-    category: "on_page",
-    title: "Meta Titles & Descriptions Optimization",
-    impact: "medium",
-    status: "warning",
-    details: "4 blog posts have meta descriptions under 90 characters, leaving search snippet real-estate underutilized.",
-    recommendation: "Expand short descriptions to 145-155 characters, incorporating secondary search query entities.",
-  },
-  {
-    id: "page-3",
-    category: "on_page",
-    title: "Descriptive Image Alt Attributes",
-    impact: "low",
-    status: "pass",
-    details: "All content images feature contextual alt descriptions supporting semantic search indexing.",
-    recommendation: "Ensure newly generated infographics include descriptive captions alongside alt text.",
-  },
+  const checks = data.completed?.checks ?? [];
+  const problems = useMemo(
+    () => checks.filter((c) => c.status !== "pass").sort((a, b) => auditPriority(b) - auditPriority(a)),
+    [checks],
+  );
+  const failing = problems.filter((c) => c.status === "fail").length;
+  const passing = checks.length - problems.length;
 
-  // ── Citations & Authority ──
-  {
-    id: "cite-1",
-    category: "citations",
-    title: "Open Graph & Social Card Meta Verification",
-    impact: "medium",
-    status: "pass",
-    details: "og:title, og:image (1200x630), og:description, and twitter:card tags are fully rendered.",
-    recommendation: "Test social sharing previews periodically on LinkedIn and X/Twitter post inspectors.",
-  },
-  {
-    id: "cite-2",
-    category: "citations",
-    title: "Brand Citation Profile Across Industry Directories",
-    impact: "high",
-    status: "warning",
-    details: "Brand is listed on G2 and Capterra, but NAP (Name, Address, Phone) data has slight discrepancy on Crunchbase.",
-    recommendation: "Standardize legal entity name and official domain URL across all external business directory listings.",
-  },
-];
+  const header = (
+    <PageHeader
+      title="Site Audit"
+      description="Checks whether visitors, search engines and AI assistants can find, read and understand your website."
+      meta={
+        project && (
+          <>
+            {project.domain && <span>{project.domain}</span>}
+            {data.completed && <span>Last checked {data.completed.checkedAt}</span>}
+            {data.completed && <span>{data.completed.pagesScanned} pages checked</span>}
+          </>
+        )
+      }
+      actions={
+        project?.domain && data.state === "ok" ? (
+          <RunAuditButton clientId={project.id} runningId={data.running?.id} label={data.completed ? "Run again" : "Run audit"} />
+        ) : undefined
+      }
+    />
+  );
 
-export default function SiteAuditView() {
-  const [clients, setClients] = useState<ClientItem[]>([]);
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [auditItems] = useState<AuditItem[]>(DEFAULT_AUDIT_ITEMS);
-  const [isRunningAudit, setIsRunningAudit] = useState(false);
-  const [showProgressModal, setShowProgressModal] = useState(false);
-  const [addedTasks, setAddedTasks] = useState<Set<string>>(new Set());
-  const [selectedIssue, setSelectedIssue] = useState<FriendlyAuditItem | null>(null);
-
-  const fullReportRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const list = getCustomClients();
-    const frame = requestAnimationFrame(() => {
-      setClients(list);
-    });
-    return () => cancelAnimationFrame(frame);
-  }, []);
-
-  // Active Client
-  const activeClient = clients[0];
-  const clientName = activeClient?.name || "ValGrow Labs";
-  const clientWebsite = activeClient?.website || "valgrow.com";
-
-  // Map to Friendly items
-  const friendlyItems: FriendlyAuditItem[] = auditItems.map(getFriendlyAuditItem);
-
-  // Top 3 priority issues (failed items first, then high-impact warnings)
-  const priorityItems = friendlyItems.filter(
-    (item) => item.rawItem.status === "fail" || (item.rawItem.status === "warning" && item.rawItem.impact === "high")
-  ).slice(0, 3);
-
-  // Health Score Calculation: 100 - (failed * 12) - (warnings * 4)
-  const passed = auditItems.filter((i) => i.status === "pass").length;
-  const warnings = auditItems.filter((i) => i.status === "warning").length;
-  const failed = auditItems.filter((i) => i.status === "fail").length;
-  const healthScore = Math.max(0, Math.min(100, Math.round(100 - (failed * 12) - (warnings * 4))));
-
-  // Re-run Audit flow with animated modal
-  const handleRunAudit = () => {
-    setIsRunningAudit(true);
-    setShowProgressModal(true);
-  };
-
-  const handleCloseProgressModal = () => {
-    setShowProgressModal(false);
-    setIsRunningAudit(false);
-  };
-
-  const handleScrollToReport = () => {
-    fullReportRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  // Convert failed/warning item to task
-  async function handleCreateTask(item: FriendlyAuditItem) {
-    try {
-      const clientId = clients[0]?.id || "valgrow-labs-001";
-      await fetch("/api/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          client_id: clientId,
-          title: `[Site Audit] ${item.friendlyTitle}`,
-          group_name: item.category === "technical" ? "technical_seo" : "on_page_seo",
-          description: `What we found:\n${item.shortExplanation}\n\nWhy it matters:\n${item.whyItMatters}\n\nWhat to do:\n${item.whatToDoNext}\n\nSource: Site Audit (${item.rawItem.title} - ${item.id})`,
-          impact: item.rawItem.impact,
-          effort: item.rawItem.impact === "high" ? "medium" : "low",
-        }),
-      });
-      setAddedTasks((prev) => new Set([...prev, item.id]));
-    } catch {
-      setAddedTasks((prev) => new Set([...prev, item.id]));
-    }
+  if (data.state === "no_project" || !project) {
+    return (
+      <PageContainer>
+        {header}
+        <EmptyState
+          diagram={<SiteDiagram />}
+          title="Add a project to audit your website"
+          action={<ButtonLink href="/dashboard/clients/new" variant="primary">Add project</ButtonLink>}
+        >
+          A project holds your website address, the searches you care about and your competitors. Every part of VSI uses it.
+        </EmptyState>
+      </PageContainer>
+    );
   }
 
-  if (auditItems.length === 0) {
-    return <EmptyAuditState onRunFirstAudit={handleRunAudit} />;
+  if (data.state === "setup_required") {
+    return (
+      <PageContainer>
+        {header}
+        <Notice tone="attention" title="Site Audit needs a one-time database update">
+          Ask your administrator to apply the Site Audit update. Until then, audits can&apos;t be saved.
+          <Disclosure summary="Technical details" className="mt-2">
+            <p className="font-mono text-caption">Apply supabase/migrations/migration_035_site_audits.sql to the Supabase project.</p>
+          </Disclosure>
+        </Notice>
+      </PageContainer>
+    );
+  }
+
+  if (data.state === "error") {
+    return (
+      <PageContainer>
+        {header}
+        <Notice tone="critical" title={data.errorMessage ?? "We couldn't load your audit results."}>
+          Refresh the page to try again. Your audit history is safe.
+        </Notice>
+      </PageContainer>
+    );
+  }
+
+  if (!project.domain) {
+    return (
+      <PageContainer>
+        {header}
+        <Notice
+          tone="attention"
+          title="Add your website address to run an audit"
+          action={<ButtonLink href={`/dashboard/clients/${project.id}/settings`} size="sm">Project settings</ButtonLink>}
+        >
+          VSI audits the website saved on the project.
+        </Notice>
+      </PageContainer>
+    );
   }
 
   return (
-    <div className="space-y-8 animate-fadeIn pb-12">
-      
-      {/* ── 1. COMPACT AUDIT HEADER ── */}
-      <SiteAuditHeader
-        clientName={clientName}
-        clientWebsite={clientWebsite}
-        lastChecked="Today, 2:30 PM"
-        isRunning={isRunningAudit}
-        onRunAudit={handleRunAudit}
-        onViewHistory={handleScrollToReport}
+    <PageContainer>
+      {header}
+
+      {data.running && (
+        <Notice tone="info" title="Auditing your website">
+          We&apos;re checking up to 10 pages and the links on them. This usually takes under a minute. The page updates when it&apos;s done.
+        </Notice>
+      )}
+      {data.lastFailed && (
+        <Notice tone="critical" title={`The last audit didn't finish (${data.lastFailed.when})`}>
+          {data.lastFailed.message}
+        </Notice>
+      )}
+
+      {!data.completed ? (
+        !data.running && (
+          <EmptyState diagram={<SiteDiagram />} title="Run your first audit">
+            VSI checks your homepage and up to 9 more pages: whether they load, whether search engines and AI assistants may read
+            them, how they look in search results, and how clearly they answer customer questions. You get a plain list of what to fix.
+          </EmptyState>
+        )
+      ) : (
+        <>
+          {/* Conclusion */}
+          <section aria-label="Website health" className="grid gap-8 md:grid-cols-[auto_1fr_minmax(0,260px)] md:items-center">
+            <div>
+              <p className="text-caption font-medium text-ink-3">Website health</p>
+              <p className="mt-1 flex items-baseline gap-1">
+                <span className="text-metric font-semibold tabular text-ink">{data.completed.score}</span>
+                <span className="text-body text-ink-3">/ 100</span>
+              </p>
+              {data.previous && (
+                <p className="mt-1 text-support text-ink-3">
+                  {scoreChange(data.completed.score, data.previous.score)} since {data.previous.when}
+                </p>
+              )}
+            </div>
+            <div className="space-y-3">
+              <p className="max-w-[52ch] text-section font-medium text-ink">
+                {auditConclusion(data.completed.score, problems.length, failing)}
+              </p>
+              <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+                {failing > 0 && <StatusLabel tone="critical">{failing} to fix</StatusLabel>}
+                {problems.length - failing > 0 && <StatusLabel tone="attention">{problems.length - failing} to improve</StatusLabel>}
+                <StatusLabel tone="positive">{passing} looking good</StatusLabel>
+              </div>
+            </div>
+            {data.history.length >= 2 ? (
+              <TrendLine points={data.history} ariaLabel="Website health score over time" />
+            ) : (
+              <p className="text-support text-ink-3">Your score history appears here after your next audit.</p>
+            )}
+          </section>
+
+          {/* What needs attention */}
+          {problems.length > 0 && (
+            <Section title="What needs attention" description="Most important first. Open one to see why it matters and what to do.">
+              <ul className="divide-y divide-line rounded-panel border border-line bg-surface">
+                {problems.map((c) => (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      onClick={() => setOpen(auditFinding(c, project.id))}
+                      className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-surface-2"
+                    >
+                      <StatusIcon tone={c.status === "fail" ? "critical" : "attention"} size={18} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-body font-medium text-ink">{checkHeadline(c)}</span>
+                        <span className="block text-support text-ink-3">{AREA_LABEL[CHECK_COPY[c.id].area]}</span>
+                      </span>
+                      {created.has(`site_audit:${c.id}`) && <span className="hidden text-caption text-positive sm:inline">Task created</span>}
+                      <ChevronRight size={16} strokeWidth={1.75} className="shrink-0 text-ink-3" aria-hidden />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          )}
+
+          {/* Evidence from the AI checks */}
+          {data.comparisons.length > 0 && (
+            <Section
+              title="Pages AI finds hard to use"
+              description="When VSI compared these pages with the ones AI answers quote, it found gaps. These come from your AI Visibility checks."
+              action={{ label: "AI Visibility", href: "/dashboard/geo" }}
+            >
+              <ul className="divide-y divide-line border-y border-line">
+                {data.comparisons.map((p, i) => (
+                  <li key={i} className="grid gap-2 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] md:gap-8">
+                    <div className="min-w-0">
+                      <a href={p.url} target="_blank" rel="noopener noreferrer" className="block truncate text-body font-medium text-ink hover:underline">
+                        {p.url.replace(/^https?:\/\//, "")}
+                      </a>
+                      <p className="text-support text-ink-3">
+                        For &ldquo;{p.keyword}&rdquo;{p.checkedAt ? ` · ${p.checkedAt}` : ""}
+                      </p>
+                    </div>
+                    <ul className="space-y-1 text-support text-ink-2">
+                      {p.weaknesses.map((w, j) => (
+                        <li key={j} className="flex gap-2">
+                          <span aria-hidden className="mt-2 h-1 w-1 shrink-0 rounded-full bg-ink-3" />
+                          {w}
+                        </li>
+                      ))}
+                      {p.keywordId && (
+                        <li>
+                          <Link href={`/dashboard/clients/${project.id}/keywords/${p.keywordId}`} className="text-support font-medium text-ink underline-offset-4 hover:underline">
+                            See the comparison
+                          </Link>
+                        </li>
+                      )}
+                    </ul>
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          )}
+
+          {/* Everything we checked */}
+          <Section title="Everything we checked">
+            <div className="grid gap-x-10 gap-y-8 md:grid-cols-2">
+              {AREA_ORDER.map((area) => {
+                const inArea = checks.filter((c) => CHECK_COPY[c.id].area === area);
+                if (inArea.length === 0) return null;
+                return (
+                  <div key={area} className="border-t border-line pt-4">
+                    <h3 className="mb-3 text-support font-medium text-ink">{AREA_LABEL[area]}</h3>
+                    <ul className="space-y-2.5">
+                      {inArea.map((c) => (
+                        <li key={c.id}>
+                          <button
+                            type="button"
+                            onClick={() => setOpen(auditFinding(c, project.id))}
+                            className="flex w-full items-start gap-2.5 text-left text-support text-ink-2 hover:text-ink"
+                          >
+                            <StatusIcon tone={c.status === "pass" ? "positive" : c.status === "fail" ? "critical" : "attention"} />
+                            <span>{checkHeadline(c)}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          </Section>
+        </>
+      )}
+
+      <FindingDrawer
+        finding={open}
+        onClose={() => setOpen(null)}
+        alreadyCreated={open ? created.has(open.key) : false}
+        onCreated={(key) => setCreated((prev) => new Set(prev).add(key))}
       />
-
-      {/* ── 2. PROMINENT WEBSITE HEALTH HERO ── */}
-      <WebsiteHealthHero
-        score={70}
-        criticalCount={1}
-        needsAttentionCount={3}
-        passedCount={8}
-        lastChecked="Today, 2:30 PM"
-        onRunAudit={handleRunAudit}
-        onViewReport={handleScrollToReport}
-      />
-
-      {/* ── 3. WHAT NEEDS YOUR ATTENTION (VISUAL 3-COLUMN GRID) ── */}
-      <VisualIssueGrid
-        items={priorityItems}
-        addedTasks={addedTasks}
-        onSelectIssue={(item) => setSelectedIssue(item)}
-        onViewAll={handleScrollToReport}
-      />
-
-      {/* ── 4. YOUR WEBSITE AT A GLANCE (COMPACT CATEGORY CARDS) ── */}
-      <AuditCategoryGrid
-        onSelectCategory={(catId) => {
-          setCategoryFilter(catId);
-          handleScrollToReport();
-        }}
-      />
-
-      {/* ── 5. HOW VSI CHECKS YOUR WEBSITE (4-STEP CONNECTED PROCESS) ── */}
-      <AuditProcessWorkflow onLearnMore={handleScrollToReport} />
-
-      {/* ── 6. ALL AUDIT CHECKS & TECHNICAL DETAILS (NON-TECHNICAL REDESIGN) ── */}
-      <AuditChecksSection
-        items={friendlyItems}
-        addedTasks={addedTasks}
-        healthScore={healthScore}
-        failedCount={failed}
-        warningCount={warnings}
-        passedCount={passed}
-        categoryFilter={categoryFilter}
-        onClearCategoryFilter={() => setCategoryFilter("all")}
-        onSelectIssue={(item) => setSelectedIssue(item)}
-        onCreateTask={handleCreateTask}
-        onRunAudit={handleRunAudit}
-        fullReportRef={fullReportRef}
-      />
-
-      {/* ── 7. SLIDE-OVER ISSUE DETAIL DRAWER ── */}
-      <IssueDetailDrawer
-        item={selectedIssue}
-        isOpen={!!selectedIssue}
-        isTaskAdded={selectedIssue ? addedTasks.has(selectedIssue.id) : false}
-        onClose={() => setSelectedIssue(null)}
-        onCreateTask={handleCreateTask}
-      />
-
-      {/* ── 8. ANIMATED RUN AUDIT PROGRESS MODAL ── */}
-      <AuditProgressModal
-        isOpen={showProgressModal}
-        score={healthScore}
-        criticalCount={failed}
-        needsAttentionCount={warnings}
-        passedCount={passed}
-        onClose={handleCloseProgressModal}
-      />
-
-    </div>
+    </PageContainer>
   );
+}
+
+function scoreChange(now: number, before: number): string {
+  const diff = now - before;
+  if (diff === 0) return "No change";
+  return diff > 0 ? `Up ${diff}` : `Down ${Math.abs(diff)}`;
 }

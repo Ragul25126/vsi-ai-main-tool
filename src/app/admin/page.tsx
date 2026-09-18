@@ -67,11 +67,11 @@ export default function AdminDashboardPage() {
         <div>
           <div className="flex items-center gap-2 mb-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-600">
+            <span className="text-caption font-semibold text-emerald-600">
               Live Platform Status
             </span>
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-semibold text-slate-900 tracking-tight">
             Dashboard Overview
           </h1>
           <p className="text-sm text-slate-500 mt-1 max-w-2xl leading-relaxed">
@@ -81,15 +81,15 @@ export default function AdminDashboardPage() {
 
         {/* Top Right Action Buttons */}
         <div className="flex items-center gap-3 shrink-0">
-          <button className="bg-[#FF5500] hover:bg-[#e04800] text-white px-4 py-2.5 rounded-2xl font-bold text-xs shadow-md shadow-[#FF5500]/20 flex items-center gap-2 transition-all">
+          <button className="bg-ink hover:bg-[#e04800] text-white px-4 py-2.5 rounded-panel font-bold text-xs /20 flex items-center gap-2 transition-all">
             <Download className="w-4 h-4" />
             Download Weekly Summary
           </button>
           <Link
             href="/admin/invites"
-            className="bg-white border border-slate-200/90 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 shadow-xs transition-all"
+            className="bg-white border border-slate-200/90 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-panel font-bold text-xs flex items-center gap-2 transition-all"
           >
-            <UserPlus className="w-4 h-4 text-[#FF5500]" />
+            <UserPlus className="w-4 h-4 text-brand-strong" />
             Invite User
           </Link>
         </div>
@@ -98,87 +98,87 @@ export default function AdminDashboardPage() {
       {/* ══ ROW 1: 5 METRIC CARDS ══ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Metric 1: Total Users */}
-        <div className="bg-white rounded-[22px] p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between">
+        <div className="bg-white rounded-panel p-5 border border-slate-200/80 transition-shadow flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+              <div className="w-10 h-10 rounded-panel bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
                 <Users className="w-5 h-5" />
               </div>
-              <span className="text-[11px] font-extrabold text-orange-600 bg-orange-50 border border-orange-200/60 px-2 py-0.5 rounded-full">
+              <span className="text-caption font-semibold text-orange-600 bg-orange-50 border border-orange-200/60 px-2 py-0.5 rounded-full">
                 ↑ +12% this month
               </span>
             </div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Total Users</p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">{data.users.toLocaleString()}</p>
-            <p className="text-[11px] text-slate-500 font-medium mt-1">People signed up to ClearRank</p>
+            <p className="text-caption font-bold text-slate-400 tracking-wide">Total Users</p>
+            <p className="text-2xl font-semibold text-slate-900 mt-0.5">{data.users.toLocaleString()}</p>
+            <p className="text-caption text-slate-500 font-medium mt-1">People signed up to ClearRank</p>
           </div>
         </div>
 
         {/* Metric 2: Active Websites */}
-        <div className="bg-white rounded-[22px] p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between">
+        <div className="bg-white rounded-panel p-5 border border-slate-200/80 transition-shadow flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+              <div className="w-10 h-10 rounded-panel bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
                 <Globe className="w-5 h-5" />
               </div>
-              <span className="text-[11px] font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
+              <span className="text-caption font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
                 ↑ 98.4% online
               </span>
             </div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Active Websites</p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">{data.websites.toLocaleString()}</p>
-            <p className="text-[11px] text-slate-500 font-medium mt-1">Websites currently monitored</p>
+            <p className="text-caption font-bold text-slate-400 tracking-wide">Active Websites</p>
+            <p className="text-2xl font-semibold text-slate-900 mt-0.5">{data.websites.toLocaleString()}</p>
+            <p className="text-caption text-slate-500 font-medium mt-1">Websites currently monitored</p>
           </div>
         </div>
 
         {/* Metric 3: Monthly Revenue */}
-        <div className="bg-white rounded-[22px] p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between">
+        <div className="bg-white rounded-panel p-5 border border-slate-200/80 transition-shadow flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
+              <div className="w-10 h-10 rounded-panel bg-attention-soft border border-line flex items-center justify-center text-attention">
                 <Database className="w-5 h-5" />
               </div>
-              <span className="text-[11px] font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
+              <span className="text-caption font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
                 ↑ +8.5% growth
               </span>
             </div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Monthly Revenue</p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">${data.revenue.toLocaleString()}</p>
-            <p className="text-[11px] text-slate-500 font-medium mt-1">Recurring monthly earnings</p>
+            <p className="text-caption font-bold text-slate-400 tracking-wide">Monthly Revenue</p>
+            <p className="text-2xl font-semibold text-slate-900 mt-0.5">${data.revenue.toLocaleString()}</p>
+            <p className="text-caption text-slate-500 font-medium mt-1">Recurring monthly earnings</p>
           </div>
         </div>
 
         {/* Metric 4: Active Subscriptions */}
-        <div className="bg-white rounded-[22px] p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between">
+        <div className="bg-white rounded-panel p-5 border border-slate-200/80 transition-shadow flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600">
+              <div className="w-10 h-10 rounded-panel bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600">
                 <Crown className="w-5 h-5" />
               </div>
-              <span className="text-[11px] font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
+              <span className="text-caption font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
                 ↑ 94% renewal rate
               </span>
             </div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Active Subscriptions</p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">{data.subscriptions.toLocaleString()}</p>
-            <p className="text-[11px] text-slate-500 font-medium mt-1">Paid plans currently active</p>
+            <p className="text-caption font-bold text-slate-400 tracking-wide">Active Subscriptions</p>
+            <p className="text-2xl font-semibold text-slate-900 mt-0.5">{data.subscriptions.toLocaleString()}</p>
+            <p className="text-caption text-slate-500 font-medium mt-1">Paid plans currently active</p>
           </div>
         </div>
 
         {/* Metric 5: Reports Generated */}
-        <div className="bg-white rounded-[22px] p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between">
+        <div className="bg-white rounded-panel p-5 border border-slate-200/80 transition-shadow flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600">
+              <div className="w-10 h-10 rounded-panel bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600">
                 <FileText className="w-5 h-5" />
               </div>
-              <span className="text-[11px] font-extrabold text-orange-600 bg-orange-50 border border-orange-200/60 px-2 py-0.5 rounded-full">
+              <span className="text-caption font-semibold text-orange-600 bg-orange-50 border border-orange-200/60 px-2 py-0.5 rounded-full">
                 ↑ +15% vs last month
               </span>
             </div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Reports Generated</p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">{data.reports.toLocaleString()}</p>
-            <p className="text-[11px] text-slate-500 font-medium mt-1">Easy-to-read audits delivered</p>
+            <p className="text-caption font-bold text-slate-400 tracking-wide">Reports Generated</p>
+            <p className="text-2xl font-semibold text-slate-900 mt-0.5">{data.reports.toLocaleString()}</p>
+            <p className="text-caption text-slate-500 font-medium mt-1">Easy-to-read audits delivered</p>
           </div>
         </div>
       </div>
@@ -188,10 +188,10 @@ export default function AdminDashboardPage() {
         {/* ── LEFT COLUMN (7 COLS): TRENDS + RECENT ACTIVITY ── */}
         <div className="lg:col-span-7 space-y-6">
           {/* Card 1: Growth & Performance Trends */}
-          <div className="bg-white rounded-[24px] p-6 border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow">
+          <div className="bg-white rounded-panel p-6 border border-slate-200/80 transition-shadow">
             <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-[#FF5500]">
+                <div className="w-10 h-10 rounded-panel bg-orange-50 border border-orange-100 flex items-center justify-center text-brand-strong">
                   <BarChart3 className="w-5 h-5" />
                 </div>
                 <div>
@@ -199,7 +199,7 @@ export default function AdminDashboardPage() {
                     <h2 className="text-[17px] font-bold text-slate-900 tracking-tight">
                       Growth & Performance Trends
                     </h2>
-                    <span className="text-[11px] font-extrabold text-[#FF5500] bg-orange-50 border border-orange-200/70 px-2.5 py-0.5 rounded-full">
+                    <span className="text-caption font-semibold text-brand-strong bg-orange-50 border border-orange-200/70 px-2.5 py-0.5 rounded-full">
                       +34% overall increase
                     </span>
                   </div>
@@ -215,9 +215,9 @@ export default function AdminDashboardPage() {
                   <button
                     key={t}
                     onClick={() => setTimeRange(t)}
-                    className={`px-3 py-1 text-[11px] font-bold rounded-full transition-all ${
+                    className={`px-3 py-1 text-caption font-bold rounded-full transition-all ${
                       timeRange === t
-                        ? "bg-white text-slate-900 shadow-xs border border-slate-200/60"
+                        ? "bg-white text-slate-900  border border-slate-200/60"
                         : "text-slate-500 hover:text-slate-900"
                     }`}
                   >
@@ -230,7 +230,7 @@ export default function AdminDashboardPage() {
             {/* Legend */}
             <div className="flex items-center gap-6 mb-4 text-xs font-semibold">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#FF5500]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-ink" />
                 <span className="text-slate-600">Monitored Websites</span>
               </div>
               <div className="flex items-center gap-2">
@@ -244,8 +244,8 @@ export default function AdminDashboardPage() {
               <svg viewBox="0 0 500 200" className="w-full h-full overflow-visible" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="monitoredGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#FF5500" stopOpacity="0.15" />
-                    <stop offset="100%" stopColor="#FF5500" stopOpacity="0.0" />
+                    <stop offset="0%" stopColor="var(--brand)" stopOpacity="0.15" />
+                    <stop offset="100%" stopColor="var(--brand)" stopOpacity="0.0" />
                   </linearGradient>
                   <linearGradient id="healthyGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#10B981" stopOpacity="0.12" />
@@ -260,7 +260,7 @@ export default function AdminDashboardPage() {
 
                 {/* Monitored Area & Line */}
                 <path d="M 0 170 C 80 140, 160 110, 240 85 C 320 60, 400 50, 500 20 L 500 200 L 0 200 Z" fill="url(#monitoredGrad)" />
-                <path d="M 0 170 C 80 140, 160 110, 240 85 C 320 60, 400 50, 500 20" fill="none" stroke="#FF5500" strokeWidth="3.5" strokeLinecap="round" />
+                <path d="M 0 170 C 80 140, 160 110, 240 85 C 320 60, 400 50, 500 20" fill="none" stroke="var(--brand)" strokeWidth="3.5" strokeLinecap="round" />
 
                 {/* Healthy Area & Line */}
                 <path d="M 0 190 C 80 160, 160 135, 240 120 C 320 105, 400 115, 500 50 L 500 200 L 0 200 Z" fill="url(#healthyGrad)" />
@@ -268,7 +268,7 @@ export default function AdminDashboardPage() {
 
                 {/* Data point dots */}
                 {[[0,170], [100,145], [200,115], [300,85], [400,60], [500,20]].map(([x,y], i) => (
-                  <circle key={i} cx={x} cy={y} r="5" fill="#FF5500" stroke="#FFFFFF" strokeWidth="2.5" />
+                  <circle key={i} cx={x} cy={y} r="5" fill="var(--brand)" stroke="#FFFFFF" strokeWidth="2.5" />
                 ))}
                 {[[0,190], [100,165], [200,135], [300,120], [400,115], [500,50]].map(([x,y], i) => (
                   <circle key={i} cx={x} cy={y} r="5" fill="#10B981" stroke="#FFFFFF" strokeWidth="2.5" />
@@ -276,7 +276,7 @@ export default function AdminDashboardPage() {
               </svg>
 
               {/* Month Labels */}
-              <div className="flex justify-between text-[11px] font-semibold text-slate-400 mt-2 px-1">
+              <div className="flex justify-between text-caption font-semibold text-slate-400 mt-2 px-1">
                 <span>Jan</span>
                 <span>Feb</span>
                 <span>Mar</span>
@@ -288,10 +288,10 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Card 2: Quick Activity & Recent Milestones */}
-          <div className="bg-white rounded-[24px] p-6 border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow">
+          <div className="bg-white rounded-panel p-6 border border-slate-200/80 transition-shadow">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
+                <div className="w-10 h-10 rounded-panel bg-attention-soft border border-line flex items-center justify-center text-attention">
                   <Bell className="w-5 h-5" />
                 </div>
                 <div>
@@ -303,7 +303,7 @@ export default function AdminDashboardPage() {
                   </p>
                 </div>
               </div>
-              <Link href="/admin/cron-runs" className="text-xs font-bold text-[#FF5500] hover:text-[#e04800] flex items-center gap-1">
+              <Link href="/admin/cron-runs" className="text-xs font-bold text-brand-strong hover:text-[#e04800] flex items-center gap-1">
                 View Log <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -311,59 +311,59 @@ export default function AdminDashboardPage() {
             {/* Activity List */}
             <div className="space-y-3">
               {/* Item 1 */}
-              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/70 border border-slate-100 hover:bg-slate-100/50 transition-colors">
+              <div className="flex items-center justify-between p-3.5 rounded-panel bg-slate-50/70 border border-slate-100 hover:bg-slate-100/50 transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-blue-100/80 text-blue-600 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-panel bg-blue-100/80 text-blue-600 flex items-center justify-center shrink-0">
                     <FileText className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-slate-800 truncate">Acme Corp renewed Pro Plan</p>
-                    <p className="text-[11px] text-slate-400 truncate">Annual billing confirmed ($1,188)</p>
+                    <p className="text-caption text-slate-400 truncate">Annual billing confirmed ($1,188)</p>
                   </div>
                 </div>
-                <span className="text-[11px] font-semibold text-slate-400 shrink-0 ml-2">12 mins ago</span>
+                <span className="text-caption font-semibold text-slate-400 shrink-0 ml-2">12 mins ago</span>
               </div>
 
               {/* Item 2 */}
-              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/70 border border-slate-100 hover:bg-slate-100/50 transition-colors">
+              <div className="flex items-center justify-between p-3.5 rounded-panel bg-slate-50/70 border border-slate-100 hover:bg-slate-100/50 transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-panel bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0">
                     <CheckCircle2 className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-slate-800 truncate">Health scan completed for travelhub.io</p>
-                    <p className="text-[11px] text-slate-400 truncate">Condition: Great (98/100 Core Web Vitals)</p>
+                    <p className="text-caption text-slate-400 truncate">Condition: Great (98/100 Core Web Vitals)</p>
                   </div>
                 </div>
-                <span className="text-[11px] font-semibold text-slate-400 shrink-0 ml-2">43 mins ago</span>
+                <span className="text-caption font-semibold text-slate-400 shrink-0 ml-2">43 mins ago</span>
               </div>
 
               {/* Item 3 */}
-              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/70 border border-slate-100 hover:bg-slate-100/50 transition-colors">
+              <div className="flex items-center justify-between p-3.5 rounded-panel bg-slate-50/70 border border-slate-100 hover:bg-slate-100/50 transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-orange-100/80 text-[#FF5500] flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-panel bg-orange-100/80 text-brand-strong flex items-center justify-center shrink-0">
                     <Users className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-slate-800 truncate">New agency account registered</p>
-                    <p className="text-[11px] text-slate-400 truncate">Elevate Media onboarded with 18 sites</p>
+                    <p className="text-caption text-slate-400 truncate">Elevate Media onboarded with 18 sites</p>
                   </div>
                 </div>
-                <span className="text-[11px] font-semibold text-slate-400 shrink-0 ml-2">2 hours ago</span>
+                <span className="text-caption font-semibold text-slate-400 shrink-0 ml-2">2 hours ago</span>
               </div>
 
               {/* Item 4 */}
-              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/70 border border-slate-100 hover:bg-slate-100/50 transition-colors">
+              <div className="flex items-center justify-between p-3.5 rounded-panel bg-slate-50/70 border border-slate-100 hover:bg-slate-100/50 transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-purple-100/80 text-purple-600 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-panel bg-purple-100/80 text-purple-600 flex items-center justify-center shrink-0">
                     <Crown className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-slate-800 truncate">Weekly audit digest delivered</p>
-                    <p className="text-[11px] text-slate-400 truncate">Automated emails successfully sent to 1,420 subscribers</p>
+                    <p className="text-caption text-slate-400 truncate">Automated emails successfully sent to 1,420 subscribers</p>
                   </div>
                 </div>
-                <span className="text-[11px] font-semibold text-slate-400 shrink-0 ml-2">5 hours ago</span>
+                <span className="text-caption font-semibold text-slate-400 shrink-0 ml-2">5 hours ago</span>
               </div>
             </div>
           </div>
@@ -372,9 +372,9 @@ export default function AdminDashboardPage() {
         {/* ── RIGHT COLUMN (5 COLS): PLATFORM HEALTH + QUICK START GUIDE ── */}
         <div className="lg:col-span-5 space-y-6">
           {/* Card 1: Overall Platform Health */}
-          <div className="bg-white rounded-[24px] p-6 border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow">
+          <div className="bg-white rounded-panel p-6 border border-slate-200/80 transition-shadow">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+              <div className="w-10 h-10 rounded-panel bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
@@ -400,8 +400,8 @@ export default function AdminDashboardPage() {
                 </svg>
                 {/* Center score */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl font-black text-slate-900 leading-none">96%</span>
-                  <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase mt-1">EXCELLENT</span>
+                  <span className="text-3xl font-semibold text-slate-900 leading-none">96%</span>
+                  <span className="text-caption font-bold text-slate-400 mt-1">EXCELLENT</span>
                 </div>
               </div>
             </div>
@@ -409,43 +409,43 @@ export default function AdminDashboardPage() {
             {/* Status Breakdown List */}
             <div className="space-y-3 mt-4">
               {/* Item 1 */}
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between p-3 rounded-panel bg-slate-50 border border-slate-100">
                 <div className="flex items-center gap-2.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                   <div>
                     <p className="text-xs font-bold text-slate-800">11,950 Healthy</p>
-                    <p className="text-[10px] text-slate-400">No action needed</p>
+                    <p className="text-caption text-slate-400">No action needed</p>
                   </div>
                 </div>
-                <span className="text-xs font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full">
+                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full">
                   96.0%
                 </span>
               </div>
 
               {/* Item 2 */}
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between p-3 rounded-panel bg-slate-50 border border-slate-100">
                 <div className="flex items-center gap-2.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
                   <div>
                     <p className="text-xs font-bold text-slate-800">420 Needs Attention</p>
-                    <p className="text-[10px] text-slate-400">Minor tweaks recommended</p>
+                    <p className="text-caption text-slate-400">Minor tweaks recommended</p>
                   </div>
                 </div>
-                <span className="text-xs font-extrabold text-blue-600 bg-blue-50 border border-blue-200/60 px-2.5 py-0.5 rounded-full">
+                <span className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200/60 px-2.5 py-0.5 rounded-full">
                   3.4%
                 </span>
               </div>
 
               {/* Item 3 */}
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between p-3 rounded-panel bg-slate-50 border border-slate-100">
                 <div className="flex items-center gap-2.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
                   <div>
                     <p className="text-xs font-bold text-slate-800">80 Issues Found</p>
-                    <p className="text-[10px] text-slate-400">Requires fixing</p>
+                    <p className="text-caption text-slate-400">Requires fixing</p>
                   </div>
                 </div>
-                <span className="text-xs font-extrabold text-rose-600 bg-rose-50 border border-rose-200/60 px-2.5 py-0.5 rounded-full">
+                <span className="text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-200/60 px-2.5 py-0.5 rounded-full">
                   0.6%
                 </span>
               </div>
@@ -453,25 +453,25 @@ export default function AdminDashboardPage() {
 
             {/* Bottom Link */}
             <div className="mt-5 pt-3 border-t border-slate-100 text-center">
-              <Link href="/admin/qa" className="text-xs font-bold text-slate-600 hover:text-[#FF5500] flex items-center justify-center gap-1 transition-colors">
+              <Link href="/admin/qa" className="text-xs font-bold text-slate-600 hover:text-brand-strong flex items-center justify-center gap-1 transition-colors">
                 Review All Identified Issues <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
           </div>
 
           {/* Card 2: Quick Start Guide Callout Box */}
-          <div className="bg-gradient-to-br from-[#FF5500] to-[#E04800] rounded-[24px] p-6 text-white shadow-lg shadow-[#FF5500]/20 relative overflow-hidden">
+          <div className="bg-surface-2 rounded-panel p-6 text-white /20 relative overflow-hidden">
             {/* Background vector accents */}
             <div className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full bg-white/10 blur-xl pointer-events-none" />
             <div className="absolute right-4 top-4 opacity-20 pointer-events-none">
               <TrendingUp className="w-28 h-28 stroke-[1]" />
             </div>
 
-            <span className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-xs px-3 py-1 rounded-full text-[11px] font-bold text-white mb-3">
+            <span className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-xs px-3 py-1 rounded-full text-caption font-bold text-white mb-3">
               Quick Start Guide
             </span>
 
-            <h3 className="text-xl font-extrabold tracking-tight mb-2">
+            <h3 className="text-xl font-semibold tracking-tight mb-2">
               Need Help Getting Started?
             </h3>
             <p className="text-xs text-white/90 leading-relaxed font-medium mb-6 max-w-sm">
@@ -480,13 +480,13 @@ export default function AdminDashboardPage() {
 
             {/* Callout Action Buttons */}
             <div className="flex items-center gap-3 flex-wrap">
-              <button className="bg-white hover:bg-slate-50 text-[#FF5500] px-4 py-2.5 rounded-xl font-extrabold text-xs shadow-md flex items-center gap-2 transition-all">
+              <button className="bg-white hover:bg-slate-50 text-brand-strong px-4 py-2.5 rounded-panel font-semibold text-xs flex items-center gap-2 transition-all">
                 <Play className="w-3.5 h-3.5 fill-current" />
                 Watch Video
               </button>
               <Link
                 href="/admin/prompts"
-                className="border border-white/40 hover:bg-white/10 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all"
+                className="border border-white/40 hover:bg-white/10 text-white px-4 py-2.5 rounded-panel font-bold text-xs flex items-center gap-1.5 transition-all"
               >
                 Read Docs <ArrowRight className="w-3.5 h-3.5" />
               </Link>

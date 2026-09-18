@@ -43,11 +43,11 @@ export default async function KeywordDetailPage({
  rank_tracking_enabled: boolean | null;
  chatgpt_enabled: boolean | null;
  };
- // Platform defaults — keep aligned with run-pipeline.
+ // Platform defaults - keep aligned with run-pipeline.
  const showAiMode = client.ai_mode_enabled ?? true;
  const showAiOverview = client.ai_overview_enabled ?? false;
  const showRank = client.rank_tracking_enabled ?? true;
- // ChatGPT visibility is now on by default for every client — pilots get
+ // ChatGPT visibility is now on by default for every client - pilots get
  // the full set of signals. Each client can still opt out via /admin/clients.
  const showChatGpt = client.chatgpt_enabled ?? true;
 
@@ -101,11 +101,11 @@ export default async function KeywordDetailPage({
  chatgptActualEntity = (entityRow as { chatgpt_actual_entity?: string | null }).chatgpt_actual_entity ?? null;
  }
  } catch {
- // Columns don't exist yet — leave nulls.
+ // Columns don't exist yet - leave nulls.
  }
  }
 
- // Existing keyword reports — only show successfully-generated ("ready")
+ // Existing keyword reports - only show successfully-generated ("ready")
  // ones so the list doesn't include pending or failed rows the user
  // didn't actually produce.
  const reportsBaseQuery = supabase
@@ -153,34 +153,34 @@ export default async function KeywordDetailPage({
  return (
  <div className="p-4 sm:p-8 max-w-6xl space-y-6">
  {/* Breadcrumb */}
- <div className="flex items-center gap-2 text-sm text-gray-500">
+ <div className="flex items-center gap-2 text-sm text-ink-3">
  <Link href={`/dashboard/clients/${id}`} className="hover:text-white transition-colors">{client.name}</Link>
- <span className="text-gray-600">/</span>
+ <span className="text-ink-3">/</span>
  <Link href={`/dashboard/clients/${id}/keywords`} className="hover:text-white transition-colors">Keywords</Link>
- <span className="text-gray-600">/</span>
- <span className="text-gray-300 truncate">{keyword.keyword}</span>
+ <span className="text-ink-3">/</span>
+ <span className="text-ink-2 truncate">{keyword.keyword}</span>
  </div>
 
  {/* Header */}
- <div className="rounded-[20px] border border-white/5 bg-card/[0.02] p-4 sm:p-6 backdrop-blur-md">
+ <div className="rounded-panel border border-line bg-card/[0.02] p-4 sm:p-6 backdrop-blur-md">
  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
- <h1 className="text-lg sm:text-2xl font-heading font-black text-white break-words">{keyword.keyword}</h1>
- <span className={`rounded px-2 py-0.5 text-xs font-bold border border-white/10 ${tt?.color.replace('bg-', 'text-').replace('100', '400')}`}>
+ <h1 className="text-lg sm:text-2xl font-heading font-semibold text-ink break-words">{keyword.keyword}</h1>
+ <span className={`rounded px-2 py-0.5 text-xs font-bold border border-line ${tt?.color.replace('bg-', 'text-').replace('100', '400')}`}>
  {tt?.label}
  </span>
- <span className="rounded bg-card/10 border border-white/20 px-2 py-0.5 text-xs text-gray-300 font-medium">
+ <span className="rounded bg-card/10 border border-white/20 px-2 py-0.5 text-xs text-ink-2 font-medium">
  {(LOCATIONS[keyword.location as Location] ?? LOCATIONS.ae).label}
  </span>
- <span className={`flex items-center gap-1.5 text-xs ${keyword.is_active ? "text-emerald-400" : "text-gray-500"}`}>
- <span className={`h-1.5 w-1.5 rounded-full ${keyword.is_active ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-gray-500"}`} />
+ <span className={`flex items-center gap-1.5 text-xs ${keyword.is_active ? "text-emerald-400" : "text-ink-3"}`}>
+ <span className={`h-1.5 w-1.5 rounded-full ${keyword.is_active ? "bg-emerald-500 " : "bg-gray-500"}`} />
  {keyword.is_active ? "Active" : "Paused"}
  </span>
  </div>
- <p className="text-sm text-gray-400">
- Tracking <span className="text-white font-medium">{keyword.domain}</span>
- {keyword.brand && <span> · brand: <span className="text-white">{keyword.brand}</span></span>}
+ <p className="text-sm text-ink-3">
+ Tracking <span className="text-ink font-medium">{keyword.domain}</span>
+ {keyword.brand && <span> · brand: <span className="text-ink">{keyword.brand}</span></span>}
  </p>
  </div>
 
@@ -189,20 +189,20 @@ export default async function KeywordDetailPage({
  </div>
  </div>
 
- {/* Current state quick stats — only render tiles for engines the
+ {/* Current state quick stats - only render tiles for engines the
  client has enabled. Keeps the dashboard clean for clients on
  partial plans. */}
  {latest && (
  <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
  {/* Rank */}
  {showRank && (
- <div className="rounded-lg bg-card/5 border border-white/10 p-3">
- <p className="text-xs text-gray-400 mb-1">Google Rank</p>
+ <div className="rounded-lg bg-card/5 border border-line p-3">
+ <p className="text-xs text-ink-3 mb-1">Google Rank</p>
  <div className="flex items-baseline gap-2">
  {latest.rank_position ? (
  <p className="text-2xl font-bold text-cyan-400">#{latest.rank_position}</p>
  ) : (
- <p className="text-sm font-semibold text-gray-500">Not in top 10</p>
+ <p className="text-sm font-semibold text-ink-3">Not in top 10</p>
  )}
  {rankDelta !== null && rankDelta !== 0 && (
  <span className={`text-xs font-semibold ${rankDelta > 0 ? "text-emerald-400" : "text-rose-400"}`}>
@@ -215,23 +215,23 @@ export default async function KeywordDetailPage({
 
  {/* AI Mode */}
  {showAiMode && (
- <div className="rounded-lg bg-card/5 border border-white/10 p-3">
- <p className="text-xs text-gray-400 mb-1">AI Mode</p>
+ <div className="rounded-lg bg-card/5 border border-line p-3">
+ <p className="text-xs text-ink-3 mb-1">AI Mode</p>
  <p className={`text-base font-bold ${
  liveClientCited ? "text-emerald-400" :
  latest.mentioned_in_text ? "text-cyan-400" :
- latest.aio_present ? "text-rose-400" : "text-gray-500"
+ latest.aio_present ? "text-rose-400" : "text-ink-3"
  }`}>
  {liveClientCited ? "✓ Cited" :
  latest.mentioned_in_text ? "~ Mentioned" :
  latest.aio_present === false ? "Not triggered" :
- latest.aio_present === null ? "—" : "✗ Invisible"}
+ latest.aio_present === null ? "-" : "✗ Invisible"}
  </p>
  {(latest.cited_domains?.length ?? 0) > 0 && (
- <p className="text-[10px] text-gray-500 mt-0.5">
+ <p className="text-caption text-ink-3 mt-0.5">
  {latest.cited_domains.length} citations
  {citationDelta !== null && citationDelta !== 0 && (
- <span className={`ml-1 ${citationDelta > 0 ? "text-cyan-400" : "text-gray-600"}`}>
+ <span className={`ml-1 ${citationDelta > 0 ? "text-cyan-400" : "text-ink-3"}`}>
  ({citationDelta > 0 ? "+" : ""}{citationDelta})
  </span>
  )}
@@ -240,45 +240,45 @@ export default async function KeywordDetailPage({
  </div>
  )}
 
- {/* AI Overview — only when the client opted in */}
+ {/* AI Overview - only when the client opted in */}
  {showAiOverview && (
- <div className="rounded-lg bg-card/5 border border-white/10 p-3">
- <p className="text-xs text-gray-400 mb-1">AI Overview</p>
+ <div className="rounded-lg bg-card/5 border border-line p-3">
+ <p className="text-xs text-ink-3 mb-1">AI Overview</p>
  <p className={`text-base font-bold ${
  latest.ai_overview_client_cited ? "text-emerald-400" :
  latest.ai_overview_present ? "text-purple-400" :
- latest.ai_overview_present === false ? "text-gray-500" :
- "text-gray-600"
+ latest.ai_overview_present === false ? "text-ink-3" :
+ "text-ink-3"
  }`}>
  {latest.ai_overview_client_cited ? "✓ Cited" :
  latest.ai_overview_present ? "Present" :
  latest.ai_overview_present === false ? "Not triggered" :
- "—"}
+ "-"}
  </p>
  </div>
  )}
 
- {/* ChatGPT — only when the client opted in */}
+ {/* ChatGPT - only when the client opted in */}
  {showChatGpt && (
- <div className="rounded-lg bg-card/5 border border-white/10 p-3">
- <p className="text-xs text-gray-400 mb-1">ChatGPT</p>
+ <div className="rounded-lg bg-card/5 border border-line p-3">
+ <p className="text-xs text-ink-3 mb-1">ChatGPT</p>
  <p className={`text-base font-bold ${
  chatgptEntityMatch === false ? "text-orange-400" :
  latest.chatgpt_brand_cited ? "text-emerald-400" :
  latest.chatgpt_brand_mentioned ? "text-cyan-400" :
- latest.chatgpt_checked ? "text-rose-400" : "text-gray-600"
+ latest.chatgpt_checked ? "text-rose-400" : "text-ink-3"
  }`}>
- {!latest.chatgpt_checked ? "—" :
+ {!latest.chatgpt_checked ? "-" :
  chatgptEntityMatch === false ? "⚠ Wrong entity" :
  latest.chatgpt_brand_cited ? "✓ Cited" :
  latest.chatgpt_brand_mentioned ? "~ Mentioned" :
  "✗ Invisible"}
  </p>
  {chatgptEntityMatch === false ? (
- <p className="text-[10px] text-orange-400 mt-0.5">Answer is about a different brand</p>
+ <p className="text-caption text-orange-400 mt-0.5">Answer is about a different brand</p>
  ) : (
  latest.chatgpt_checked && latest.chatgpt_mention_count != null && latest.chatgpt_mention_count > 0 && (
- <p className="text-[10px] text-gray-500 mt-0.5">{latest.chatgpt_mention_count}× mentioned</p>
+ <p className="text-caption text-ink-3 mt-0.5">{latest.chatgpt_mention_count}× mentioned</p>
  )
  )}
  </div>
@@ -286,7 +286,7 @@ export default async function KeywordDetailPage({
  </div>
  )}
 
- {/* Gap classification — show provisional state if AIO content not yet captured */}
+ {/* Gap classification - show provisional state if AIO content not yet captured */}
  {gap && (() => {
  const hasContent = !!(latest?.aio_full_text || latest?.aio_snippet);
  const hasCitations = (latest?.cited_domains?.length ?? 0) > 0;
@@ -294,11 +294,11 @@ export default async function KeywordDetailPage({
 
  if (aioContentPending) {
  return (
- <div className="mt-4 flex items-center gap-3 rounded-lg bg-card/5 border border-white/10 p-3">
+ <div className="mt-4 flex items-center gap-3 rounded-lg bg-card/5 border border-line p-3">
  <StatusDot color="gray" size="md" />
  <div className="flex-1">
- <p className="text-sm font-semibold text-white">AI Mode present — content pending</p>
- <p className="text-xs text-gray-400">
+ <p className="text-sm font-semibold text-ink">AI Mode present - content pending</p>
+ <p className="text-xs text-ink-3">
  Google triggered an AI Mode for this query but content wasn&apos;t captured in this snapshot. Re-run to fetch.
  </p>
  </div>
@@ -307,14 +307,14 @@ export default async function KeywordDetailPage({
  }
 
  return (
- <div className="mt-4 flex items-center gap-3 rounded-lg bg-card/5 border border-white/10 p-3">
+ <div className="mt-4 flex items-center gap-3 rounded-lg bg-card/5 border border-line p-3">
  <StatusDot color={gap.dot} size="md" />
  <div className="flex-1">
- <p className="text-sm font-semibold text-white">{gap.title}</p>
- <p className="text-xs text-gray-400">{gap.description}</p>
+ <p className="text-sm font-semibold text-ink">{gap.title}</p>
+ <p className="text-xs text-ink-3">{gap.description}</p>
  </div>
  {gapChanged && (
- <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 text-xs font-semibold text-amber-400">
+ <span className="rounded-full bg-brand-soft border border-line px-2.5 py-1 text-xs font-semibold text-brand-strong">
  Status changed since last check
  </span>
  )}
@@ -326,7 +326,7 @@ export default async function KeywordDetailPage({
  {/* ── Workflow order: Brief → Snapshot → ChatGPT response →
  Citation Strategy → Reports → Tasks ─────────────────────── */}
 
- {/* 1. Brief — diagnosis */}
+ {/* 1. Brief - diagnosis */}
  {latest && (
  <OpportunityBriefButton
  gapLabel={latest.gap_label}
@@ -347,10 +347,10 @@ export default async function KeywordDetailPage({
  />
  )}
 
- {/* 2. Latest Snapshot — the raw data the brief draws from */}
+ {/* 2. Latest Snapshot - the raw data the brief draws from */}
  {latest ? (
- <div className="rounded-[20px] border border-white/5 bg-card/[0.02] p-6 backdrop-blur-md">
- <h2 className="text-base font-semibold text-white mb-4">Latest Snapshot</h2>
+ <div className="rounded-panel border border-line bg-card/[0.02] p-6 backdrop-blur-md">
+ <h2 className="text-base font-semibold text-ink mb-4">Latest Snapshot</h2>
  <KeywordIntelligenceView
  keyword={keyword.keyword}
  gapLabel={latest.gap_label}
@@ -375,12 +375,12 @@ export default async function KeywordDetailPage({
  </div>
  ) : null}
 
- {/* 3. ChatGPT Response — second AI surface, lives next to the snapshot
+ {/* 3. ChatGPT Response - second AI surface, lives next to the snapshot
  since it's part of the raw "what AI saw" data, not the strategy. */}
  {showChatGpt && latest && latest.chatgpt_checked && (
- <div className="rounded-[20px] border border-white/5 bg-card/[0.02] p-6 backdrop-blur-md">
+ <div className="rounded-panel border border-line bg-card/[0.02] p-6 backdrop-blur-md">
  <div className="flex items-center justify-between mb-2">
- <h2 className="text-base font-semibold text-white">ChatGPT Response</h2>
+ <h2 className="text-base font-semibold text-ink">ChatGPT Response</h2>
  <div className="flex items-center gap-2 text-xs">
  {chatgptEntityMatch === false ? (
  <span className="rounded-full bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 font-semibold text-orange-400" title="ChatGPT name-dropped your brand but the answer is actually about a different organisation with the same name">⚠ Wrong entity</span>
@@ -399,18 +399,18 @@ export default async function KeywordDetailPage({
  )}
  </div>
  </div>
- <p className="text-[11px] text-gray-500 mb-4 leading-relaxed">
- How a ChatGPT-class assistant would answer this query right now — used as a proxy for whether your brand
+ <p className="text-caption text-ink-3 mb-4 leading-relaxed">
+ How a ChatGPT-class assistant would answer this query right now - used as a proxy for whether your brand
  naturally surfaces in conversational AI search. Captured by sending the keyword to an LLM with a research-assistant
  system prompt and scanning the response for the brand and competitor mentions.
  </p>
 
  {chatgptEntityMatch === false && (
  <div className="mb-4 rounded-lg border border-orange-500/30 bg-orange-500/10 p-3">
- <p className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-1">Brand-name collision detected</p>
+ <p className="text-xs font-bold text-orange-400 mb-1">Brand-name collision detected</p>
  <p className="text-xs text-orange-200 leading-relaxed">
  ChatGPT&rsquo;s answer mentions the brand name but appears to describe{" "}
- <strong>{chatgptActualEntity ?? "a different organisation"}</strong> — not the tracked brand.
+ <strong>{chatgptActualEntity ?? "a different organisation"}</strong> - not the tracked brand.
  Treat &ldquo;mentioned&rdquo; as a false positive for this snapshot. The recommended move is brand-disambiguation
  content (a clear &ldquo;about us&rdquo; page, Wikipedia / Wikidata entry, sameAs schema) so the model can tell the
  two entities apart.
@@ -419,14 +419,14 @@ export default async function KeywordDetailPage({
  )}
 
  {latest.chatgpt_response && (
- <div className="rounded-lg bg-card/5 border border-white/10 p-4 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap max-h-96 overflow-y-auto">
+ <div className="rounded-lg bg-card/5 border border-line p-4 text-sm text-ink-2 leading-relaxed whitespace-pre-wrap max-h-96 overflow-y-auto">
  {latest.chatgpt_response}
  </div>
  )}
 
  {(latest.chatgpt_cited_urls?.length ?? 0) > 0 && (
  <div className="mt-4">
- <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+ <p className="text-xs font-semibold text-ink-3 mb-1.5">
  ChatGPT Cited Sources ({latest.chatgpt_cited_urls.length})
  </p>
  <div className="space-y-1">
@@ -448,12 +448,12 @@ export default async function KeywordDetailPage({
  rel="noopener noreferrer"
  className={`block rounded-lg border px-3 py-2 text-xs hover:bg-card/10 transition-colors ${
  isClient
- ? "border-amber-500/30 bg-amber-500/10 text-amber-400"
- : "border-white/10 bg-card/5 text-gray-300"
+ ? "border-line bg-brand-soft text-brand-strong"
+ : "border-line bg-card/5 text-ink-2"
  }`}
  >
  <span className="font-medium">{host || url}</span>
- {isClient && <span className="ml-2 text-amber-500">★ client</span>}
+ {isClient && <span className="ml-2 text-brand-strong">★ client</span>}
  </a>
  );
  })}
@@ -463,12 +463,12 @@ export default async function KeywordDetailPage({
 
  {(latest.chatgpt_competitors?.length ?? 0) > 0 && (
  <div className="mt-4">
- <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+ <p className="text-xs font-semibold text-ink-3 mb-1.5">
  Competitors mentioned ({latest.chatgpt_competitors.length})
  </p>
  <div className="flex flex-wrap gap-1.5">
  {latest.chatgpt_competitors.map((c: string, i: number) => (
- <span key={i} className="rounded-full border border-white/10 bg-card/5 px-2.5 py-0.5 text-xs text-gray-300">
+ <span key={i} className="rounded-full border border-line bg-card/5 px-2.5 py-0.5 text-xs text-ink-2">
  {c}
  </span>
  ))}
@@ -478,7 +478,7 @@ export default async function KeywordDetailPage({
  </div>
  )}
 
- {/* 4. Citation Strategy — the blueprint (scrapes top 10 + client page) */}
+ {/* 4. Citation Strategy - the blueprint (scrapes top 10 + client page) */}
  {latest && (() => {
  // Count competitor citations using a fresh host comparison against
  // the current client.website. Old snapshots may have stale isClient
@@ -509,7 +509,7 @@ export default async function KeywordDetailPage({
  );
  })()}
 
- {/* 5. Reports — Task List grounds in the Citation Strategy above */}
+ {/* 5. Reports - Task List grounds in the Citation Strategy above */}
  {latest && (
  <KeywordReportButton
  trackedKeywordId={keyword.id}
@@ -518,7 +518,7 @@ export default async function KeywordDetailPage({
  />
  )}
 
- {/* 6. Tasks — the imported execution tickets */}
+ {/* 6. Tasks - the imported execution tickets */}
  {latest && (
  <KeywordTasksPanel
  clientId={id}
@@ -535,20 +535,20 @@ export default async function KeywordDetailPage({
  )}
 
  {!latest && (
- <div className="rounded-[20px] border border-dashed border-white/10 bg-card/[0.01] p-10 text-center">
- <p className="text-sm text-gray-400">No checks yet for this keyword</p>
- <p className="text-xs text-gray-500 mt-1">Hit Run to capture the first snapshot</p>
+ <div className="rounded-panel border border-dashed border-line bg-card/[0.01] p-10 text-center">
+ <p className="text-sm text-ink-3">No checks yet for this keyword</p>
+ <p className="text-xs text-ink-3 mt-1">Hit Run to capture the first snapshot</p>
  </div>
  )}
 
- {/* History — collapsed by default; users open it when they want the audit trail */}
+ {/* History - collapsed by default; users open it when they want the audit trail */}
  {history.length > 1 && (
- <details className="group rounded-[20px] border border-white/5 bg-card/[0.02] p-6 backdrop-blur-md [&_summary::-webkit-details-marker]:hidden">
+ <details className="group rounded-panel border border-line bg-card/[0.02] p-6 backdrop-blur-md [&_summary::-webkit-details-marker]:hidden">
  <summary className="flex items-center justify-between cursor-pointer list-none">
- <h2 className="text-base font-semibold text-white">
- History — {history.length} check{history.length !== 1 ? "s" : ""}
+ <h2 className="text-base font-semibold text-ink">
+ History - {history.length} check{history.length !== 1 ? "s" : ""}
  </h2>
- <span className="flex items-center gap-1.5 text-xs text-gray-500 group-hover:text-gray-300 transition-colors">
+ <span className="flex items-center gap-1.5 text-xs text-ink-3 group-hover:text-ink-2 transition-colors">
  <span className="group-open:hidden">Show</span>
  <span className="hidden group-open:inline">Hide</span>
  <svg
@@ -559,8 +559,8 @@ export default async function KeywordDetailPage({
  </svg>
  </span>
  </summary>
- <div className="mt-4 rounded-lg border border-white/10 overflow-hidden">
- <div className="grid grid-cols-12 gap-2 px-4 py-2.5 bg-card/5 text-xs text-gray-400 font-medium">
+ <div className="mt-4 rounded-lg border border-line overflow-hidden">
+ <div className="grid grid-cols-12 gap-2 px-4 py-2.5 bg-card/5 text-xs text-ink-3 font-medium">
  <div className="col-span-2">Date</div>
  <div className="col-span-1 text-center">Rank</div>
  <div className="col-span-1 text-center">AIO</div>
@@ -574,41 +574,41 @@ export default async function KeywordDetailPage({
  return (
  <div
  key={r.id}
- className={`grid grid-cols-12 gap-2 px-4 py-2.5 border-t border-white/5 items-center text-xs ${
- isLatest ? "bg-amber-500/10" : "hover:bg-card/5"
+ className={`grid grid-cols-12 gap-2 px-4 py-2.5 border-t border-line items-center text-xs ${
+ isLatest ? "bg-brand-soft" : "hover:bg-card/5"
  }`}
  >
  <div className="col-span-2">
- <p className="text-white font-medium">
+ <p className="text-ink font-medium">
  {new Date(r.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
  </p>
- <p className="text-gray-500 text-xs">
+ <p className="text-ink-3 text-xs">
  {new Date(r.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
  </p>
  </div>
  <div className="col-span-1 text-center font-semibold">
- {r.rank_position ? <span className="text-cyan-400">#{r.rank_position}</span> : <span className="text-gray-600 text-[10px]">Not&nbsp;top&nbsp;10</span>}
+ {r.rank_position ? <span className="text-cyan-400">#{r.rank_position}</span> : <span className="text-ink-3 text-caption">Not&nbsp;top&nbsp;10</span>}
  </div>
  <div className="col-span-1 text-center">
- {r.aio_present === null ? <span className="text-gray-600">—</span>
- : r.aio_present ? <span className="text-amber-400">Yes</span>
- : <span className="text-gray-500">No</span>}
+ {r.aio_present === null ? <span className="text-ink-3">-</span>
+ : r.aio_present ? <span className="text-brand-strong">Yes</span>
+ : <span className="text-ink-3">No</span>}
  </div>
  <div className="col-span-1 text-center">
- {r.client_cited === null ? <span className="text-gray-600">—</span>
+ {r.client_cited === null ? <span className="text-ink-3">-</span>
  : r.client_cited ? <span className="text-emerald-400">✓</span>
  : r.mentioned_in_text ? <span className="text-cyan-400">~</span>
- : <span className="text-gray-500">✗</span>}
+ : <span className="text-ink-3">✗</span>}
  </div>
- <div className="col-span-1 text-center text-gray-300">
+ <div className="col-span-1 text-center text-ink-2">
  {r.cited_domains?.length ?? 0}
  </div>
  <div className="col-span-6 flex items-center gap-2">
  {rGap && <StatusDot color={rGap.dot} />}
- <span className="font-medium text-gray-300">
+ <span className="font-medium text-ink-2">
  {rGap?.title ?? r.gap_label?.replace(/_/g, " ")}
  </span>
- {isLatest && <span className="ml-2 text-xs text-amber-500 font-semibold border border-amber-500/30 rounded px-1 py-0.5">latest</span>}
+ {isLatest && <span className="ml-2 text-xs text-brand-strong font-semibold border border-line rounded px-1 py-0.5">latest</span>}
  </div>
  </div>
  );

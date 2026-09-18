@@ -124,7 +124,7 @@ export default function MessagesPage() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-full bg-emerald-500 text-white font-semibold text-sm shadow-xl flex items-center gap-3"
+            className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-full bg-emerald-500 text-white font-semibold text-sm shadow-overlay flex items-center gap-3"
           >
             <CheckCircle2 size={18} />
             <span>{typeof toastMessage === "string" ? toastMessage : toastMessage.text}</span>
@@ -145,7 +145,7 @@ export default function MessagesPage() {
         <div className="p-4">
           <button 
             onClick={handleOpenNewCompose}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white font-bold rounded-[16px] shadow-lg shadow-[#FF6B00]/20 transition-all hover:-translate-y-0.5"
+            className="w-full flex items-center justify-center gap-2 py-3 bg-ink hover:bg-brand-soft text-white font-bold rounded-panel /20 transition-all .5"
           >
             <Plus size={18} />
             Compose Message
@@ -160,19 +160,19 @@ export default function MessagesPage() {
               <button
                 key={folder.id}
                 onClick={() => setActiveFolder(folder.id)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-panel text-sm font-semibold transition-colors ${
                   isActive 
-                    ? "bg-[#FF6B00]/10 text-[#FF6B00]" 
+                    ? "bg-brand-soft text-brand-strong" 
                     : "text-muted-foreground hover:bg-muted-bg hover:text-foreground"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon size={18} className={isActive ? "text-[#FF6B00]" : "text-muted-foreground"} />
+                  <Icon size={18} className={isActive ? "text-brand-strong" : "text-muted-foreground"} />
                   {folder.label}
                 </div>
                 {folder.badge !== undefined && folder.badge > 0 && (
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                    isActive ? "bg-[#FF6B00] text-white" : "bg-muted-bg text-muted-foreground border border-border/50"
+                  <span className={`text-caption font-bold px-2 py-0.5 rounded-full ${
+                    isActive ? "bg-ink text-white" : "bg-muted-bg text-muted-foreground border border-border/50"
                   }`}>
                     {folder.badge}
                   </span>
@@ -194,7 +194,7 @@ export default function MessagesPage() {
               placeholder={`Search in ${activeFolder}...`} 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-muted-bg/60 border border-border rounded-full pl-9 pr-4 py-2 text-sm text-foreground outline-none focus:border-[#FF6B00]/50 transition-colors"
+              className="w-full bg-muted-bg/60 border border-border rounded-full pl-9 pr-4 py-2 text-sm text-foreground outline-none focus:border-line-strong transition-colors"
             />
           </div>
 
@@ -226,7 +226,7 @@ export default function MessagesPage() {
               onClick={() => setFilterUnread(!filterUnread)}
               className={`p-2 rounded-full border transition-colors ${
                 filterUnread 
-                  ? 'bg-[#FF6B00]/10 border-[#FF6B00]/50 text-[#FF6B00]' 
+                  ? 'bg-brand-soft border-line-strong text-brand-strong' 
                   : 'bg-muted-bg/60 border-border text-muted-foreground hover:text-foreground'
               }`}
               title="Filter unread"
@@ -234,7 +234,7 @@ export default function MessagesPage() {
               <Filter size={16} />
             </button>
 
-            <button className="md:hidden p-2 rounded-full bg-[#FF6B00] text-white" onClick={handleOpenNewCompose}>
+            <button className="md:hidden p-2 rounded-full bg-ink text-white" onClick={handleOpenNewCompose}>
               <Plus size={16} />
             </button>
           </div>
@@ -247,7 +247,7 @@ export default function MessagesPage() {
               // Loading Skeleton
               <div className="space-y-3">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-20 rounded-[20px] bg-card border border-border animate-pulse p-4" />
+                  <div key={i} className="h-20 rounded-panel bg-card border border-border animate-pulse p-4" />
                 ))}
               </div>
             ) : (
@@ -317,15 +317,15 @@ export default function MessagesPage() {
                           key={msg.id}
                           variants={itemVariants}
                           onClick={() => handleMessageClick(msg)}
-                          className={`group relative flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-[20px] border cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 ${
+                          className={`group relative flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-panel border cursor-pointer transition-all duration-200  hover:shadow-overlay hover:shadow-black/5 ${
                             msg.status === "unread" 
-                              ? "bg-card border-[#FF6B00]/50 shadow-md" 
+                              ? "bg-card border-line-strong " 
                               : "bg-card/70 border-border hover:bg-card hover:border-border/80"
                           }`}
                         >
                           {/* Unread Bar Indicator */}
                           {msg.status === "unread" && (
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#FF6B00] rounded-r-full" />
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-ink rounded-r-full" />
                           )}
 
                           {/* Star / Avatar */}
@@ -334,8 +334,8 @@ export default function MessagesPage() {
                               onClick={(e) => { e.stopPropagation(); toggleStar(msg.id); }}
                               className={`p-1 rounded-full transition-colors ${
                                 msg.isStarred 
-                                  ? 'text-amber-400 hover:text-amber-500' 
-                                  : 'text-muted-foreground hover:text-amber-400 hover:bg-amber-400/10'
+                                  ? 'text-brand-strong hover:text-ink' 
+                                  : 'text-muted-foreground hover:text-ink hover:bg-surface-2'
                               }`}
                             >
                               <Star size={18} fill={msg.isStarred ? "currentColor" : "none"} />
@@ -363,18 +363,18 @@ export default function MessagesPage() {
 
                                 {/* Priority Badge */}
                                 {msg.priority === "high" && (
-                                  <span className="px-1.5 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[10px] font-bold uppercase">
+                                  <span className="px-1.5 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-500 text-caption font-bold">
                                     High
                                   </span>
                                 )}
                                 {isDraft && (
-                                  <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-bold uppercase">
+                                  <span className="px-1.5 py-0.5 rounded bg-brand-soft border border-line text-brand-strong text-caption font-bold">
                                     Draft
                                   </span>
                                 )}
                               </div>
 
-                              <span className={`text-xs whitespace-nowrap ml-2 flex items-center gap-1 ${msg.status === "unread" ? 'font-bold text-[#FF6B00]' : 'text-muted-foreground'}`}>
+                              <span className={`text-xs whitespace-nowrap ml-2 flex items-center gap-1 ${msg.status === "unread" ? 'font-bold text-brand-strong' : 'text-muted-foreground'}`}>
                                 <Clock size={12} className="opacity-70" />
                                 {formattedDate} {formattedTime}
                               </span>
@@ -385,7 +385,7 @@ export default function MessagesPage() {
                                 {msg.subject || "(No Subject)"}
                               </span>
                               <span className="hidden sm:inline text-xs text-muted-foreground truncate flex-1">
-                                — {msg.preview || "(No content)"}
+                                - {msg.preview || "(No content)"}
                               </span>
                             </div>
                             <span className="sm:hidden text-xs text-muted-foreground truncate block mt-1">

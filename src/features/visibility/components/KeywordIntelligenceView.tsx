@@ -32,12 +32,12 @@ const GAP_COLORS: Record<string, string> = {
  aligned: "text-emerald-700",
  aligned_no_mention: "text-blue-700",
  ai_mentioned: "text-blue-700",
- search_strong_ai_invisible: "text-amber-700",
+ search_strong_ai_invisible: "text-attention",
  weak_double_loss: "text-rose-700",
  geo_cited: "text-emerald-700",
  geo_cited_no_mention: "text-blue-700",
  geo_mentioned: "text-blue-700",
- geo_invisible: "text-amber-700",
+ geo_invisible: "text-attention",
  geo_no_aio: "text-slate-500",
  seo_ranked: "text-emerald-700",
  seo_ranked_no_aio: "text-emerald-700",
@@ -84,19 +84,19 @@ export default function KeywordIntelligenceView({
  <div className="space-y-5 mt-4 pt-4 border-t border-slate-200 font-sans">
  {/* Gap status banner */}
  {showProvisional ? (
- <div className="flex items-start gap-2.5 bg-slate-50 p-3.5 rounded-[20px] border border-slate-200">
+ <div className="flex items-start gap-2.5 bg-slate-50 p-3.5 rounded-panel border border-slate-200">
  <span className="mt-1"><StatusDot color="gray" size="md" /></span>
  <div>
  <span className="text-xs font-bold text-slate-800">
- AI Mode present — content pending
+ AI Mode present - content pending
  </span>
  <p className="text-xs text-slate-500 mt-0.5">
- An AI Mode was triggered for this query. Content extraction is queued — re-run to fetch.
+ An AI Mode was triggered for this query. Content extraction is queued - re-run to fetch.
  </p>
  </div>
  </div>
  ) : (
- <div className="flex items-start gap-2.5 bg-slate-50/80 p-3.5 rounded-[20px] border border-slate-200">
+ <div className="flex items-start gap-2.5 bg-slate-50/80 p-3.5 rounded-panel border border-slate-200">
  {gapInfo && <span className="mt-1"><StatusDot color={gapInfo.dot} size="md" /></span>}
  <div>
  <span className={`text-xs font-bold ${gapColor}`}>
@@ -114,8 +114,8 @@ export default function KeywordIntelligenceView({
  {/* SERP Results Panel */}
  <div className="space-y-2.5">
  <div className="flex items-center justify-between">
- <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
- Google SERP — Top {serpResults.length}
+ <p className="text-caption font-bold text-slate-500">
+ Google SERP - Top {serpResults.length}
  </p>
  {rankPosition && (
  <span className="text-xs text-blue-700 font-bold bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
@@ -125,7 +125,7 @@ export default function KeywordIntelligenceView({
  </div>
 
  {serpResults.length === 0 ? (
- <p className="text-xs text-slate-400 italic py-4">No SERP data — re-run to capture</p>
+ <p className="text-xs text-slate-400 italic py-4">No SERP data - re-run to capture</p>
  ) : (
  <div className="space-y-1.5">
  {serpResults.map((r, i) => {
@@ -136,32 +136,32 @@ export default function KeywordIntelligenceView({
  href={r.url}
  target="_blank"
  rel="noopener noreferrer"
- className={`flex items-start gap-2.5 rounded-[20px] px-3 py-2.5 border transition-all ${
+ className={`flex items-start gap-2.5 rounded-panel px-3 py-2.5 border transition-all ${
  isClient
- ? "bg-amber-50 border-amber-300 hover:bg-amber-100/60 shadow-xs"
+ ? "bg-attention-soft border-line hover:bg-attention-soft/60 "
  : "bg-card border-slate-200 hover:bg-slate-50"
  }`}
  >
  <span className={`shrink-0 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold mt-0.5 ${
- isClient ? "bg-amber-500 text-white" : "bg-slate-200 text-slate-700"
+ isClient ? "bg-ink text-white" : "bg-slate-200 text-slate-700"
  }`}>
  {r.position}
  </span>
  <div className="min-w-0 flex-1">
  <div className="flex items-center gap-1.5 flex-wrap">
- <p className={`text-xs font-bold truncate ${isClient ? "text-amber-900" : "text-slate-900"}`}>
+ <p className={`text-xs font-bold truncate ${isClient ? "text-attention" : "text-slate-900"}`}>
  {r.title}
  </p>
  {!isClient && r.platform !== "other" && r.platform !== "brand" && (
- <span className={`shrink-0 rounded px-1 py-0.5 text-[10px] font-semibold ${PLATFORM_LABELS[r.platform].color}`}>
+ <span className={`shrink-0 rounded px-1 py-0.5 text-caption font-semibold ${PLATFORM_LABELS[r.platform].color}`}>
  {PLATFORM_LABELS[r.platform].label}
  </span>
  )}
  {isClient && (
- <span className="shrink-0 text-[10px] font-bold text-amber-700 uppercase bg-amber-200/60 px-1.5 py-0.5 rounded">★ Client</span>
+ <span className="shrink-0 text-caption font-bold text-attention bg-amber-200/60 px-1.5 py-0.5 rounded">★ Client</span>
  )}
  </div>
- <p className="text-[11px] font-mono text-slate-400 truncate">{r.domain} →</p>
+ <p className="text-caption font-mono text-slate-400 truncate">{r.domain} →</p>
  </div>
  </a>
  );
@@ -173,8 +173,8 @@ export default function KeywordIntelligenceView({
  {/* AIO Panel */}
  <div className="space-y-3">
  <div className="flex items-center gap-2">
- <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">AI Mode Surface</p>
- <span className={`h-2 w-2 rounded-full ${aioPresent ? "bg-amber-500" : "bg-slate-300"}`} />
+ <p className="text-caption font-bold text-slate-500">AI Mode Surface</p>
+ <span className={`h-2 w-2 rounded-full ${aioPresent ? "bg-ink" : "bg-slate-300"}`} />
  <span className="text-xs font-semibold text-slate-600">{aioPresent ? "Triggered" : "Not triggered"}</span>
  </div>
 
@@ -192,8 +192,8 @@ export default function KeywordIntelligenceView({
 
  {/* AIO Answer */}
  {displayText && (
- <div className="rounded-[20px] bg-card border border-slate-200 p-4 shadow-xs">
- <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">AI Mode Answer</p>
+ <div className="rounded-panel bg-card border border-slate-200 p-4">
+ <p className="text-caption font-bold text-slate-400 mb-2">AI Mode Answer</p>
  <div className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap max-h-72 overflow-y-auto pr-1 font-sans">
  {displayText}
  </div>
@@ -202,7 +202,7 @@ export default function KeywordIntelligenceView({
 
  {/* Citations */}
  <div>
- <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+ <p className="text-caption font-bold text-slate-500 mb-2">
  AIO Citations ({hasRichCitations ? citations.length : citedDomains.length})
  </p>
  {!hasAnyCitations ? (
@@ -217,25 +217,25 @@ export default function KeywordIntelligenceView({
  href={c.url}
  target="_blank"
  rel="noopener noreferrer"
- className={`flex items-start gap-2.5 rounded-[20px] px-3 py-2 border transition-all ${
+ className={`flex items-start gap-2.5 rounded-panel px-3 py-2 border transition-all ${
  isClient
- ? "bg-amber-50 border-amber-300 hover:bg-amber-100/60 shadow-xs"
+ ? "bg-attention-soft border-line hover:bg-attention-soft/60 "
  : "bg-card border-slate-200 hover:bg-slate-50"
  }`}
  >
  <span className={`shrink-0 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold mt-0.5 ${
- isClient ? "bg-amber-500 text-white" : "bg-slate-200 text-slate-700"
+ isClient ? "bg-ink text-white" : "bg-slate-200 text-slate-700"
  }`}>
  {c.position}
  </span>
  <div className="min-w-0 flex-1">
  <div className="flex items-center gap-1.5 flex-wrap">
- <p className={`text-xs font-bold ${isClient ? "text-amber-900" : "text-slate-900"}`}>
+ <p className={`text-xs font-bold ${isClient ? "text-attention" : "text-slate-900"}`}>
  {c.sourceName}
  </p>
- {isClient && <span className="text-[10px] font-bold text-amber-700 uppercase bg-amber-200/60 px-1.5 py-0.5 rounded">★ Client</span>}
+ {isClient && <span className="text-caption font-bold text-attention bg-amber-200/60 px-1.5 py-0.5 rounded">★ Client</span>}
  </div>
- <p className="text-[11px] font-mono text-slate-400 truncate">{c.domain} →</p>
+ <p className="text-caption font-mono text-slate-400 truncate">{c.domain} →</p>
  </div>
  </a>
  );
@@ -253,9 +253,9 @@ export default function KeywordIntelligenceView({
  </div>
  </>
  ) : (
- <div className="rounded-[20px] bg-slate-50 border border-slate-200 p-5 text-center">
+ <div className="rounded-panel bg-slate-50 border border-slate-200 p-5 text-center">
  <p className="text-xs text-slate-500 font-medium">No AI Mode for this query</p>
- <p className="text-[11px] text-slate-400 mt-0.5">Google served traditional organic SERP results</p>
+ <p className="text-caption text-slate-400 mt-0.5">Google served traditional organic SERP results</p>
  </div>
  )}
  </div>

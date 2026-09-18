@@ -19,44 +19,28 @@ export default async function ClientSettingsPage({
  const clientQ = supabase.from("clients").select("id, name, brand_name, website, ai_mode_enabled, ai_overview_enabled, rank_tracking_enabled, chatgpt_enabled, llm_mentions_enabled, brief_model_override, location_override, check_frequency").eq("id", id);
  const { data: rawClient } = await (isSuperAdmin ? clientQ : clientQ.eq("agency_id", session.agencyId)).single();
 
-  let client = rawClient;
-  if (!client && (id === "valgrow-labs-001" || id === "1" || id === "3")) {
-    client = {
-      id,
-      name: "Valgrow Labs",
-      brand_name: "Valgrow Labs",
-      website: "valgrowlabs.com",
-      ai_mode_enabled: true,
-      ai_overview_enabled: true,
-      rank_tracking_enabled: true,
-      chatgpt_enabled: true,
-      llm_mentions_enabled: true,
-      brief_model_override: null,
-      location_override: null,
-      check_frequency: "daily",
-    };
-  }
+  const client = rawClient;
 
   if (!client) notFound();
 
  return (
  <div className="p-4 sm:p-8 max-w-4xl mx-auto space-y-6">
- <div className="border-b border-white/[0.05] pb-6">
- <div className="flex items-center gap-2 mb-1.5 text-xs font-mono text-gray-500">
- <Link href={`/dashboard/clients/${id}`} className="hover:text-amber-400 transition-colors flex items-center gap-1">
+ <div className="border-b border-line pb-6">
+ <div className="flex items-center gap-2 mb-1.5 text-xs font-mono text-ink-3">
+ <Link href={`/dashboard/clients/${id}`} className="hover:text-ink transition-colors flex items-center gap-1">
  <ArrowLeft size={13} />
  <span>{client.name}</span>
  </Link>
- <span className="text-gray-600">/</span>
- <span className="text-white font-bold">Client Settings</span>
+ <span className="text-ink-3">/</span>
+ <span className="text-ink font-bold">Client Settings</span>
  </div>
  <div className="flex items-center gap-3">
- <h1 className="text-2xl font-heading font-black text-white tracking-tight">Client Configuration & Identity</h1>
- <span className="rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-0.5 text-[10px] font-mono font-bold uppercase tracking-widest">
+ <h1 className="text-2xl font-heading font-semibold text-ink tracking-tight">Client Configuration & Identity</h1>
+ <span className="rounded-full bg-brand-soft border border-line text-brand-strong px-3 py-0.5 text-caption font-mono font-bold">
  {id.slice(0, 8)}
  </span>
  </div>
- <p className="text-xs font-mono text-gray-400 mt-1 max-w-2xl">
+ <p className="text-xs font-mono text-ink-3 mt-1 max-w-2xl">
  Configure AI citation override modes, answer box tracking toggles, and brand anchor identity signals. Each check toggle supports Off / On / Inherit from agency defaults.
  </p>
  </div>

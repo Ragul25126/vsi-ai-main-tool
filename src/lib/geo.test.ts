@@ -1,0 +1,187 @@
+import { describe, expect, it } from "vitest";
+import { computeGeo, engineResult, geoConclusion, highlightBrand, latestPerSearch, type GeoRow } from "./geo";
+import { geoFindings } from "./geo-findings";
+
+const ALL_ON = { google_ai_mode: true, chatgpt: true, ai_overviews: false };
+
+function row(overrides: Partial<GeoRow>): GeoRow {
+  return {
+    id: Math.random().toString(36),
+    tracked_keyword_id: "k1",
+    keyword: "plumber dubai",
+    created_at: "2026-09-10T08:00:00Z",
+    gap_label: null,
+    aio_present: null,
+    mentioned_in_text: null,
+    client_cited: null,
+    cited_domains: null,
+    ai_overview_present: null,
+    ai_overview_client_cited: null,
+    ai_overview_cited_domains: null,
+    chatgpt_checked: false,
+    chatgpt_brand_mentioned: null,
+    chatgpt_brand_cited: null,
+    chatgpt_competitors: null,
+    chatgpt_cited_urls: null,
+    chatgpt_entity_match: null,
+    ...overrides,
+  };
+}
+
+describe("engineResult", () => {
+  it("treats missing data as not checked, never as 'no'", () => {
+    expect(engineResult(row({}), "google_ai_mode")).toBeNull();
+    expect(engineResult(row({}), "ai_overviews")).toBeNull();
+    expect(engineResult(row({ chatgpt_checked: false }), "chatgpt")).toBeNull();
+  });
+
+  it("counts AI Mode appearances from name or link", () => {
+    expect(engineResult(row({ aio_present: true, mentioned_in_text: true, client_cited: false }), "google_ai_mode")).toMatchObject({
+      answered: true,
+      named: true,
+      linked: false,
+      appears: true,
+    });
+    expect(engineResult(row({ aio_present: false, client_cited: true }), "google_ai_mode")).toMatchObject({ answered: false, appears: false });
+  });
+
+  it("does not claim AI Overviews tracks names", () => {
+    expect(engineResult(row({ ai_overview_present: true, ai_overview_client_cited: true }), "ai_overviews")?.named).toBeNull();
+  });
+});
+
+describe("latestPerSearch", () => {
+  it("keeps the newest row per search", () => {
+    const rows = [
+      row({ created_at: "2026-09-01T00:00:00Z", aio_present: false }),
+      row({ created_at: "2026-09-10T00:00:00Z", aio_present: true }),
+      row({ tracked_keyword_id: "k2", keyword: "a", created_at: "2026-09-02T00:00:00Z" }),
+    ];
+    const latest = latestPerSearch(rows);
+    expect(latest).toHaveLength(2);
+    expect(latest.find((r) => r.tracked_keyword_id === "k1")?.aio_present).toBe(true);
+  });
+});
+
+describe("computeGeo", () => {
+  const rows: GeoRow[] = [
+    // You're named and linked in AI Mode
+    row({ tracked_keyword_id: "k1", keyword: "best plumber", aio_present: true, mentioned_in_text: true, client_cited: true, cited_domains: ["example.com", "rival.com"] }),
+    // Not mentioned; rival and reddit are linked
+    row({ tracked_keyword_id: "k2", keyword: "emergency plumber", aio_present: true, mentioned_in_text: false, client_cited: false, cited_domains: ["rival.com", "www.reddit.com"] }),
+    // ChatGPT names you
+    row({ tracked_keyword_id: "k3", keyword: "plumber prices", aio_present: false, chatgpt_checked: true, chatgpt_brand_mentioned: true, chatgpt_brand_cited: false, chatgpt_competitors: ["Rival Plumbing"] }),
+    // Never checked by any engine
+    row({ tracked_keyword_id: "k4", keyword: "new search" }),
+    // Older row for k2 on a previous day: you appeared then
+    row({ tracked_keyword_id: "k2", keyword: "emergency plumber", created_at: "2026-09-01T08:00:00Z", aio_present: true, mentioned_in_text: true, client_cited: false, cited_domains: [] }),
+  ];
+  const s = computeGeo(rows, { domain: "https://www.example.com/", enabled: ALL_ON });
+
+  it("computes visibility over searches that got an AI answer", () => {
+    expect(s.searchesTracked).toBe(4);
+    expect(s.answered).toBe(3);
+    expect(s.appears).toBe(2);
+    expect(s.visibility).toBe(67);
+    expect(s.early).toBe(true);
+  });
+
+  it("counts mentions and citations per answer", () => {
+    expect(s.mentions).toBe(2);
+    expect(s.citations).toBe(1);
+  });
+
+  it("counts competitors the same way as you, excluding your own domain", () => {
+    expect(s.competitors.map((c) => c.domain)).toEqual(["rival.com"]);
+    expect(s.competitors[0]).toMatchObject({ answers: 2, gapSearches: 1 });
+    expect(s.platforms).toEqual([{ name: "Reddit", answers: 1 }]);
+  });
+
+  it("counts a competitor once per engine answer, like your own citations", () => {
+    const both = computeGeo(
+      [
+        row({
+          aio_present: true,
+          client_cited: true,
+          cited_domains: ["example.com", "rival.com"],
+          chatgpt_checked: true,
+          chatgpt_brand_cited: true,
+          chatgpt_cited_urls: ["https://example.com/a", "https://rival.com/x", "https://rival.com/y"],
+        }),
+      ],
+      { domain: "example.com", enabled: ALL_ON },
+    );
+    expect(both.citations).toBe(2);
+    expect(both.competitors[0]).toMatchObject({ domain: "rival.com", answers: 2, gapSearches: 0 });
+  });
+
+  it("reports engine coverage without inventing unsupported engines", () => {
+    expect(s.engines.map((e) => e.id).sort()).toEqual(["ai_overviews", "chatgpt", "google_ai_mode"]);
+    const mode = s.engines.find((e) => e.id === "google_ai_mode")!;
+    expect(mode).toMatchObject({ checked: 3, answered: 2, appears: 1 });
+    expect(s.engines.find((e) => e.id === "ai_overviews")).toMatchObject({ enabled: false, checked: 0 });
+  });
+
+  it("builds a trend per check date", () => {
+    expect(s.trend).toEqual([
+      { date: "2026-09-01", value: 100 },
+      { date: "2026-09-10", value: 67 },
+    ]);
+  });
+
+  it("returns a null visibility when nothing was answered", () => {
+    const empty = computeGeo([row({})], { domain: "example.com", enabled: ALL_ON });
+    expect(empty.visibility).toBeNull();
+    expect(geoConclusion(empty)).toMatch(/None of the searches/);
+  });
+
+  it("writes a plain conclusion", () => {
+    expect(geoConclusion(s)).toBe("You appear in 2 of 3 AI answers we checked. rival.com is linked more often than you.");
+  });
+});
+
+describe("geoFindings", () => {
+  const s = computeGeo(
+    [
+      row({ tracked_keyword_id: "k1", keyword: "a", aio_present: true, mentioned_in_text: false, client_cited: false, cited_domains: ["rival.com", "g2.com"] }),
+      row({ tracked_keyword_id: "k2", keyword: "b", aio_present: true, mentioned_in_text: false, client_cited: true, cited_domains: ["example.com"] }),
+      row({ tracked_keyword_id: "k3", keyword: "c", chatgpt_checked: true, chatgpt_brand_mentioned: true, chatgpt_entity_match: false }),
+    ],
+    { domain: "example.com", enabled: ALL_ON },
+  );
+  const findings = geoFindings(s, "client-1");
+  const keys = findings.map((f) => f.key);
+
+  it("produces the expected opportunities, most urgent first", () => {
+    expect(keys).toEqual(["geo:entity", "geo:not_mentioned", "geo:competitors_linked", "geo:linked_not_named", "geo:platforms"]);
+  });
+
+  it("links single-search tasks to that search so they can be verified", () => {
+    const notMentioned = findings.find((f) => f.key === "geo:not_mentioned")!;
+    expect(notMentioned.draft?.trackedKeywordId).toBe("k1");
+    expect(notMentioned.draft?.group).toBe("Content");
+  });
+
+  it("uses only valid task groups", () => {
+    for (const f of findings) expect(["Content", "Technical", "Off-page"]).toContain(f.draft?.group);
+  });
+});
+
+describe("highlightBrand", () => {
+  it("marks the brand, case-insensitively, and keeps the rest", () => {
+    expect(highlightBrand("Try ValGrow or valgrow labs today.", ["valgrow labs", "valgrow"])).toEqual([
+      { text: "Try ", you: false },
+      { text: "ValGrow", you: true },
+      { text: " or ", you: false },
+      { text: "valgrow labs", you: true },
+      { text: " today.", you: false },
+    ]);
+  });
+  it("escapes regex characters in tokens", () => {
+    expect(highlightBrand("a (b+c) d", ["(b+c)"])).toEqual([
+      { text: "a ", you: false },
+      { text: "(b+c)", you: true },
+      { text: " d", you: false },
+    ]);
+  });
+});

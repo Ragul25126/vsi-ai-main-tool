@@ -19,13 +19,13 @@ const ENGINES: { key: keyof Initial; label: string; description: string; tag?: s
  { key: "rank_tracking_enabled", label: "Google rank tracking",
  description: "Captures the client&rsquo;s organic position in Google search results, plus the top-10 SERP." },
  { key: "ai_mode_enabled", label: "AI Mode citations",
- description: "Google AI Mode answer + ranked citation list. The core visibility signal — default for every client." },
+ description: "Google AI Mode answer + ranked citation list. The core visibility signal - default for every client." },
  { key: "ai_overview_enabled", label: "AI Overview", tag: "PREMIUM",
  description: "Google&rsquo;s personalised AI Overview surface. Requires the VSI browser extension for reliable capture. Bill as add-on credits." },
  { key: "chatgpt_enabled", label: "ChatGPT visibility",
  description: "Sends the query to a ChatGPT-class assistant and scans the response for the brand. A second AI surface in the gap calculation." },
  { key: "llm_mentions_enabled", label: "LLM mentions", tag: "BETA",
- description: "Brand mentions across multiple LLMs (Claude, Gemini, Perplexity). Provider-pending — leave off until enabled platform-wide." },
+ description: "Brand mentions across multiple LLMs (Claude, Gemini, Perplexity). Provider-pending - leave off until enabled platform-wide." },
 ];
 
 function TriToggle({
@@ -37,13 +37,13 @@ function TriToggle({
  { v: false, text: "Force OFF" },
  ];
  return (
- <div className="rounded-[20px] border border-[#333] bg-[#1C1C1E] p-4 text-white">
+ <div className="rounded-panel border border-[#333] bg-[#1C1C1E] p-4 text-white">
  <div className="flex items-start justify-between gap-4">
  <div className="flex-1 min-w-0">
  <div className="flex items-baseline gap-2">
  <p className="text-sm font-semibold text-white">{label}</p>
  {tag && (
- <span className="rounded-full bg-[#FF4500]/20 text-[#FF4500] text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5">
+ <span className="rounded-full bg-brand-soft text-brand-strong text-caption font-bold px-1.5 py-0.5">
  {tag}
  </span>
  )}
@@ -62,7 +62,7 @@ function TriToggle({
  ? "bg-green-600 text-white"
  : o.v === false
  ? "bg-red-600 text-white"
- : "bg-[#FF4500] text-white"
+ : "bg-ink text-white"
  : "text-gray-400 hover:text-white"
  }`}
  >
@@ -109,8 +109,8 @@ export default function AdminClientEnginesForm({ clientId, initial }: Props) {
  return (
  <div className="space-y-3">
  <div className="flex items-baseline justify-between gap-2">
- <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Tracking engines</p>
- <p className="text-[11px] text-gray-500">Default = inherit platform default. Force ON / OFF locks the engine for this client only.</p>
+ <p className="text-xs font-bold text-gray-400">Tracking engines</p>
+ <p className="text-caption text-gray-500">Default = inherit platform default. Force ON / OFF locks the engine for this client only.</p>
  </div>
 
  {ENGINES.map((e) => (
@@ -128,7 +128,7 @@ export default function AdminClientEnginesForm({ clientId, initial }: Props) {
  <button
  onClick={save}
  disabled={saving}
- className="rounded-lg bg-[#FF4500] px-4 py-2 text-sm font-semibold text-white hover:bg-[#E03E00] disabled:opacity-50 transition-colors"
+ className="rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-[#E03E00] disabled:opacity-50 transition-colors"
  >
  {saving ? "Saving…" : "Save changes"}
  </button>

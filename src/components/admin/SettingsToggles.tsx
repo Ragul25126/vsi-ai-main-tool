@@ -27,14 +27,14 @@ const TOGGLES: ToggleConfig[] = [
     key: "openai_search_enabled",
     title: "OpenAI live web search",
     description:
-      "Uses gpt-4o-mini-search-preview, which grounds answers in live search results (+$30 per 1,000 searches). Leave off for the pilot — the plain gpt-4o-mini model is roughly 75× cheaper and still produces a useful visibility signal.",
+      "Uses gpt-4o-mini-search-preview, which grounds answers in live search results (+$30 per 1,000 searches). Leave off for the pilot - the plain gpt-4o-mini model is roughly 75× cheaper and still produces a useful visibility signal.",
     experimental: true,
   },
   {
     key: "openai_reports_enabled",
     title: "Route keyword reports through OpenAI",
     description:
-      "Master switch for sending keyword reports (Summary, Detailed, Task List) to OpenAI. Each report type uses the model configured below — typically a cheap model for Summary/Detailed and a stronger one for Task Lists.",
+      "Master switch for sending keyword reports (Summary, Detailed, Task List) to OpenAI. Each report type uses the model configured below - typically a cheap model for Summary/Detailed and a stronger one for Task Lists.",
   },
   {
     key: "openai_citation_enabled",
@@ -81,7 +81,7 @@ const SELECTS: SelectConfig[] = [
     key: "openai_tasks_model",
     title: "OpenAI model · Task List reports",
     description:
-      "Task tickets need owners, effort, impact, and acceptance criteria. The stronger model produces materially better tickets — worth the spend for the report your team will actually execute.",
+      "Task tickets need owners, effort, impact, and acceptance criteria. The stronger model produces materially better tickets - worth the spend for the report your team will actually execute.",
     options: [
       { value: "gpt-4o-mini", label: "gpt-4o-mini · cheapest" },
       { value: "gpt-4o", label: "gpt-4o · recommended" },
@@ -125,7 +125,7 @@ export default function SettingsToggles({ initial }: { initial: Record<string, u
   return (
     <div className="space-y-4">
       {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+        <div className="rounded-panel border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
           {error}
         </div>
       )}
@@ -133,12 +133,12 @@ export default function SettingsToggles({ initial }: { initial: Record<string, u
       {TOGGLES.map((t) => {
         const value = !!state[t.key];
         return (
-          <div key={t.key} className="flex items-start justify-between gap-4 rounded-[22px] border border-slate-200/80 bg-white p-5 shadow-xs text-slate-900">
+          <div key={t.key} className="flex items-start justify-between gap-4 rounded-panel border border-slate-200/80 bg-white p-5 text-slate-900">
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <p className="text-base font-bold text-slate-900">{t.title}</p>
                 {t.experimental && (
-                  <span className="rounded-full bg-orange-50 border border-orange-200 px-2.5 py-0.5 text-[10px] font-extrabold text-[#FF5500] uppercase tracking-wider">
+                  <span className="rounded-full bg-orange-50 border border-orange-200 px-2.5 py-0.5 text-caption font-semibold text-brand-strong">
                     Experimental
                   </span>
                 )}
@@ -149,12 +149,12 @@ export default function SettingsToggles({ initial }: { initial: Record<string, u
               onClick={() => setKey(t.key, !value)}
               disabled={saving === t.key}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
-                value ? "bg-[#FF5500]" : "bg-slate-200"
+                value ? "bg-ink" : "bg-slate-200"
               } disabled:opacity-50`}
               aria-pressed={value}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-xs ${
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform  ${
                   value ? "translate-x-6" : "translate-x-1"
                 }`}
               />
@@ -166,7 +166,7 @@ export default function SettingsToggles({ initial }: { initial: Record<string, u
       {SELECTS.map((s) => {
         const current = typeof state[s.key] === "string" ? (state[s.key] as string) : "";
         return (
-          <div key={s.key} className="rounded-[22px] border border-slate-200/80 bg-white p-5 shadow-xs text-slate-900">
+          <div key={s.key} className="rounded-panel border border-slate-200/80 bg-white p-5 text-slate-900">
             <p className="text-base font-bold text-slate-900">{s.title}</p>
             <p className="mt-1 text-xs text-slate-500 font-medium leading-relaxed">{s.description}</p>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -175,9 +175,9 @@ export default function SettingsToggles({ initial }: { initial: Record<string, u
                   key={opt.value}
                   onClick={() => setKey(s.key, opt.value)}
                   disabled={saving === s.key}
-                  className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
+                  className={`rounded-panel px-3.5 py-2 text-xs font-bold transition-all ${
                     current === opt.value
-                      ? "bg-[#FF5500] text-white shadow-xs"
+                      ? "bg-ink text-white "
                       : "border border-slate-200 bg-slate-50/80 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
                   } disabled:opacity-50 cursor-pointer`}
                 >

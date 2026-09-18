@@ -17,7 +17,6 @@ import {
   Check,
   X,
   Trash2,
-  Plus
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { useNotifications, Notification } from "@/contexts/NotificationsContext";
@@ -41,7 +40,6 @@ export default function NotificationDropdown() {
     notifications, 
     markAsRead, 
     clearAllNotifications, 
-    createNotification,
     refreshNotifications,
     unreadCount 
   } = useNotifications();
@@ -120,20 +118,6 @@ export default function NotificationDropdown() {
     }, 200);
   };
 
-  // Helper to trigger test new notification (for testing real-time creation)
-  const handleCreateTestNotification = async () => {
-    await createNotification({
-      title: "New AI Ranking Detected",
-      message: "Your brand is now cited in Google Gemini SERP.",
-      type: "alert",
-      severity: "high",
-    });
-    setToastMessage("New notification created!");
-    setShowToast(true);
-    setTimeout(() => {
-      setShowToast(false);
-    }, 2000);
-  };
 
   const getNotificationIcon = (title: string) => {
     const t = title.toLowerCase();
@@ -146,7 +130,7 @@ export default function NotificationDropdown() {
     }
     if (t.includes("ai") || t.includes("citation") || t.includes("sge") || t.includes("gemini")) {
       return (
-        <div className="w-7 h-7 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
+        <div className="w-7 h-7 rounded-full bg-brand-soft border border-line text-brand-strong flex items-center justify-center shrink-0">
           <Sparkles size={18} />
         </div>
       );
@@ -173,7 +157,7 @@ export default function NotificationDropdown() {
       );
     }
     return (
-      <div className="w-7 h-7 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
+      <div className="w-7 h-7 rounded-full bg-brand-soft border border-line text-brand-strong flex items-center justify-center shrink-0">
         <AlertCircle size={18} />
       </div>
     );
@@ -185,8 +169,8 @@ export default function NotificationDropdown() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         type="button"
-        className={`relative p-2 rounded-[20px] text-muted-foreground hover:text-foreground hover:bg-muted-bg transition-all duration-200 cursor-pointer outline-none ${
-          isOpen ? "bg-muted-bg text-foreground ring-2 ring-amber-500/20" : ""
+        className={`relative p-2 rounded-panel text-muted-foreground hover:text-foreground hover:bg-muted-bg transition-all duration-200 cursor-pointer outline-none ${
+          isOpen ? "bg-muted-bg text-foreground ring-2 ring-line" : ""
         }`}
         title="Notifications"
         aria-expanded={isOpen}
@@ -196,7 +180,7 @@ export default function NotificationDropdown() {
         <Bell size={18} />
         {/* Red Unread Badge (Hides automatically when count is zero) */}
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-[10px] font-extrabold text-white ring-2 ring-card shadow-xs animate-in zoom-in-50 duration-200">
+          <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-caption font-semibold text-white ring-2 ring-card animate-in zoom-in-50 duration-200">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -210,7 +194,7 @@ export default function NotificationDropdown() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-5 right-5 z-[100] flex items-center gap-2 px-4 py-2.5 rounded-[14px] font-sans text-xs font-semibold shadow-2xl border"
+            className="fixed bottom-5 right-5 z-[100] flex items-center gap-2 px-4 py-2.5 rounded-panel font-sans text-xs font-semibold shadow-overlay border"
             style={{
               background: isDark ? "#18181B" : "#FFFFFF",
               color: isDark ? "#FFFFFF" : "#111827",
@@ -258,7 +242,7 @@ export default function NotificationDropdown() {
               }}
             >
               <div className="flex items-center gap-[6px]">
-                <Bell size={16} className="text-[#FF6B00]" />
+                <Bell size={16} className="text-brand-strong" />
                 <h3 
                   className="text-[16px] font-semibold tracking-normal normal-case leading-[20px]"
                   style={{ color: isDark ? "#FFFFFF" : "#1F2937" }}
@@ -272,7 +256,7 @@ export default function NotificationDropdown() {
                   type="button"
                   onClick={() => setShowConfirmDialog(true)}
                   className="text-[12px] font-semibold transition-all hover:opacity-80 cursor-pointer"
-                  style={{ color: "#FF6B00" }}
+                  style={{ color: "var(--brand)" }}
                 >
                   Clear All
                 </button>
@@ -289,7 +273,7 @@ export default function NotificationDropdown() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute inset-0 z-30 flex flex-col justify-between p-3.5 rounded-[10px]"
+                    className="absolute inset-0 z-30 flex flex-col justify-between p-3.5 rounded-control"
                     style={{
                       background: isDark ? "#18181B" : "#FFFFFF",
                       border: isDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid #E5E7EB",
@@ -308,7 +292,7 @@ export default function NotificationDropdown() {
                           <X size={14} />
                         </button>
                       </div>
-                      <p className="text-[11px] font-normal leading-relaxed text-muted-foreground">
+                      <p className="text-caption font-normal leading-relaxed text-muted-foreground">
                         This action will remove all notifications from your notification list.
                       </p>
                     </div>
@@ -317,14 +301,14 @@ export default function NotificationDropdown() {
                       <button
                         type="button"
                         onClick={() => setShowConfirmDialog(false)}
-                        className="px-2.5 py-1 rounded-md text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted-bg transition-colors cursor-pointer"
+                        className="px-2.5 py-1 rounded-md text-caption font-semibold text-muted-foreground hover:text-foreground hover:bg-muted-bg transition-colors cursor-pointer"
                       >
                         Cancel
                       </button>
                       <button
                         type="button"
                         onClick={handleConfirmClearAll}
-                        className="px-3 py-1 rounded-md text-[11px] font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors shadow-xs cursor-pointer flex items-center gap-1"
+                        className="px-3 py-1 rounded-md text-caption font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors cursor-pointer flex items-center gap-1"
                       >
                         <Trash2 size={12} />
                         Clear All
@@ -355,26 +339,11 @@ export default function NotificationDropdown() {
                   </h4>
                   
                   <p 
-                    className="text-[11px] font-normal leading-snug mb-3 max-w-[200px]"
+                    className="text-caption font-normal leading-snug mb-3 max-w-[200px]"
                     style={{ color: isDark ? "rgba(255,255,255,0.6)" : "#6B7280" }}
                   >
                     You're all caught up.<br />New notifications will appear here.
                   </p>
-
-                  <button
-                    type="button"
-                    onClick={handleCreateTestNotification}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-semibold transition-all cursor-pointer border hover:border-amber-500/50"
-                    style={{
-                      background: isDark ? "rgba(255,255,255,0.06)" : "#F9FAFB",
-                      borderColor: isDark ? "rgba(255,255,255,0.1)" : "#E5E7EB",
-                      color: isDark ? "#FFFFFF" : "#374151"
-                    }}
-                    title="Simulate a new incoming notification"
-                  >
-                    <Plus size={11} className="text-[#FF6B00]" />
-                    <span>Simulate Notification</span>
-                  </button>
                 </div>
               ) : (
                 <motion.div
@@ -409,7 +378,7 @@ export default function NotificationDropdown() {
                           background: isDark
                             ? (notification.isRead ? "rgba(255, 255, 255, 0.03)" : "rgba(255, 255, 255, 0.07)")
                             : (notification.isRead ? "#F9FAFB" : "#F3F4F6"),
-                          border: isFocused ? "1px solid #FF6B00" : (isDark ? "1px solid rgba(255,255,255,0.04)" : "1px solid rgba(0,0,0,0.04)"),
+                          border: isFocused ? "1px solid var(--line-strong)" : (isDark ? "1px solid rgba(255,255,255,0.04)" : "1px solid rgba(0,0,0,0.04)"),
                           boxSizing: "border-box",
                         }}
                         onMouseEnter={(e) => {
@@ -434,19 +403,19 @@ export default function NotificationDropdown() {
                               {notification.title}
                             </p>
                             {!notification.isRead && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B00] shrink-0" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-ink shrink-0" />
                             )}
                           </div>
 
                           <p 
-                            className="text-[11px] font-normal leading-snug truncate mt-0.5"
+                            className="text-caption font-normal leading-snug truncate mt-0.5"
                             style={{ color: isDark ? "rgba(255, 255, 255, 0.7)" : "#4B5563" }}
                           >
                             {notification.message}
                           </p>
 
                           <span 
-                            className="text-[10px] font-medium leading-none block mt-0.5"
+                            className="text-caption font-medium leading-none block mt-0.5"
                             style={{ color: isDark ? "rgba(255, 255, 255, 0.45)" : "#9CA3AF" }}
                           >
                             {notification.timestamp}
@@ -471,8 +440,8 @@ export default function NotificationDropdown() {
                 <Link
                   href="/dashboard/tasks-audits"
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center justify-center gap-1 text-[12px] font-semibold transition-all hover:gap-1.5 cursor-pointer py-1 px-2.5 rounded-full hover:bg-[#FF6B00]/10"
-                  style={{ color: "#FF6B00" }}
+                  className="flex items-center justify-center gap-1 text-[12px] font-semibold transition-all hover:gap-1.5 cursor-pointer py-1 px-2.5 rounded-full hover:bg-brand-soft"
+                  style={{ color: "var(--brand)" }}
                 >
                   <span>View All Audit Tasks</span>
                   <ArrowRight size={13} />

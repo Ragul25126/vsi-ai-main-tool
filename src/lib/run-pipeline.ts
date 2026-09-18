@@ -72,6 +72,17 @@ async function runKeyword(
     const gptResult  = gptSettled.status === "fulfilled"  ? gptSettled.value  : null;
     const aioOverviewResult = aioOverviewSettled.status === "fulfilled" ? aioOverviewSettled.value : null;
 
+    // The search clients return placeholder results when no API key is set.
+    // Never store those as real history.
+    const DEMO_HOST = "industry-leader.com";
+    const isDemo =
+      (serpResult?.organicResults ?? []).some((r) => (r.url || r.domain || "").includes(DEMO_HOST)) ||
+      (aioResult?.citedDomains ?? []).some((d) => d.includes(DEMO_HOST)) ||
+      (aioOverviewResult?.citedDomains ?? []).some((d) => d.includes(DEMO_HOST));
+    if (isDemo) {
+      return { status: "error", error: "Search provider isn't configured, so no real results were collected." };
+    }
+
     const errors: string[] = [];
     if (serpSettled.status === "rejected") {
       errors.push(`SERP: ${serpSettled.reason instanceof Error ? serpSettled.reason.message : String(serpSettled.reason)}`);

@@ -20,8 +20,8 @@ export default async function InvitesPage() {
 
       <InviteCreator />
 
-      <div className="rounded-[22px] border border-slate-200/80 overflow-hidden bg-white shadow-xs">
-        <div className="grid grid-cols-12 gap-2 px-6 py-3 bg-slate-50/70 text-xs text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
+      <div className="rounded-panel border border-slate-200/80 overflow-hidden bg-white">
+        <div className="grid grid-cols-12 gap-2 px-6 py-3 bg-slate-50/70 text-xs text-slate-400 font-bold border-b border-slate-100">
           <div className="col-span-3">Code</div>
           <div className="col-span-3">Email / Note</div>
           <div className="col-span-1">Role</div>

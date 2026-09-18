@@ -227,10 +227,10 @@ export default function PromptsPage() {
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1200px] mx-auto font-sans bg-background animate-fadeIn pb-16">
       
       {/* ── 1. ATTRACTIVE & PROFESSIONAL HERO HEADER ── */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-white via-white to-orange-50/30 dark:from-card dark:via-card dark:to-orange-950/10 border border-slate-200/90 dark:border-border rounded-3xl p-6 sm:p-8 shadow-xs space-y-5">
+      <div className="relative overflow-hidden bg-surface-2 dark:from-card dark:via-card dark:to-orange-950/10 border border-slate-200/90 dark:border-border rounded-panel p-6 sm:p-8 space-y-5">
         
         {/* Ambient background glow accent */}
-        <div className="absolute -top-24 -right-24 w-72 h-72 bg-gradient-to-br from-[#FF5A1F]/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 -right-24 w-72 h-72 bg-surface-2 rounded-full blur-3xl pointer-events-none" />
         
         <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           
@@ -238,20 +238,20 @@ export default function PromptsPage() {
           <div className="space-y-3 max-w-2xl">
             
             {/* Eyebrow Pill */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF5A1F]/10 border border-[#FF5A1F]/20 text-[#FF5A1F] text-[11px] font-black uppercase tracking-wider shadow-2xs">
-              <Sparkles size={12} className="text-[#FF5A1F]" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-soft border border-line-strong text-brand-strong text-caption font-semibold">
+              <Sparkles size={12} className="text-brand-strong" />
               <span>AI Search Intelligence</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold lowercase tracking-normal">live</span>
+              <span className="text-caption text-emerald-600 dark:text-emerald-400 font-bold lowercase tracking-normal">live</span>
             </div>
 
             {/* Title with Gradient Icon */}
             <div className="flex items-start sm:items-center gap-3.5">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FF5A1F] to-[#E04810] text-white flex items-center justify-center shrink-0 shadow-md shadow-orange-500/20">
+              <div className="w-11 h-11 rounded-panel bg-surface-2 text-white flex items-center justify-center shrink-0 shadow-orange-500/20">
                 <Zap size={22} className="fill-white stroke-none" />
               </div>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-foreground tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-foreground tracking-tight">
                   AI Search Simulator
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-muted-foreground font-medium mt-0.5 leading-relaxed">
@@ -279,12 +279,12 @@ export default function PromptsPage() {
           </div>
 
           {/* Right: Preset Samples Bar */}
-          <div className="relative bg-white/90 dark:bg-card/90 backdrop-blur-xs border border-slate-200/90 dark:border-border p-3 rounded-2xl shadow-xs space-y-2 shrink-0 lg:max-w-md">
+          <div className="relative bg-white/90 dark:bg-card/90 backdrop-blur-xs border border-slate-200/90 dark:border-border p-3 rounded-panel space-y-2 shrink-0 lg:max-w-md">
             <div className="flex items-center justify-between px-1">
-              <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              <span className="text-[10.5px] font-semibold text-slate-400 dark:text-slate-500">
                 Quick Test Samples:
               </span>
-              <span className="text-[10px] text-slate-400 font-medium">1-Click Scenarios</span>
+              <span className="text-caption text-slate-400 font-medium">1-Click Scenarios</span>
             </div>
             
             <div className="flex items-center gap-1.5 flex-wrap">
@@ -293,16 +293,16 @@ export default function PromptsPage() {
                   <button
                     type="button"
                     onClick={() => handleApplyPreset(s)}
-                    className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs ${
+                    className={`px-3 py-1.5 rounded-panel text-caption font-bold transition-all cursor-pointer flex items-center gap-1.5  ${
                       keyword === s.keyword && clientDomain === s.domain
-                        ? "bg-[#FF5A1F] text-white shadow-xs scale-[1.02]"
-                        : "bg-slate-50 dark:bg-muted/60 hover:bg-orange-50 hover:text-[#FF5A1F] text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-border"
+                        ? "bg-ink text-white  scale-[1.02]"
+                        : "bg-slate-50 dark:bg-muted/60 hover:bg-orange-50 hover:text-brand-strong text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-border"
                     }`}
                   >
                     <span>{s.emoji}</span>
                     <span>{s.name}</span>
                     {s.isCustom && (
-                      <span className="text-[9px] font-black uppercase px-1 py-0.2 rounded bg-orange-100 dark:bg-orange-950 text-[#FF5A1F] border border-orange-200 dark:border-orange-800">
+                      <span className="text-caption font-semibold px-1 py-0.2 rounded bg-orange-100 dark:bg-orange-950 text-brand-strong border border-orange-200 dark:border-orange-800">
                         Custom
                       </span>
                     )}
@@ -314,7 +314,7 @@ export default function PromptsPage() {
                       type="button"
                       onClick={(e) => handleDeleteSample(s.id, e)}
                       title="Delete custom sample"
-                      className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-[11px] font-black cursor-pointer shadow-xs z-10"
+                      className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-caption font-semibold cursor-pointer z-10"
                     >
                       ×
                     </button>
@@ -326,7 +326,7 @@ export default function PromptsPage() {
               <button
                 type="button"
                 onClick={handleOpenAddModalWithCurrent}
-                className="px-3 py-1.5 rounded-xl border border-dashed border-[#FF5A1F]/60 bg-orange-50/70 hover:bg-[#FF5A1F] text-[#FF5A1F] hover:text-white dark:bg-orange-950/40 dark:text-orange-300 dark:hover:text-white text-[11px] font-black transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+                className="px-3 py-1.5 rounded-panel border border-dashed border-line-strong bg-orange-50/70 hover:bg-ink-2 text-brand-strong hover:text-white dark:bg-orange-950/40 dark:text-orange-300 dark:hover:text-white text-caption font-semibold transition-all cursor-pointer flex items-center gap-1"
                 title="Add a custom sample query & domain"
               >
                 <Plus size={13} className="stroke-[3]" />
@@ -339,11 +339,11 @@ export default function PromptsPage() {
       </div>
 
       {/* ── 2. SIMPLE 2-STEP INTERACTIVE BUILDER ── */}
-      <div className="bg-white dark:bg-card border border-slate-200/80 dark:border-border rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
+      <div className="bg-white dark:bg-card border border-slate-200/80 dark:border-border rounded-panel p-6 sm:p-8 space-y-6">
         
         {/* Step A: Pick Engine (Visual Brand Buttons) */}
         <div className="space-y-2.5">
-          <label className="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+          <label className="text-xs font-semibold text-slate-400 dark:text-slate-500 block">
             1. Select AI Assistant to Test
           </label>
           
@@ -355,20 +355,20 @@ export default function PromptsPage() {
                   key={eng.id}
                   type="button"
                   onClick={() => handleSelectEngine(eng)}
-                  className={`p-4 rounded-2xl border text-left transition-all flex items-center gap-3.5 cursor-pointer ${
+                  className={`p-4 rounded-panel border text-left transition-all flex items-center gap-3.5 cursor-pointer ${
                     isSelected
-                      ? "border-2 border-[#FF5A1F] bg-[#FFF9F5] dark:bg-orange-950/30 shadow-xs"
+                      ? "border-2 border-line-strong bg-[#FFF9F5] dark:bg-orange-950/30 "
                       : "border-slate-200/80 dark:border-border bg-white dark:bg-card hover:border-orange-200 hover:bg-slate-50/50"
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-white dark:bg-card border border-slate-200/70 dark:border-border flex items-center justify-center shrink-0 p-2 shadow-2xs">
+                  <div className="w-10 h-10 rounded-panel bg-white dark:bg-card border border-slate-200/70 dark:border-border flex items-center justify-center shrink-0 p-2">
                     {eng.logo}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className={`text-xs font-black leading-tight ${isSelected ? "text-slate-900 dark:text-foreground" : "text-slate-800 dark:text-slate-200"}`}>
+                    <p className={`text-xs font-semibold leading-tight ${isSelected ? "text-slate-900 dark:text-foreground" : "text-slate-800 dark:text-slate-200"}`}>
                       {eng.name}
                     </p>
-                    <p className="text-[11px] text-slate-500 dark:text-muted-foreground font-medium leading-snug mt-1">
+                    <p className="text-caption text-slate-500 dark:text-muted-foreground font-medium leading-snug mt-1">
                       {eng.tagline}
                     </p>
                   </div>
@@ -380,7 +380,7 @@ export default function PromptsPage() {
 
         {/* Step B: The 2 Essential Inputs */}
         <div className="space-y-2.5 pt-2">
-          <label className="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+          <label className="text-xs font-semibold text-slate-400 dark:text-slate-500 block">
             2. Enter Your Search Phrase &amp; Website
           </label>
 
@@ -389,7 +389,7 @@ export default function PromptsPage() {
             {/* Input 1: Search Phrase */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-foreground">
-                <Search size={14} className="text-[#FF5A1F]" />
+                <Search size={14} className="text-brand-strong" />
                 <span>What are customers searching for?</span>
               </div>
               <input
@@ -397,7 +397,7 @@ export default function PromptsPage() {
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="e.g. best saas platform"
-                className="w-full bg-slate-50/70 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-xl px-4 py-3 text-xs font-medium text-slate-900 dark:text-foreground focus:outline-none focus:border-[#FF5A1F] shadow-2xs"
+                className="w-full bg-slate-50/70 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-panel px-4 py-3 text-xs font-medium text-slate-900 dark:text-foreground focus:outline-none focus:border-line-strong"
               />
               <p className="text-[10.5px] text-slate-400 font-medium">
                 The search phrase or buyer question.
@@ -414,7 +414,7 @@ export default function PromptsPage() {
                 <button
                   type="button"
                   onClick={handleOpenAddModalWithCurrent}
-                  className="text-[11px] font-bold text-[#FF5A1F] hover:underline cursor-pointer flex items-center gap-1"
+                  className="text-caption font-bold text-brand-strong hover:underline cursor-pointer flex items-center gap-1"
                 >
                   <BookmarkPlus size={12} />
                   <span>Save as Custom Sample</span>
@@ -425,7 +425,7 @@ export default function PromptsPage() {
                 value={clientDomain}
                 onChange={(e) => setClientDomain(e.target.value)}
                 placeholder="e.g. valgrowlabs.com"
-                className="w-full bg-slate-50/70 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-xl px-4 py-3 text-xs font-medium text-slate-900 dark:text-foreground focus:outline-none focus:border-[#FF5A1F] shadow-2xs"
+                className="w-full bg-slate-50/70 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-panel px-4 py-3 text-xs font-medium text-slate-900 dark:text-foreground focus:outline-none focus:border-line-strong"
               />
               <p className="text-[10.5px] text-slate-400 font-medium">
                 The website you want the AI to recommend.
@@ -452,7 +452,7 @@ export default function PromptsPage() {
             <button
               type="button"
               onClick={handleCopyPrompt}
-              className="px-4 py-3 rounded-xl bg-white dark:bg-card border border-slate-200 dark:border-border text-xs font-bold text-slate-700 dark:text-foreground hover:bg-slate-50 shadow-2xs transition-colors cursor-pointer"
+              className="px-4 py-3 rounded-panel bg-white dark:bg-card border border-slate-200 dark:border-border text-xs font-bold text-slate-700 dark:text-foreground hover:bg-slate-50 transition-colors cursor-pointer"
             >
               {copied ? <span className="text-emerald-600 font-bold">Copied!</span> : "Copy Prompt Text"}
             </button>
@@ -461,7 +461,7 @@ export default function PromptsPage() {
               type="button"
               onClick={() => triggerSimulation()}
               disabled={isLoading}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#FF5A1F] hover:bg-[#E04D16] text-white text-xs font-black shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-60"
+              className="flex items-center gap-2 px-6 py-3 rounded-panel bg-ink hover:bg-ink-2 text-white text-xs font-semibold transition-all cursor-pointer disabled:opacity-60"
             >
               {isLoading ? (
                 <RefreshCw size={15} className="animate-spin" />
@@ -476,7 +476,7 @@ export default function PromptsPage() {
 
         {/* Optional Collapsible Advanced Options */}
         {showAdvanced && (
-          <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-muted/30 border border-slate-200/80 dark:border-border space-y-3 animate-fadeIn">
+          <div className="p-4 rounded-panel bg-slate-50/70 dark:bg-muted/30 border border-slate-200/80 dark:border-border space-y-3 animate-fadeIn">
             <div>
               <label className="text-xs font-bold text-slate-800 dark:text-foreground block mb-1">
                 Competitors (Optional)
@@ -486,7 +486,7 @@ export default function PromptsPage() {
                 value={competitors}
                 onChange={(e) => setCompetitors(e.target.value)}
                 placeholder="e.g. competitor1.com, competitor2.com"
-                className="w-full bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl px-3.5 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-[#FF5A1F]"
+                className="w-full bg-white dark:bg-card border border-slate-200 dark:border-border rounded-panel px-3.5 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-line-strong"
               />
             </div>
             <div>
@@ -497,7 +497,7 @@ export default function PromptsPage() {
                 rows={2}
                 value={customPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
-                className="w-full bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl p-3 font-mono text-xs text-foreground focus:outline-none focus:border-[#FF5A1F] resize-none"
+                className="w-full bg-white dark:bg-card border border-slate-200 dark:border-border rounded-panel p-3 font-mono text-xs text-foreground focus:outline-none focus:border-line-strong resize-none"
               />
             </div>
           </div>
@@ -507,17 +507,17 @@ export default function PromptsPage() {
 
       {/* ── 3. AUTHENTIC & PROFESSIONAL AI INSPECTION PANEL ── */}
       {hasTested && (
-        <div className="bg-white dark:bg-card border border-slate-200/90 dark:border-border rounded-3xl p-6 sm:p-8 space-y-6 shadow-xs animate-fadeIn">
+        <div className="bg-white dark:bg-card border border-slate-200/90 dark:border-border rounded-panel p-6 sm:p-8 space-y-6 animate-fadeIn">
           
           {/* Header Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-border">
             <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-muted border border-slate-200/80 dark:border-border flex items-center justify-center shrink-0 p-2 shadow-2xs">
+              <div className="w-10 h-10 rounded-panel bg-slate-100 dark:bg-muted border border-slate-200/80 dark:border-border flex items-center justify-center shrink-0 p-2">
                 {selectedEngine.logo}
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-base font-black text-slate-900 dark:text-foreground">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-foreground">
                     {selectedEngine.name} Live Inspection
                   </h3>
                   <span className="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10.5px] font-bold px-2.5 py-0.5 rounded-full">
@@ -531,7 +531,7 @@ export default function PromptsPage() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-muted text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-200/70 dark:border-border">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-panel bg-slate-50 dark:bg-muted text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-200/70 dark:border-border">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
                 <span>Latency: 1.2s</span>
               </span>
@@ -542,49 +542,49 @@ export default function PromptsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
             
             {/* Card 1: Your AI Rank */}
-            <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-muted/30 border border-slate-200/80 dark:border-border space-y-1.5">
+            <div className="p-4 rounded-panel bg-slate-50/70 dark:bg-muted/30 border border-slate-200/80 dark:border-border space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <span className="text-caption font-semibold text-slate-400 dark:text-slate-500">
                   Your AI Rank
                 </span>
                 <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />
               </div>
-              <p className="text-xl font-black text-slate-900 dark:text-foreground">
+              <p className="text-xl font-semibold text-slate-900 dark:text-foreground">
                 #1 Choice
               </p>
-              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+              <p className="text-caption text-emerald-600 dark:text-emerald-400 font-semibold">
                 Recommended first to customers
               </p>
             </div>
 
             {/* Card 2: Website Link in AI */}
-            <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-muted/30 border border-slate-200/80 dark:border-border space-y-1.5">
+            <div className="p-4 rounded-panel bg-slate-50/70 dark:bg-muted/30 border border-slate-200/80 dark:border-border space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <span className="text-caption font-semibold text-slate-400 dark:text-slate-500">
                   Website Link in AI
                 </span>
-                <Globe size={16} className="text-[#FF5A1F]" />
+                <Globe size={16} className="text-brand-strong" />
               </div>
-              <p className="text-xl font-black text-slate-900 dark:text-foreground truncate">
+              <p className="text-xl font-semibold text-slate-900 dark:text-foreground truncate">
                 Included &amp; Clickable
               </p>
-              <p className="text-[11px] text-slate-500 font-medium truncate">
+              <p className="text-caption text-slate-500 font-medium truncate">
                 https://{cleanDomain}
               </p>
             </div>
 
             {/* Card 3: Competitor Rank */}
-            <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-muted/30 border border-slate-200/80 dark:border-border space-y-1.5">
+            <div className="p-4 rounded-panel bg-slate-50/70 dark:bg-muted/30 border border-slate-200/80 dark:border-border space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <span className="text-caption font-semibold text-slate-400 dark:text-slate-500">
                   Competitor Rank
                 </span>
                 <ShieldCheck size={16} className="text-indigo-600 dark:text-indigo-400" />
               </div>
-              <p className="text-xl font-black text-slate-900 dark:text-foreground">
+              <p className="text-xl font-semibold text-slate-900 dark:text-foreground">
                 Behind You (#2)
               </p>
-              <p className="text-[11px] text-slate-500 font-medium truncate">
+              <p className="text-caption text-slate-500 font-medium truncate">
                 Beats {competitors.split(",")[0] || "competitors"}
               </p>
             </div>
@@ -592,15 +592,15 @@ export default function PromptsPage() {
           </div>
 
           {/* Authentic AI Response Container */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-slate-50/50 dark:bg-muted/20 border border-slate-200/90 dark:border-border space-y-4">
+          <div className="p-5 sm:p-6 rounded-panel bg-slate-50/50 dark:bg-muted/20 border border-slate-200/90 dark:border-border space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200/60 dark:border-border">
               <div className="flex items-center gap-2">
-                <Bot size={15} className="text-[#FF5A1F]" />
+                <Bot size={15} className="text-brand-strong" />
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
                   What the AI Answers:
                 </span>
               </div>
-              <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-lg border border-emerald-200/80 dark:border-emerald-800">
+              <span className="text-caption text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-lg border border-emerald-200/80 dark:border-emerald-800">
                 ● Live Grounded Search
               </span>
             </div>
@@ -611,16 +611,16 @@ export default function PromptsPage() {
               </p>
 
               {/* #1 Choice Card */}
-              <div className="p-4 rounded-xl bg-white dark:bg-card border border-slate-200/80 dark:border-border space-y-2 shadow-2xs">
+              <div className="p-4 rounded-panel bg-white dark:bg-card border border-slate-200/80 dark:border-border space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-md bg-emerald-600 text-white text-[11px] font-black flex items-center justify-center">
+                    <span className="w-5 h-5 rounded-md bg-emerald-600 text-white text-caption font-semibold flex items-center justify-center">
                       1
                     </span>
-                    <span className="font-extrabold text-slate-900 dark:text-foreground text-xs sm:text-sm">
+                    <span className="font-semibold text-slate-900 dark:text-foreground text-xs sm:text-sm">
                       {cleanDomain}
                     </span>
-                    <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold px-2 py-0.2 rounded-md">
+                    <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-caption font-bold px-2 py-0.2 rounded-md">
                       Top Recommendation
                     </span>
                   </div>
@@ -628,7 +628,7 @@ export default function PromptsPage() {
                     href={`https://${cleanDomain}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#FF5A1F] hover:underline"
+                    className="inline-flex items-center gap-1 text-caption font-bold text-brand-strong hover:underline"
                   >
                     <span>Visit Website</span>
                     <ExternalLink size={11} />
@@ -640,9 +640,9 @@ export default function PromptsPage() {
               </div>
 
               {/* #2 Competitor Card */}
-              <div className="p-3.5 rounded-xl bg-white/60 dark:bg-card/60 border border-slate-200/60 dark:border-border flex items-center justify-between gap-2 text-xs">
+              <div className="p-3.5 rounded-panel bg-white/60 dark:bg-card/60 border border-slate-200/60 dark:border-border flex items-center justify-between gap-2 text-xs">
                 <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                  <span className="w-5 h-5 rounded-md bg-slate-100 dark:bg-muted text-slate-600 dark:text-slate-300 text-[11px] font-bold flex items-center justify-center">
+                  <span className="w-5 h-5 rounded-md bg-slate-100 dark:bg-muted text-slate-600 dark:text-slate-300 text-caption font-bold flex items-center justify-center">
                     2
                   </span>
                   <span className="font-semibold text-slate-700 dark:text-slate-300">
@@ -650,15 +650,15 @@ export default function PromptsPage() {
                   </span>
                   <span className="text-slate-400">— Alternative option</span>
                 </div>
-                <span className="text-[10px] text-slate-400 font-bold uppercase">
+                <span className="text-caption text-slate-400 font-bold">
                   Rank #2
                 </span>
               </div>
             </div>
 
             {/* Cited Sources List */}
-            <div className="pt-3 border-t border-slate-200/60 dark:border-border flex items-center gap-2 flex-wrap text-[11px]">
-              <span className="font-extrabold uppercase tracking-wider text-slate-400">Websites Cited by AI:</span>
+            <div className="pt-3 border-t border-slate-200/60 dark:border-border flex items-center gap-2 flex-wrap text-caption">
+              <span className="font-semibold text-slate-400">Websites Cited by AI:</span>
               <a
                 href={`https://${cleanDomain}`}
                 target="_blank"
@@ -677,7 +677,7 @@ export default function PromptsPage() {
           </div>
 
           {/* Plain English Summary */}
-          <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-muted/30 border border-slate-200/80 dark:border-border flex items-start gap-3">
+          <div className="p-4 rounded-panel bg-slate-50/70 dark:bg-muted/30 border border-slate-200/80 dark:border-border flex items-start gap-3">
             <ShieldCheck size={18} className="text-emerald-600 shrink-0 mt-0.5" />
             <div className="text-xs text-slate-600 dark:text-muted-foreground leading-relaxed">
               <strong className="text-slate-900 dark:text-foreground font-bold">Summary:</strong> When customers search {selectedEngine.name} for <em>&ldquo;{cleanKeyword}&rdquo;</em>, your business is shown as the #1 answer with a direct clickable link to your website.
@@ -690,19 +690,19 @@ export default function PromptsPage() {
       {/* ── 4. ADD CUSTOM SAMPLE MODAL ── */}
       {isAddSampleModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl space-y-4 animate-scaleUp">
+          <div className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-panel p-6 sm:p-7 max-w-md w-full shadow-overlay space-y-4 animate-scaleUp">
             
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-border">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-[#FF5A1F] flex items-center justify-center font-bold">
+                <div className="w-8 h-8 rounded-panel bg-orange-50 dark:bg-orange-950/40 text-brand-strong flex items-center justify-center font-bold">
                   <BookmarkPlus size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 dark:text-foreground">
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-foreground">
                     Add Custom Sample
                   </h3>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-caption text-slate-400">
                     Save a 1-click test scenario for your business
                   </p>
                 </div>
@@ -721,7 +721,7 @@ export default function PromptsPage() {
               
               {/* Quick Template Starters */}
               <div className="space-y-1.5 pb-1">
-                <label className="text-[10.5px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                <label className="text-[10.5px] font-semibold text-slate-400 block">
                   Or Quick-Fill From Template:
                 </label>
                 <div className="flex flex-wrap gap-1.5">
@@ -740,7 +740,7 @@ export default function PromptsPage() {
                         setNewSampleKeyword(t.kw);
                         setNewSampleDomain(t.dom);
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-muted/70 hover:bg-orange-50 hover:text-[#FF5A1F] text-[10.5px] font-bold text-slate-600 dark:text-slate-300 transition-colors cursor-pointer flex items-center gap-1 border border-slate-200/50 dark:border-border"
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-muted/70 hover:bg-orange-50 hover:text-brand-strong text-[10.5px] font-bold text-slate-600 dark:text-slate-300 transition-colors cursor-pointer flex items-center gap-1 border border-slate-200/50 dark:border-border"
                     >
                       <span>{t.emoji}</span>
                       <span>{t.name}</span>
@@ -751,13 +751,13 @@ export default function PromptsPage() {
 
               <div className="grid grid-cols-4 gap-2">
                 <div className="col-span-1">
-                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="text-caption font-bold text-slate-700 dark:text-slate-300 block mb-1">
                     Emoji
                   </label>
                   <select
                     value={newSampleEmoji}
                     onChange={(e) => setNewSampleEmoji(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-xl px-2 py-2 text-base text-center cursor-pointer"
+                    className="w-full bg-slate-50 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-panel px-2 py-2 text-base text-center cursor-pointer"
                   >
                     {["🚀", "⚖️", "🏠", "🚗", "✈️", "🛍️", "🍔", "💼", "📈", "💻", "💎", "🏥", "☕", "🎓", "🎨"].map((em) => (
                       <option key={em} value={em}>
@@ -767,7 +767,7 @@ export default function PromptsPage() {
                   </select>
                 </div>
                 <div className="col-span-3">
-                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  <label className="text-caption font-bold text-slate-700 dark:text-slate-300 block mb-1">
                     Sample Title
                   </label>
                   <input
@@ -776,13 +776,13 @@ export default function PromptsPage() {
                     placeholder="e.g. Law Firm, Real Estate"
                     value={newSampleName}
                     onChange={(e) => setNewSampleName(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-xl px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-[#FF5A1F]"
+                    className="w-full bg-slate-50 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-panel px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-line-strong"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                <label className="text-caption font-bold text-slate-700 dark:text-slate-300 block mb-1">
                   Search Query / Topic
                 </label>
                 <input
@@ -791,12 +791,12 @@ export default function PromptsPage() {
                   placeholder="e.g. best corporate lawyer dubai"
                   value={newSampleKeyword}
                   onChange={(e) => setNewSampleKeyword(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-xl px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-[#FF5A1F]"
+                  className="w-full bg-slate-50 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-panel px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-line-strong"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                <label className="text-caption font-bold text-slate-700 dark:text-slate-300 block mb-1">
                   Your Website Domain
                 </label>
                 <input
@@ -805,12 +805,12 @@ export default function PromptsPage() {
                   placeholder="e.g. alrashidlaw.ae"
                   value={newSampleDomain}
                   onChange={(e) => setNewSampleDomain(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-xl px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-[#FF5A1F]"
+                  className="w-full bg-slate-50 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-panel px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-line-strong"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                <label className="text-caption font-bold text-slate-700 dark:text-slate-300 block mb-1">
                   Competitors (Optional)
                 </label>
                 <input
@@ -818,7 +818,7 @@ export default function PromptsPage() {
                   placeholder="e.g. competitorlaw.com"
                   value={newSampleCompetitors}
                   onChange={(e) => setNewSampleCompetitors(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-xl px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-[#FF5A1F]"
+                  className="w-full bg-slate-50 dark:bg-muted/40 border border-slate-200 dark:border-border rounded-panel px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-line-strong"
                 />
               </div>
 
@@ -827,13 +827,13 @@ export default function PromptsPage() {
                 <button
                   type="button"
                   onClick={() => setIsAddSampleModalOpen(false)}
-                  className="px-3.5 py-2 rounded-xl bg-white dark:bg-card border border-slate-200 dark:border-border text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
+                  className="px-3.5 py-2 rounded-panel bg-white dark:bg-card border border-slate-200 dark:border-border text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-[#FF5A1F] hover:bg-[#E04D16] text-white text-xs font-black shadow-xs cursor-pointer"
+                  className="px-4 py-2 rounded-panel bg-ink hover:bg-ink-2 text-white text-xs font-semibold cursor-pointer"
                 >
                   Save Sample
                 </button>

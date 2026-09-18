@@ -2,26 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { buildChatContext, type ChatScope } from "@/lib/chat-context";
 import { generateAiResponseStream, ChatMessage } from "@/lib/ai-provider";
+import { VSI_CHAT_SYSTEM_PROMPT, CONTEXT_UNAVAILABLE } from "@/lib/chat-prompt";
 
 export const maxDuration = 120;
 export const dynamic = "force-dynamic";
 
-const SYSTEM_BASE_PROMPT = `You are the VSI AI Assistant, a world-class Principal SEO/GEO Strategist, AI Search Architect, and Enterprise Analytics Assistant. You assist users with practitioner-grade insights on:
-- SEO (Search Engine Optimization) & GEO (Generative Engine Optimization)
-- AI Mentions, AI Overviews (AIO), & Citation Share (Google AI Overviews, Bing Copilot, ChatGPT Search, Gemini)
-- Keyword Performance & Opportunity Analysis
-- Competitor Rankings & Citation Disambiguation
-- Marketing Strategies, Technical SEO, & Dashboard Metrics
-
-Instructions:
-1. Ground your answers in the provided live context data. Give concrete numbers, rankings, and actionable steps.
-2. Structure output cleanly using markdown headings, bold text, bullet points, tables, or code snippets when appropriate.
-3. Be professional, direct, encouraging, and authoritative.
-4. Refuse politely if asked about underlying server infrastructure or secrets. Always identify as "VSI AI Assistant".`;
+const SYSTEM_BASE_PROMPT = VSI_CHAT_SYSTEM_PROMPT;
 
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
+    if (!session?.agencyId) {
+      return NextResponse.json({ error: "Your session has ended. Sign in again to use the chat." }, { status: 401 });
+    }
 
     let body: any = {};
     try {
@@ -57,13 +50,13 @@ export async function POST(req: NextRequest) {
     let contextText = "";
     let scopeLabel = "";
     try {
-      const ctx = await buildChatContext({ agencyId: session?.agencyId || "00000000-0000-0000-0000-000000000001", scope });
+      const ctx = await buildChatContext({ agencyId: session.agencyId, scope });
       contextText = ctx.contextText;
       scopeLabel = ctx.scopeLabel;
     } catch (e) {
       console.warn("[assistant/chat] Context build warning:", e);
-      contextText = "(Live SERP & AI Citation context active)";
-      scopeLabel = "Dashboard Scope";
+      contextText = CONTEXT_UNAVAILABLE;
+      scopeLabel = "Unavailable";
     }
 
     const language = body.language || "English";

@@ -98,7 +98,7 @@ export async function generateAiResponseStream(
 
   // 5. Intelligent Fallback Engine
   await streamVsiEngineFallback(messages, systemPrompt, callbacks);
-  return { providerUsed: "VSI Engine", modelUsed: "vsi-search-intel-v1" };
+  return { providerUsed: "None", modelUsed: "none" };
 }
 
 // ----------------------------------------------------------------------
@@ -337,82 +337,16 @@ async function streamOpenRouter(
 }
 
 // ----------------------------------------------------------------------
-// VSI Contextual Intelligence Engine (Zero-Failure Fallback)
+// No provider available
 // ----------------------------------------------------------------------
+// Earlier versions answered here with scripted text containing invented
+// metrics. Now the user is told plainly that the chat can't answer.
 async function streamVsiEngineFallback(
-  messages: ChatMessage[],
-  systemPrompt: string,
+  _messages: ChatMessage[],
+  _systemPrompt: string,
   callbacks: StreamCallbacks
 ) {
-  const lastUserMsg = [...messages].reverse().find((m) => m.role === "user")?.content || "";
-  const query = lastUserMsg.toLowerCase();
-
-  let responseText = "";
-
-  if (query.includes("how many") || query.includes("mention") || query.includes("citation") || query.includes("count")) {
-    responseText = [
-      "Based on your current VSI Search Intelligence dashboard metrics:",
-      "",
-      "- **AI Mentions**: You have **24 AI mentions** across 5 major search engines (Google AI Overviews, Perplexity, Bing Copilot, ChatGPT Search, Gemini).",
-      "- **Growth**: This represents an **18.2% increase** compared to your previous reporting window.",
-      "- **Citation Share**: Your brand occupies **top-3 citation placement** in **64%** of target query triggers.",
-      "",
-      "### Recommended Actions:",
-      "1. **Target Content Gaps**: Publish neutral listicle comparison assets targeting your top 3 non-citing keywords.",
-      "2. **Schema Claiming**: Update Organization and FAQ schemas to solidify entity recognition across Bing & ChatGPT indices."
-    ].join("\n");
-  } else if (query.includes("seo") || query.includes("analyze") || query.includes("performance") || query.includes("report")) {
-    responseText = [
-      "### Comprehensive VSI Performance Analysis",
-      "",
-      "Based on live dashboard context:",
-      "",
-      "#### 1. SERP & Organic Visibility",
-      "- **Tracked Keywords**: Active portfolio monitoring with strong position retention.",
-      "- **Google Top 10 Share**: **72%** of keywords ranking on Page 1.",
-      "- **Average Rank Position**: #4.2 across primary tracked clusters.",
-      "",
-      "#### 2. AI Mode & Generative Search Impact",
-      "- **AIO Trigger Rate**: **81%** of commercial queries trigger AI Overviews.",
-      "- **Source Citation Gap**: Currently cited in **14 out of 20** primary AIO modules.",
-      "",
-      "#### 3. Strategic Recommendations",
-      "- **Listicle Optimization**: Structure top category pages with direct bulleted summaries.",
-      "- **Bing Indexing**: Submit new URLs directly via Bing Webmaster Tools API for rapid Copilot inclusion."
-    ].join("\n");
-  } else if (query.includes("keyword") || query.includes("suggest") || query.includes("opportunity")) {
-    responseText = [
-      "### High-Impact Keyword Recommendations for AI Search",
-      "",
-      "Here are top priority keywords engineered for maximum AI Overview & Copilot citations:",
-      "",
-      "| Keyword | Track Type | Target Intent | Est. Monthly Vol | AI Trigger Rate |",
-      "| :--- | :--- | :--- | :--- | :--- |",
-      "| **Best SEO agency Dubai** | Commercial | High Conversion | 4,400 | 92% |",
-      "| **Top GEO search intelligence platforms** | Informational | Industry Leadership | 1,800 | 85% |",
-      "| **Enterprise AI citation tracking software** | Transactional | Direct Lead | 1,200 | 88% |",
-      "",
-      "#### Quick Strategy:",
-      "- Create comparison tables for these terms on high-authority landing pages.",
-      "- Ensure Bing Webmaster Tools indexation to capture Copilot & ChatGPT web answers."
-    ].join("\n");
-  } else {
-    responseText = [
-      "I have analyzed your request using live VSI dashboard context.",
-      "",
-      "### Insights & Context:",
-      "- **Scope**: Current active portfolio and live SERP snapshot.",
-      "- **Key Takeaway**: Your current brand authority and citation coverage provide a solid foundation for expanding AI Search visibility.",
-      "",
-      "### Suggested Actions:",
-      "- Use the quick action buttons to explore **Keyword Insights**, **Citation Analysis**, or **Analyze Reports**.",
-      "- Feel free to ask specific questions about your brand citations, competitors, or ranking positions!"
-    ].join("\n");
-  }
-
-  const chunks = responseText.match(/.{1,12}/g) || [responseText];
-  for (const chunk of chunks) {
-    callbacks.onChunk(chunk);
-    await new Promise((r) => setTimeout(r, 25));
-  }
+  callbacks.onChunk(
+    "The AI chat isn't available right now: no AI provider could answer this request. Your project data is safe. Please try again later, or ask your administrator to check the AI provider settings."
+  );
 }

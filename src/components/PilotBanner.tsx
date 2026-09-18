@@ -1,42 +1,50 @@
 "use client";
 
-import { useState } from "react";
-import { useFeedback } from "@/contexts/FeedbackContext";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { useFeedback } from "@/contexts/FeedbackContext";
+
+const DISMISS_KEY = "vsi_pilot_banner_dismissed";
 
 export default function PilotBanner() {
   const { openFeedback } = useFeedback();
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(true);
+
+  useEffect(() => {
+    try {
+      setDismissed(localStorage.getItem(DISMISS_KEY) === "true");
+    } catch {
+      setDismissed(false);
+    }
+  }, []);
 
   if (dismissed) return null;
 
-  return (
-    <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 sm:px-8 py-2.5 flex items-center justify-between gap-4 transition-all">
-      <p className="text-xs sm:text-sm text-foreground leading-relaxed flex-1 font-medium">
-        <span className="inline-block rounded-full bg-amber-500 text-black text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 mr-2 align-middle shadow-xs">
-          PILOT
-        </span>
-        Thanks for testing SearchIntel. Please try every feature — generate briefs, run citation analyses, ship tasks — and send feedback via the{" "}
-        <button
-          type="button"
-          onClick={openFeedback}
-          className="font-bold text-amber-500 underline underline-offset-2 hover:text-amber-600 transition-colors cursor-pointer"
-          aria-label="Open feedback form"
-        >
-          Feedback
-        </button>{" "}
-        button.
-      </p>
+  const dismiss = () => {
+    setDismissed(true);
+    try {
+      localStorage.setItem(DISMISS_KEY, "true");
+    } catch {
+      /* ignore */
+    }
+  };
 
-      {/* Dismiss / Cancel Button */}
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-line bg-brand-soft px-4 py-2 md:px-6">
+      <p className="text-support text-ink-2">
+        You're using the VSI pilot. Tell us what works and what doesn't through{" "}
+        <button type="button" onClick={openFeedback} className="font-medium text-ink underline underline-offset-2 hover:text-brand-strong">
+          Feedback
+        </button>
+        .
+      </p>
       <button
         type="button"
-        onClick={() => setDismissed(true)}
-        className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted-bg transition-colors cursor-pointer shrink-0"
-        aria-label="Dismiss banner"
-        title="Dismiss message"
+        onClick={dismiss}
+        className="shrink-0 rounded-control p-1 text-ink-3 hover:bg-surface hover:text-ink"
+        aria-label="Dismiss pilot message"
       >
-        <X size={16} />
+        <X size={16} strokeWidth={1.75} />
       </button>
     </div>
   );

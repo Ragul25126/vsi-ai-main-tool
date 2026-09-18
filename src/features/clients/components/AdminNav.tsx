@@ -26,14 +26,14 @@ export default function AdminNav() {
     <div className="flex items-center justify-between mb-6 gap-4 flex-wrap lg:flex-nowrap">
       {/* Logo with Super Admin Subtitle */}
       <div className="flex items-center gap-2.5 shrink-0">
-        <div className="w-9 h-9 rounded-xl bg-[#FF5500] text-white flex items-center justify-center shadow-md shadow-[#FF5500]/20">
+        <div className="w-9 h-9 rounded-panel bg-ink text-white flex items-center justify-center /20">
           <ShieldCheck className="w-5 h-5 text-white" />
         </div>
         <div>
           <div className="flex items-center gap-1">
-            <span className="text-[17px] font-extrabold text-slate-900 tracking-tight">SEOTool</span>
+            <span className="text-[17px] font-semibold text-slate-900 tracking-tight">SEOTool</span>
           </div>
-          <span className="text-[11px] font-bold text-slate-400 block -mt-1">Super Admin</span>
+          <span className="text-caption font-bold text-slate-400 block -mt-1">Super Admin</span>
         </div>
       </div>
 
@@ -45,7 +45,7 @@ export default function AdminNav() {
             href={href}
             className={`px-4 py-1.5 text-[13px] font-semibold rounded-full transition-all duration-200 whitespace-nowrap ${
               isActive(href)
-                ? "bg-[#FF5500] text-white shadow-sm"
+                ? "bg-ink text-white "
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
             }`}
           >
@@ -62,19 +62,19 @@ export default function AdminNav() {
           <input
             type="text"
             placeholder="Search websites or reports..."
-            className="bg-[#F1F4F9] border border-slate-200/80 rounded-full pl-9 pr-4 py-1.5 text-[12.5px] text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#FF5500] w-56 lg:w-64 transition-all"
+            className="bg-[#F1F4F9] border border-slate-200/80 rounded-full pl-9 pr-4 py-1.5 text-[12.5px] text-slate-700 placeholder-slate-400 focus:outline-none focus:border-line-strong w-56 lg:w-64 transition-all"
           />
         </div>
 
         {/* Bell Notification */}
         <button className="w-9 h-9 rounded-full bg-[#F1F4F9] border border-slate-200/80 flex items-center justify-center hover:bg-slate-200/70 transition-colors relative">
           <Bell className="w-4 h-4 text-slate-600" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-[#FF5500] rounded-full border border-white" />
+          <span className="absolute top-2 right-2 w-2 h-2 bg-ink rounded-full border border-white" />
         </button>
 
         {/* User Profile Badge */}
         <div className="flex items-center gap-2 bg-[#F1F4F9] border border-slate-200/80 rounded-full pr-3 pl-1 py-1 hover:bg-slate-200/60 cursor-pointer transition-colors">
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#FF5500] to-[#E04800] text-white flex items-center justify-center font-bold text-[11px] shadow-xs">
+          <div className="w-7 h-7 rounded-full bg-surface-2 text-white flex items-center justify-center font-bold text-caption">
             SA
           </div>
           <span className="text-[12.5px] font-bold text-slate-700 hidden sm:inline">Super Admin</span>

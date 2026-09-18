@@ -71,7 +71,7 @@ export default function TestSerpApiClient() {
 
   const toneClass: Record<"ok" | "empty" | "fail", string> = {
     ok: "bg-emerald-50 border-emerald-200 text-emerald-700",
-    empty: "bg-amber-50 border-amber-200 text-amber-700",
+    empty: "bg-attention-soft border-line text-attention",
     fail: "bg-rose-50 border-rose-200 text-rose-700",
   };
 
@@ -81,14 +81,14 @@ export default function TestSerpApiClient() {
           key: "ai_mode" as const,
           data: result.ai_mode,
           title: "AI Mode response",
-          subtitle: "engine=google_ai_mode — the production signal every Run Now uses",
+          subtitle: "engine=google_ai_mode - the production signal every Run Now uses",
         },
       ]
     : [];
 
   return (
     <div className="space-y-6">
-      <form onSubmit={run} className="rounded-[22px] border border-slate-200/80 bg-white p-6 shadow-xs text-slate-900">
+      <form onSubmit={run} className="rounded-panel border border-slate-200/80 bg-white p-6 text-slate-900">
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
           <div className="sm:col-span-7">
             <label className="block text-xs font-bold text-slate-500 mb-1.5">Query</label>
@@ -97,7 +97,7 @@ export default function TestSerpApiClient() {
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               placeholder="best seo agency dubai"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-[#FF5500] focus:bg-white focus:outline-none font-medium transition-colors"
+              className="w-full rounded-panel border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-line-strong focus:bg-white focus:outline-none font-medium transition-colors"
             />
           </div>
           <div className="sm:col-span-2">
@@ -106,7 +106,7 @@ export default function TestSerpApiClient() {
               type="text"
               value={gl}
               onChange={(e) => setGl(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#FF5500] focus:bg-white focus:outline-none font-bold transition-colors"
+              className="w-full rounded-panel border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-line-strong focus:bg-white focus:outline-none font-bold transition-colors"
             />
           </div>
           <div className="sm:col-span-2">
@@ -115,14 +115,14 @@ export default function TestSerpApiClient() {
               type="text"
               value={hl}
               onChange={(e) => setHl(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#FF5500] focus:bg-white focus:outline-none font-bold transition-colors"
+              className="w-full rounded-panel border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-line-strong focus:bg-white focus:outline-none font-bold transition-colors"
             />
           </div>
           <div className="sm:col-span-1 flex items-end">
             <button
               type="submit"
               disabled={loading || !keyword.trim()}
-              className="w-full rounded-xl bg-[#FF5500] px-3 py-2.5 text-sm font-bold text-white hover:bg-[#e04800] disabled:opacity-50 transition-colors shadow-md shadow-[#FF5500]/20 cursor-pointer"
+              className="w-full rounded-panel bg-ink px-3 py-2.5 text-sm font-bold text-white hover:bg-[#e04800] disabled:opacity-50 transition-colors /20 cursor-pointer"
             >
               {loading ? "..." : "Test"}
             </button>
@@ -134,7 +134,7 @@ export default function TestSerpApiClient() {
       </form>
 
       {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{error}</div>
+        <div className="rounded-panel border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{error}</div>
       )}
 
       {result && (
@@ -142,21 +142,21 @@ export default function TestSerpApiClient() {
           {cards.map(({ key, data, title, subtitle }) => {
             const s = summarise(data);
             return (
-              <div key={key} className="rounded-[22px] border border-slate-200/80 bg-white p-6 shadow-xs text-slate-900">
+              <div key={key} className="rounded-panel border border-slate-200/80 bg-white p-6 text-slate-900">
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
                     <p className="text-base font-bold text-slate-900">{title}</p>
                     <p className="text-xs text-slate-500 font-medium mt-0.5">{subtitle}</p>
                   </div>
                   <div className="text-right shrink-0 text-xs text-slate-400 font-medium">
-                    <p>{data.tookMs}ms · HTTP {data.status || "—"}</p>
-                    <p className="mt-0.5 text-[#FF5500] font-bold">{data.creditsUsed} credit{data.creditsUsed !== 1 ? "s" : ""}</p>
+                    <p>{data.tookMs}ms · HTTP {data.status || "-"}</p>
+                    <p className="mt-0.5 text-brand-strong font-bold">{data.creditsUsed} credit{data.creditsUsed !== 1 ? "s" : ""}</p>
                   </div>
                 </div>
-                <div className={`rounded-xl border px-3.5 py-2 text-xs font-bold mb-4 ${toneClass[s.tone]}`}>
+                <div className={`rounded-panel border px-3.5 py-2 text-xs font-bold mb-4 ${toneClass[s.tone]}`}>
                   {s.label}
                 </div>
-                <pre className="text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-xl p-4 overflow-x-auto max-h-96 overflow-y-auto font-mono">
+                <pre className="text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-panel p-4 overflow-x-auto max-h-96 overflow-y-auto font-mono">
                   {JSON.stringify(data.bodyExcerpt, null, 2)}
                 </pre>
               </div>

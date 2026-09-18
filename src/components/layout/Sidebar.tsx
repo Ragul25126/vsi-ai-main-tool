@@ -3,681 +3,453 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
-import { 
-  LayoutDashboard, Search, Plus, LogOut, ShieldCheck, Menu, Settings, 
-  CheckSquare, ChevronRight, ChevronDown, ChevronUp, Users, Terminal, 
-  MessageSquare, Sparkles, Layers, PanelLeftClose, PanelLeftOpen, 
-  FileText, HelpCircle, TrendingUp, Zap, Bot, Globe, Shield, ExternalLink, ArrowUp
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  Check,
+  ChevronsUpDown,
+  FolderOpen,
+  HelpCircle,
+  LogOut,
+  Menu,
+  MessageCircle,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Plus,
+  Search,
+  Settings2,
+  Shield,
+  X,
 } from "lucide-react";
-import { ServiceType } from "@/types/search";
 import type { UserRole } from "@/lib/auth";
-import { logoutAndRedirect, getClientUser } from "@/lib/auth-client";
-import { getCustomClients } from "@/lib/client-store";
-
-interface ClientEntry {
-  id: string;
-  name: string;
-  service_type: ServiceType;
-  agencyName?: string | null;
-  website?: string | null;
-}
+import { logoutAndRedirect } from "@/lib/auth-client";
+import { displayDomain, type ProjectSummary } from "@/lib/project-types";
+import { cn } from "@/lib/utils";
+import { NAV_GROUPS } from "./nav";
 
 interface Props {
   agencyName: string;
-  agencyLogoUrl?: string | null;
-  clients: ClientEntry[];
+  projects: ProjectSummary[];
+  activeProjectId: string | null;
   userRole: UserRole;
   userEmail: string;
   atClientCap?: boolean;
-  showSidebarProfile?: boolean;
 }
 
-interface NavItem {
-  href: string;
-  label: string;
-  tooltip?: string;
-  Icon: React.ElementType;
-  badge?: {
-    text: string;
-    variant: "orange" | "green" | "blue";
+const COLLAPSE_KEY = "vsi_sidebar_collapsed";
+
+const COLLAPSE_EVENT = "vsi:sidebar-collapse";
+
+function readCollapsed(): boolean {
+  try {
+    return localStorage.getItem(COLLAPSE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function subscribeCollapsed(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(COLLAPSE_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(COLLAPSE_EVENT, onChange);
   };
 }
 
-interface NavSection {
-  id: string;
-  title: string;
-  Icon: React.ElementType;
-  items: NavItem[];
-}
-
-export default function Sidebar({
-  agencyName,
-  agencyLogoUrl,
-  clients,
-  userRole,
-  userEmail,
-  atClientCap = false,
-  showSidebarProfile = true,
-}: Props) {
+export default function Sidebar({ agencyName, projects, activeProjectId, userRole, userEmail, atClientCap = false }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const router = useRouter();
-  
-  const [open, setOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [currentUserEmail, setCurrentUserEmail] = useState(userEmail);
-  const [localLogoUrl, setLocalLogoUrl] = useState<string | null>(null);
-  const [localAgencyName, setLocalAgencyName] = useState<string | null>(null);
-  
-  // Section collapsible state
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    analyze: true,
-    execution: true,
-  });
+  const tab = searchParams.get("tab");
 
-  const [displayedClients, setDisplayedClients] = useState<ClientEntry[]>(clients);
-  const [showClientSelector, setShowClientSelector] = useState(false);
-  const [clientSearch, setClientSearch] = useState("");
-  const clientSelectorRef = useRef<HTMLDivElement>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const collapsed = useSyncExternalStore(subscribeCollapsed, readCollapsed, () => false);
 
-  // Close client selector on outside click
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (clientSelectorRef.current && !clientSelectorRef.current.contains(event.target as Node)) {
-        setShowClientSelector(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Sync clients from store
-  useEffect(() => {
-    const updateClients = () => {
-      const custom = getCustomClients();
-      const customEntries: ClientEntry[] = custom.map((c) => ({
-        id: c.id,
-        name: c.name,
-        service_type: (c.service_type || "geo") as ServiceType,
-        agencyName: null,
-        website: c.website || null,
-      }));
-      const serverIds = new Set(clients.map((c) => c.id));
-      const combined = [...clients, ...customEntries.filter((c) => !serverIds.has(c.id))];
-      setDisplayedClients(combined);
-    };
-
-    updateClients();
-    window.addEventListener("storage", updateClients);
-    window.addEventListener("clients_updated", updateClients);
-    return () => {
-      window.removeEventListener("storage", updateClients);
-      window.removeEventListener("clients_updated", updateClients);
-    };
-  }, [clients]);
-
-  useEffect(() => { setOpen(false); }, [pathname, searchParams]);
-
-  useEffect(() => {
-    const clientUser = getClientUser();
-    if (clientUser?.email) {
-      setCurrentUserEmail(clientUser.email);
-    } else if (userEmail) {
-      setCurrentUserEmail(userEmail);
-    }
-  }, [userEmail]);
-
-  // Read agency logo & name from localStorage
-  useEffect(() => {
-    const readBranding = () => {
-      const storedLogo = localStorage.getItem("searchintel_agency_logo");
-      const storedName = localStorage.getItem("searchintel_agency_name");
-      setLocalLogoUrl(storedLogo ?? null);
-      setLocalAgencyName(storedName ?? null);
-    };
-    readBranding();
-    window.addEventListener("storage", readBranding);
-    return () => window.removeEventListener("storage", readBranding);
-  }, []);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("sidebar_collapsed");
-    if (saved === "true") {
-      setIsCollapsed(true);
-    }
-  }, []);
-
-  const toggleCollapse = () => {
-    setIsCollapsed((prev) => {
-      const next = !prev;
-      localStorage.setItem("sidebar_collapsed", String(next));
-      return next;
-    });
-  };
-
-  const toggleSection = (sectionId: string) => {
-    setOpenSections((prev) => ({
-      ...prev,
-      [sectionId]: !prev[sectionId],
-    }));
-  };
-
-  function handleSignOut() {
-    logoutAndRedirect();
+  // Close the mobile menu whenever the page changes.
+  const navKey = `${pathname}?${searchParams.toString()}`;
+  const [lastNavKey, setLastNavKey] = useState(navKey);
+  if (navKey !== lastNavKey) {
+    setLastNavKey(navKey);
+    setMobileOpen(false);
   }
 
-  const currentTab = searchParams.get("tab");
-
-  // Determine active state with tab support
-  const isActive = (href: string) => {
-    const [targetPath, targetQuery] = href.split("?");
-    
-    if (targetQuery) {
-      const targetParams = new URLSearchParams(targetQuery);
-      const targetTab = targetParams.get("tab");
-      
-      if (targetTab) {
-        return pathname === targetPath && currentTab === targetTab;
-      }
-      return pathname === targetPath && searchParams.toString() === targetQuery;
+  const toggleCollapsed = () => {
+    try {
+      localStorage.setItem(COLLAPSE_KEY, String(!collapsed));
+    } catch {
+      /* storage unavailable: the sidebar just doesn't remember */
     }
-    
-    if (pathname === targetPath) {
-      if (currentTab && href === "/dashboard/check") return false;
-      return true;
-    }
-    
-    return false;
+    window.dispatchEvent(new Event(COLLAPSE_EVENT));
   };
 
-  // Active client detection from URL
-  const selectedClientId = pathname.startsWith("/dashboard/clients/")
-    ? pathname.split("/")[3]
-    : searchParams.get("client") || (displayedClients[0]?.id ?? null);
+  const active = projects.find((p) => p.id === activeProjectId) ?? null;
+  const isCollapsed = collapsed && !mobileOpen;
 
-  const activeClient = displayedClients.find((c) => c.id === selectedClientId) || displayedClients[0];
-
-  // Ubersuggest-inspired Navigation Sections
-  const navSections: NavSection[] = [
-    {
-      id: "analyze",
-      title: "Analyze and Audit",
-      Icon: BarChart3Icon,
-      items: [
-        { 
-          href: "/dashboard/chat", 
-          label: "AI Chat", 
-          tooltip: "Ask VSI Assistant about rankings & citation opportunities", 
-          Icon: Bot,
-        },
-        { 
-          href: "/dashboard", 
-          label: "Dashboard", 
-          tooltip: "Overall SEO & AI visibility performance", 
-          Icon: LayoutDashboard,
-        },
-        { 
-          href: "/dashboard/check", 
-          label: "Site Audit", 
-          tooltip: "Technical SEO & AI visibility diagnostics", 
-          Icon: ShieldCheck,
-        },
-        { 
-          href: "/dashboard/check?tab=quick-check", 
-          label: "Search & AI Check", 
-          tooltip: "Live real-time check across Google Search & AI Overviews", 
-          Icon: Search,
-        },
-        { 
-          href: "/dashboard/check?tab=opportunities", 
-          label: "Next Actions", 
-          tooltip: "High-impact citation & ranking opportunities", 
-          Icon: Zap,
-          badge: { text: "NEW!", variant: "orange" },
-        },
-        { 
-          href: "/dashboard/services/seo", 
-          label: "Rank Tracking", 
-          tooltip: "Daily Google search rankings and positions", 
-          Icon: TrendingUp,
-          badge: { text: "REVAMPED", variant: "orange" },
-        },
-        { 
-          href: "/dashboard/competitors", 
-          label: "Competitor Analysis", 
-          tooltip: "Compare AI citations and keyword share with competitors", 
-          Icon: Users,
-        },
-        { 
-          href: "/dashboard/check?tab=aivisibility", 
-          label: "Pixel Rank Tracking", 
-          tooltip: "Track Google AI Overview & ChatGPT citations", 
-          Icon: Sparkles,
-          badge: { text: "NEW!", variant: "orange" },
-        },
-        { 
-          href: "/dashboard/settings", 
-          label: "Project Settings", 
-          tooltip: "Manage client settings, keywords, and engine configurations", 
-          Icon: Settings,
-        },
-      ],
-    },
-    {
-      id: "ai_visibility_section",
-      title: "AI Search Visibility",
-      Icon: Layers,
-      items: [
-        { 
-          href: "/dashboard/tasks", 
-          label: "Action Board", 
-          tooltip: "Kanban task execution & verified outcomes", 
-          Icon: CheckSquare,
-        },
-        { 
-          href: "/dashboard/clients", 
-          label: "Client Reports", 
-          tooltip: "Generate and export client-ready strategy reports", 
-          Icon: FileText,
-        },
-        { 
-          href: "/dashboard/prompts", 
-          label: "AI Prompts & SERP", 
-          tooltip: "Simulate queries across Google and ChatGPT", 
-          Icon: Terminal,
-        },
-      ],
-    },
-  ];
-
-  const filteredClients = displayedClients.filter((c) =>
-    c.name.toLowerCase().includes(clientSearch.toLowerCase())
-  );
-
-  const sidebarContent = (
-    <div className="flex flex-col h-full min-h-0 relative overflow-hidden bg-card select-none">
-      
-      {/* ── 1. Brand Header ── */}
-      <div className={`flex items-center ${isCollapsed ? "justify-center flex-col gap-2 py-3 px-2" : "justify-between px-4 py-3.5"} border-b border-border/70 bg-card shrink-0 z-10`}>
-        <Link href="/dashboard" className="flex items-center gap-2.5 min-w-0 group" title={isCollapsed ? "VSI — ValGrow Search Intelligence" : undefined}>
-          <div className="relative flex-shrink-0 p-1 rounded-xl bg-[#FF5A1F]/10 border border-[#FF5A1F]/20 shadow-xs">
-            <Image src="/vg-logo.png" alt="VSI" width={26} height={26} className="shrink-0 rounded-md object-contain" />
-          </div>
+  const content = (
+    <div className="flex h-full min-h-0 flex-col bg-surface">
+      {/* Brand */}
+      <div className={cn("flex h-14 shrink-0 items-center border-b border-line", isCollapsed ? "justify-center px-2" : "justify-between px-4")}>
+        <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5" aria-label="VSI overview">
+          <Image src="/vg-logo.png" alt="" width={26} height={26} className="shrink-0 rounded-md" />
           {!isCollapsed && (
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-black text-foreground tracking-tight leading-none group-hover:text-[#FF5A1F] transition-colors">
-                  VSI
-                </span>
-                <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[#FF5A1F]/10 text-[#FF5A1F] border border-[#FF5A1F]/25 leading-none">
-                  PRO
-                </span>
-              </div>
-              <p className="mt-1 text-[9px] font-semibold text-muted-foreground tracking-wider uppercase truncate leading-none">
-                Search Intelligence
-              </p>
-            </div>
+            <span className="min-w-0 leading-tight">
+              <span className="block text-body font-semibold text-ink">VSI</span>
+              <span className="block truncate text-caption text-ink-3">Search Intelligence</span>
+            </span>
           )}
         </Link>
-        <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => setMobileOpen(false)}
+          className="rounded-control p-1.5 text-ink-3 hover:bg-surface-2 hover:text-ink md:hidden"
+          aria-label="Close menu"
+        >
+          <X size={18} strokeWidth={1.75} />
+        </button>
+        {!isCollapsed && (
           <button
-            onClick={() => setOpen(false)}
-            className="md:hidden rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            title="Close sidebar"
-          >
-            <span className="text-xs font-mono">✕</span>
-          </button>
-          <button
-            onClick={toggleCollapse}
             type="button"
-            className="hidden md:flex items-center justify-center rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-            title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            onClick={toggleCollapsed}
+            className="hidden rounded-control p-1.5 text-ink-3 hover:bg-surface-2 hover:text-ink md:inline-flex"
+            aria-label="Collapse sidebar"
           >
-            {isCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+            <PanelLeftClose size={16} strokeWidth={1.75} />
           </button>
-        </div>
+        )}
       </div>
 
-      {/* ── 2. Project / Client Context Selector (Ubersuggest Style) ── */}
-      {!isCollapsed ? (
-        <div className="p-3 border-b border-border/70 bg-muted/20 shrink-0 space-y-2.5">
-          <div className="relative" ref={clientSelectorRef}>
-            <button
-              type="button"
-              onClick={() => setShowClientSelector(!showClientSelector)}
-              className="w-full flex items-center justify-between p-2.5 rounded-xl bg-card border border-border/90 hover:border-[#FF5A1F]/40 shadow-xs transition-all text-left group cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-7 h-7 rounded-lg bg-[#FF5A1F] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">
-                  {activeClient?.name ? activeClient.name.charAt(0).toUpperCase() : "V"}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-xs font-bold text-foreground truncate group-hover:text-[#FF5A1F] transition-colors">
-                      {activeClient?.name || "ValGrow Labs"}
-                    </p>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground truncate font-mono">
-                    {activeClient?.website || "valgrowlabs.com"}
-                  </p>
-                </div>
-              </div>
-              <ChevronDown size={14} className={`text-muted-foreground transition-transform duration-200 shrink-0 ${showClientSelector ? "rotate-180 text-[#FF5A1F]" : ""}`} />
-            </button>
+      {/* Project */}
+      <div className={cn("shrink-0 border-b border-line", isCollapsed ? "p-2" : "p-3")}>
+        <ProjectSwitcher
+          projects={projects}
+          active={active}
+          collapsed={isCollapsed}
+          atClientCap={atClientCap}
+          onExpand={toggleCollapsed}
+        />
+      </div>
 
-            {/* Dropdown Menu (Solid, Opaque & High-Z Elevation) */}
-            {showClientSelector && (
-              <div className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-2xl bg-white dark:bg-[#121215] border border-slate-200 dark:border-border shadow-2xl p-2.5 space-y-2 animate-in fade-in-50 zoom-in-95">
-                <div className="relative">
-                  <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    type="text"
-                    value={clientSearch}
-                    onChange={(e) => setClientSearch(e.target.value)}
-                    placeholder="Search project..."
-                    className="w-full pl-7 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-muted/50 rounded-lg border border-slate-200 dark:border-border focus:outline-none focus:ring-1 focus:ring-[#FF5A1F] text-foreground"
-                  />
-                </div>
-                <div className="max-h-44 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                  {filteredClients.map((client) => {
-                    const isSelected = client.id === activeClient?.id;
-                    return (
-                      <button
-                        key={client.id}
-                        type="button"
-                        onClick={() => {
-                          setShowClientSelector(false);
-                          router.push(`/dashboard?client=${client.id}`);
-                        }}
-                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors text-left cursor-pointer ${
-                          isSelected
-                            ? "bg-[#FFF4ED] dark:bg-[#FF5A1F]/15 text-[#FF5A1F] font-bold"
-                            : "text-foreground hover:bg-slate-100 dark:hover:bg-muted font-medium"
-                        }`}
-                      >
-                        <span className="truncate">{client.name}</span>
-                        {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#FF5A1F]" />}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="pt-1.5 border-t border-slate-100 dark:border-border flex items-center justify-between">
-                  <Link
-                    href="/dashboard/clients/new"
-                    prefetch={true}
-                    onClick={() => setShowClientSelector(false)}
-                    className="text-[11px] font-bold text-[#FF5A1F] hover:underline flex items-center gap-1"
-                  >
-                    <Plus size={12} /> Add New Project
-                  </Link>
-                  <Link
-                    href="/dashboard/clients"
-                    prefetch={true}
-                    onClick={() => setShowClientSelector(false)}
-                    className="text-[10px] text-muted-foreground hover:text-foreground font-semibold"
-                  >
-                    View All →
-                  </Link>
-                </div>
-              </div>
+      {/* Navigation */}
+      <nav aria-label="Main" className={cn("min-h-0 flex-1 overflow-y-auto py-3", isCollapsed ? "px-2" : "px-3")}>
+        {NAV_GROUPS.map((group, gi) => (
+          <div key={gi} className={cn(gi > 0 && "mt-5")}>
+            {group.title && !isCollapsed && (
+              <p className="mb-1 px-2.5 text-caption font-medium text-ink-3">{group.title}</p>
             )}
+            {group.title && isCollapsed && <div className="mx-2 mb-2 border-t border-line" aria-hidden />}
+            <ul className="space-y-0.5">
+              {group.items.map((item) => {
+                const isActive = item.isActive(pathname, tab);
+                const Icon = item.Icon;
+                return (
+                  <li key={item.label}>
+                    <Link
+                      href={item.href(active?.id ?? null)}
+                      aria-current={isActive ? "page" : undefined}
+                      title={isCollapsed ? item.label : undefined}
+                      className={cn(
+                        "relative flex h-8 items-center gap-2.5 rounded-control text-body transition-colors duration-150",
+                        isCollapsed ? "justify-center" : "px-2.5",
+                        isActive ? "bg-surface-2 font-medium text-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
+                      )}
+                    >
+                      {isActive && <span className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-brand" aria-hidden />}
+                      <Icon size={16} strokeWidth={1.75} aria-hidden className={isActive ? "text-ink" : "text-ink-3"} />
+                      {!isCollapsed && <span className="truncate">{item.label}</span>}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
-
-          {/* Prominent + Add Project Button (Ubersuggest Style) */}
-          <div>
-            <Link
-              href="/dashboard/clients/new"
-              prefetch={true}
-              className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#FF5A1F] hover:bg-[#E04810] text-white text-xs font-black shadow-xs hover:shadow-md transition-all cursor-pointer"
-            >
-              <Plus size={15} className="stroke-[3]" />
-              <span>Add Project</span>
-            </Link>
-          </div>
-        </div>
-      ) : (
-        <div className="p-2 border-b border-border/70 flex flex-col items-center gap-2">
-          <button
-            type="button"
-            onClick={toggleCollapse}
-            title={`Active: ${activeClient?.name || "ValGrow Labs"}`}
-            className="w-8 h-8 rounded-lg bg-[#FF5A1F] text-white flex items-center justify-center font-bold text-xs shadow-xs"
-          >
-            {activeClient?.name ? activeClient.name.charAt(0).toUpperCase() : "V"}
-          </button>
-          <Link
-            href="/dashboard/clients/new"
-            title="Add New Project"
-            className="w-8 h-8 rounded-lg bg-[#FF5A1F]/10 hover:bg-[#FF5A1F] text-[#FF5A1F] hover:text-white flex items-center justify-center font-bold text-xs transition-colors"
-          >
-            <Plus size={14} className="stroke-[2.5]" />
-          </Link>
-        </div>
-      )}
-
-      {/* ── 3. Main Navigation Stream (Ubersuggest Information Architecture) ── */}
-      <nav className={`flex-1 min-h-0 overflow-y-auto ${isCollapsed ? "px-1.5" : "px-3"} py-3 space-y-5 custom-scrollbar`}>
-        
-        {/* Super Admin Access Banner (if superadmin) */}
-        {userRole === "super_admin" && (
-          <div className="space-y-1">
-            <Link
-              href="/admin"
-              title={isCollapsed ? "Super Admin Console" : undefined}
-              className={`flex items-center ${isCollapsed ? "justify-center p-2" : "justify-between gap-2 px-3 py-2"} rounded-xl text-xs transition-all ${
-                pathname.startsWith("/admin")
-                  ? "bg-[#FF5A1F] text-white font-bold shadow-sm"
-                  : "text-slate-600 dark:text-slate-300 hover:bg-muted font-semibold"
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Shield size={16} className={pathname.startsWith("/admin") ? "text-white" : "text-amber-500"} />
-                {!isCollapsed && <span>Super Admin</span>}
-              </div>
-              {!isCollapsed && <ChevronRight size={13} className="opacity-70" />}
-            </Link>
-          </div>
-        )}
-
-        {/* Section Groups */}
-        {navSections.map((section) => {
-          const isOpen = openSections[section.id] ?? true;
-          const SectionIcon = section.Icon;
-
-          return (
-            <div key={section.id} className="space-y-1">
-              {/* Section Header Button (Collapsible) */}
-              {!isCollapsed && (
-                <button
-                  type="button"
-                  onClick={() => toggleSection(section.id)}
-                  className="w-full flex items-center justify-between px-2.5 py-1 text-slate-700 dark:text-slate-200 hover:text-foreground transition-colors group cursor-pointer"
-                >
-                  <div className="flex items-center gap-2">
-                    <SectionIcon size={16} className="text-slate-500 group-hover:text-foreground transition-colors" />
-                    <span className="text-xs font-bold tracking-tight">
-                      {section.title}
-                    </span>
-                  </div>
-                  {isOpen ? (
-                    <ChevronUp size={14} className="text-slate-400 group-hover:text-foreground transition-colors" />
-                  ) : (
-                    <ChevronDown size={14} className="text-slate-400 group-hover:text-foreground transition-colors" />
-                  )}
-                </button>
-              )}
-
-              {/* Section Items */}
-              {(isOpen || isCollapsed) && (
-                <div className="space-y-0.5 pt-0.5">
-                  {section.items.map(({ href, label, tooltip, Icon, badge }) => {
-                    const active = isActive(href);
-
-                    return (
-                      <Link
-                        key={href}
-                        href={href}
-                        prefetch={true}
-                        title={tooltip || label}
-                        className={`
-                          relative flex items-center transition-all duration-150 rounded-lg group
-                          ${isCollapsed ? "justify-center p-2.5" : "justify-between px-3 py-2 text-xs"}
-                          ${active 
-                            ? "bg-[#FFF4ED] dark:bg-[#FF5A1F]/15 text-[#FF5A1F] font-bold border-r-[3px] border-[#FF5A1F] rounded-r-none" 
-                            : "text-slate-600 dark:text-slate-300 hover:bg-muted/70 hover:text-foreground font-medium"
-                          }
-                        `}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <Icon 
-                            size={16} 
-                            className={`shrink-0 transition-colors ${
-                              active 
-                                ? "text-[#FF5A1F]" 
-                                : "text-slate-400 group-hover:text-foreground"
-                            }`} 
-                          />
-                          {!isCollapsed && (
-                            <span className="truncate">{label}</span>
-                          )}
-                        </div>
-
-                        {/* Badges (NEW!, LIVE, etc. as in Ubersuggest reference) */}
-                        {!isCollapsed && badge && (
-                          <span className={`
-                            text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full shrink-0 shadow-2xs
-                            ${badge.variant === "orange" ? "bg-[#FF5A1F] text-white" : ""}
-                            ${badge.variant === "green" ? "bg-emerald-500 text-white" : ""}
-                            ${badge.variant === "blue" ? "bg-blue-600 text-white" : ""}
-                          `}>
-                            {badge.text}
-                          </span>
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {/* Support & Configuration Links */}
-        <div className="pt-2 border-t border-border/70 space-y-0.5">
-          {!isCollapsed && (
-            <p className="px-2.5 text-[10px] font-extrabold text-muted-foreground tracking-wider uppercase mb-1">
-              SUPPORT & FEEDBACK
-            </p>
-          )}
-          <Link
-            href="/dashboard/feedback"
-            prefetch={true}
-            className={`flex items-center ${isCollapsed ? "justify-center p-2.5" : "gap-2.5 px-3 py-1.5"} rounded-lg text-xs text-slate-500 hover:text-foreground hover:bg-muted transition-colors`}
-            title="Feedback & Feature Requests"
-          >
-            <MessageSquare size={15} />
-            {!isCollapsed && <span>Feedback</span>}
-          </Link>
-          <Link
-            href="/dashboard/help"
-            prefetch={true}
-            className={`flex items-center ${isCollapsed ? "justify-center p-2.5" : "gap-2.5 px-3 py-1.5"} rounded-lg text-xs ${
-              pathname === "/dashboard/help" ? "bg-[#FFF4ED] dark:bg-[#FF5A1F]/15 text-[#FF5A1F] font-bold" : "text-slate-500 hover:text-foreground hover:bg-muted"
-            } transition-colors`}
-            title="Help Center, Guides & FAQs"
-          >
-            <HelpCircle size={15} className={pathname === "/dashboard/help" ? "text-[#FF5A1F]" : ""} />
-            {!isCollapsed && <span>Help Center</span>}
-          </Link>
-        </div>
+        ))}
       </nav>
 
-
-      {/* ── 4. Bottom User Profile & Workspace Status ── */}
-      {showSidebarProfile && (
-        <div className={`p-3 border-t border-border/70 bg-card shrink-0 ${isCollapsed ? "flex justify-center" : ""}`}>
-          {!isCollapsed ? (
-            <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-muted/30 border border-border/60">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold text-foreground truncate" title={currentUserEmail}>
-                  {currentUserEmail}
-                </p>
-                <p className="text-[10px] text-muted-foreground font-semibold capitalize">
-                  {userRole.replace("_", " ")}
-                </p>
-              </div>
-              <button
-                onClick={handleSignOut}
-                type="button"
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-muted transition-colors cursor-pointer"
-                title="Sign out"
-              >
-                <LogOut size={14} />
-              </button>
+      {/* Footer */}
+      <div className={cn("shrink-0 space-y-0.5 border-t border-line py-3", isCollapsed ? "px-2" : "px-3")}>
+        <FooterLink href="/dashboard/help" label="Help" Icon={HelpCircle} collapsed={isCollapsed} active={pathname === "/dashboard/help"} />
+        <FooterLink href="/dashboard/feedback" label="Feedback" Icon={MessageCircle} collapsed={isCollapsed} active={pathname === "/dashboard/feedback"} />
+        {userRole === "super_admin" && (
+          <FooterLink href="/admin" label="Admin" Icon={Shield} collapsed={isCollapsed} active={pathname.startsWith("/admin")} />
+        )}
+        {isCollapsed ? (
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            className="flex h-8 w-full items-center justify-center rounded-control text-ink-3 hover:bg-surface-2 hover:text-ink"
+            aria-label="Expand sidebar"
+          >
+            <PanelLeftOpen size={16} strokeWidth={1.75} />
+          </button>
+        ) : (
+          <div className="mt-2 flex items-center justify-between gap-2 border-t border-line px-2.5 pt-3">
+            <div className="min-w-0">
+              <p className="truncate text-support text-ink" title={userEmail}>
+                {userEmail}
+              </p>
+              <p className="truncate text-caption text-ink-3">{agencyName}</p>
             </div>
-          ) : (
             <button
-              onClick={handleSignOut}
               type="button"
-              className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-muted transition-colors cursor-pointer"
+              onClick={() => logoutAndRedirect()}
+              className="rounded-control p-1.5 text-ink-3 hover:bg-surface-2 hover:text-ink"
+              aria-label="Sign out"
               title="Sign out"
             >
-              <LogOut size={16} />
+              <LogOut size={16} strokeWidth={1.75} />
             </button>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 
   return (
     <>
-      {/* Mobile Top Bar */}
-      <div className="md:hidden sticky top-0 z-30 flex items-center justify-between bg-card border-b border-border px-4 py-3">
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => setOpen(true)}
-            className="rounded-lg p-1.5 text-muted-foreground bg-card hover:bg-muted transition-colors"
-            aria-label="Open menu"
-          >
-            <Menu size={18} />
-          </button>
-          <Image src="/vg-logo.png" alt="VSI" width={24} height={24} className="rounded object-contain" />
-          <span className="text-sm font-bold text-foreground">VSI SearchIntel</span>
-        </div>
-        <span className="text-xs font-semibold text-muted-foreground truncate max-w-[45%]">
-          {activeClient?.name || agencyName}
-        </span>
+      {/* Mobile top bar */}
+      <div className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-surface px-4 md:hidden">
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="-ml-1.5 rounded-control p-1.5 text-ink-2 hover:bg-surface-2"
+          aria-label="Open menu"
+        >
+          <Menu size={20} strokeWidth={1.75} />
+        </button>
+        <Image src="/vg-logo.png" alt="" width={22} height={22} className="rounded" />
+        <span className="min-w-0 truncate text-body font-medium text-ink">{active?.name ?? "VSI"}</span>
       </div>
 
-      {/* Backdrop */}
-      {open && (
-        <div
-          onClick={() => setOpen(false)}
-          className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-xs transition-opacity"
-          aria-hidden
-        />
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 animate-fade-in bg-ink/30 md:hidden" onClick={() => setMobileOpen(false)} aria-hidden />
       )}
 
-      {/* Sidebar Container */}
       <aside
-        className={`
-          flex flex-col bg-card border-r border-border/80 
-          fixed md:sticky top-0 inset-y-0 left-0 z-50 md:z-30
-          ${isCollapsed ? "md:w-16 w-64" : "w-64"} h-screen max-h-screen shrink-0 overflow-hidden
-          transition-all duration-200 ease-out shadow-2xl md:shadow-none
-          ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
-        `}
-        suppressHydrationWarning
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 h-dvh shrink-0 border-r border-line transition-[width,transform] duration-200 md:sticky md:top-0 md:z-30 md:h-screen md:translate-x-0",
+          isCollapsed ? "w-60 md:w-14" : "w-60",
+          mobileOpen ? "translate-x-0 shadow-overlay" : "-translate-x-full",
+        )}
       >
-        {sidebarContent}
+        {content}
       </aside>
     </>
   );
 }
 
-function BarChart3Icon(props: React.ComponentProps<typeof BarChart3>) {
-  return <BarChart3 {...props} />;
+function FooterLink({
+  href,
+  label,
+  Icon,
+  collapsed,
+  active,
+}: {
+  href: string;
+  label: string;
+  Icon: typeof HelpCircle;
+  collapsed: boolean;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      title={collapsed ? label : undefined}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "flex h-8 items-center gap-2.5 rounded-control text-support",
+        collapsed ? "justify-center" : "px-2.5",
+        active ? "bg-surface-2 text-ink" : "text-ink-3 hover:bg-surface-2 hover:text-ink",
+      )}
+    >
+      <Icon size={16} strokeWidth={1.75} aria-hidden />
+      {!collapsed && <span>{label}</span>}
+    </Link>
+  );
 }
-import { BarChart3 } from "lucide-react";
+
+function ProjectSwitcher({
+  projects,
+  active,
+  collapsed,
+  atClientCap,
+  onExpand,
+}: {
+  projects: ProjectSummary[];
+  active: ProjectSummary | null;
+  collapsed: boolean;
+  atClientCap: boolean;
+  onExpand: () => void;
+}) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [pending, setPending] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  async function select(id: string) {
+    if (id === active?.id) {
+      setOpen(false);
+      return;
+    }
+    setPending(id);
+    setError(null);
+    try {
+      const res = await fetch("/api/project/select", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: id }),
+      });
+      if (!res.ok) throw new Error();
+      setOpen(false);
+      // Project-scoped detail pages belong to the old project; go to the same
+      // section at the top level instead of showing stale data.
+      if (window.location.pathname.startsWith("/dashboard/clients/")) router.push("/dashboard");
+      router.refresh();
+    } catch {
+      setError("Couldn't switch project. Try again.");
+    } finally {
+      setPending(null);
+    }
+  }
+
+  const initial = (active?.name ?? "?").charAt(0).toUpperCase();
+
+  if (collapsed) {
+    return (
+      <button
+        type="button"
+        onClick={onExpand}
+        title={active ? `${active.name}` : "Choose a project"}
+        className="flex h-9 w-full items-center justify-center rounded-control border border-line bg-surface text-support font-semibold text-ink hover:border-line-strong"
+      >
+        {initial}
+      </button>
+    );
+  }
+
+  const filtered = projects.filter((p) => {
+    const q = query.trim().toLowerCase();
+    return !q || p.name.toLowerCase().includes(q) || (p.website ?? "").toLowerCase().includes(q);
+  });
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="flex w-full items-center gap-2.5 rounded-control border border-line bg-surface px-2.5 py-2 text-left hover:border-line-strong"
+      >
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control bg-brand-soft text-support font-semibold text-brand-strong">
+          {initial}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-support font-medium text-ink">{active?.name ?? "No project yet"}</span>
+          <span className="block truncate text-caption text-ink-3">
+            {active ? displayDomain(active.website) ?? "No website set" : "Add your first project"}
+          </span>
+        </span>
+        <ChevronsUpDown size={14} strokeWidth={1.75} className="shrink-0 text-ink-3" aria-hidden />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 right-0 top-full z-50 mt-1.5 animate-fade-in rounded-panel border border-line bg-surface p-1.5 shadow-overlay">
+          {projects.length > 6 && (
+            <div className="relative mb-1.5">
+              <Search size={14} strokeWidth={1.75} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-3" aria-hidden />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Find a project"
+                aria-label="Find a project"
+                className="h-8 w-full rounded-control border border-line bg-surface pl-8 pr-2 text-support text-ink placeholder:text-ink-3 focus:border-line-strong focus:outline-none"
+              />
+            </div>
+          )}
+          <ul role="listbox" aria-label="Projects" className="max-h-60 overflow-y-auto">
+            {filtered.length === 0 && <li className="px-2.5 py-2 text-support text-ink-3">No projects found.</li>}
+            {filtered.map((p) => (
+              <li key={p.id}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={p.id === active?.id}
+                  disabled={pending !== null}
+                  onClick={() => select(p.id)}
+                  className="flex w-full items-center gap-2 rounded-control px-2.5 py-1.5 text-left hover:bg-surface-2 disabled:opacity-60"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-support text-ink">{p.name}</span>
+                    <span className="block truncate text-caption text-ink-3">
+                      {displayDomain(p.website) ?? "No website"}
+                      {p.agencyName ? ` · ${p.agencyName}` : ""}
+                    </span>
+                  </span>
+                  {p.id === active?.id && <Check size={14} strokeWidth={1.75} className="shrink-0 text-ink" aria-hidden />}
+                  {pending === p.id && <span className="shrink-0 text-caption text-ink-3">Switching</span>}
+                </button>
+              </li>
+            ))}
+          </ul>
+          {error && <p className="px-2.5 py-1.5 text-caption text-critical">{error}</p>}
+          <div className="mt-1.5 space-y-0.5 border-t border-line pt-1.5">
+            <MenuLink href="/dashboard/clients" Icon={FolderOpen} onClick={() => setOpen(false)}>
+              All projects
+            </MenuLink>
+            {active && (
+              <MenuLink href={`/dashboard/clients/${active.id}/settings`} Icon={Settings2} onClick={() => setOpen(false)}>
+                Project settings
+              </MenuLink>
+            )}
+            {atClientCap ? (
+              <p className="px-2.5 py-1.5 text-caption text-ink-3">Your plan&apos;s project limit is reached.</p>
+            ) : (
+              <MenuLink href="/dashboard/clients/new" Icon={Plus} onClick={() => setOpen(false)}>
+                Add project
+              </MenuLink>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MenuLink({
+  href,
+  Icon,
+  onClick,
+  children,
+}: {
+  href: string;
+  Icon: typeof Plus;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className="flex items-center gap-2 rounded-control px-2.5 py-1.5 text-support text-ink-2 hover:bg-surface-2 hover:text-ink"
+    >
+      <Icon size={14} strokeWidth={1.75} aria-hidden />
+      {children}
+    </Link>
+  );
+}

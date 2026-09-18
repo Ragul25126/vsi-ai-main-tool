@@ -17,7 +17,7 @@ export default async function PromptEditPage({ params }: { params: Promise<{ key
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-        <Link href="/admin/prompts" className="hover:text-[#FF5500] transition-colors">Prompts</Link>
+        <Link href="/admin/prompts" className="hover:text-brand-strong transition-colors">Prompts</Link>
         <span className="text-slate-300">/</span>
         <span className="text-slate-900 font-bold">{def.title}</span>
       </div>

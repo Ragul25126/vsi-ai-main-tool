@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { isAuthorizedEmail } from "@/lib/auth-config";
+import { PROJECT_COOKIE, UUID_PATTERN } from "@/lib/project-types";
 
 // Routes that do not require authentication
 const PUBLIC_PATHS = [
@@ -96,6 +97,27 @@ export async function middleware(request: NextRequest) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Deep links into a project make it the active project app-wide. Access is
+  // still validated server-side in getProjectContext(); an id the user can't
+  // see simply falls back to their first project.
+  if (pathname.startsWith("/dashboard")) {
+    const fromPath = pathname.match(/^\/dashboard\/clients\/([^/]+)/)?.[1];
+    const candidate = fromPath ?? request.nextUrl.searchParams.get("client");
+    if (candidate && UUID_PATTERN.test(candidate) && request.cookies.get(PROJECT_COOKIE)?.value !== candidate) {
+      request.cookies.set(PROJECT_COOKIE, candidate);
+      const next = NextResponse.next({ request });
+      supabaseResponse.cookies.getAll().forEach((c) => next.cookies.set(c));
+      next.cookies.set(PROJECT_COOKIE, candidate, {
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 365,
+      });
+      supabaseResponse = next;
+    }
   }
 
   return supabaseResponse;

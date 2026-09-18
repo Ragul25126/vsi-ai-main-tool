@@ -52,11 +52,11 @@ export default function ClientIdentityForm({ clientId, initial, scope = "agency"
  }
 
  return (
-    <div className="rounded-[20px] border border-border bg-card p-6 shadow-xl relative overflow-hidden">
+    <div className="rounded-panel border border-border bg-card p-6 shadow-overlay relative overflow-hidden">
       <div className="flex items-baseline justify-between mb-5">
         <div>
-          <h2 className="text-sm font-bold text-foreground uppercase tracking-widest flex items-center gap-2">
-            <Shield size={14} className="text-amber-500" />
+          <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <Shield size={14} className="text-brand-strong" />
             <span>Tracked Brand Identity Signals</span>
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">Primary domains and brand names used by AI agents to detect citations and answer mentions.</p>
@@ -65,31 +65,31 @@ export default function ClientIdentityForm({ clientId, initial, scope = "agency"
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <label className="block">
-          <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-foreground mb-2">
-            <Tag size={12} className="text-amber-500" /> Brand Name Anchor
+          <span className="flex items-center gap-1.5 text-caption font-bold text-foreground mb-2">
+            <Tag size={12} className="text-brand-strong" /> Brand Name Anchor
           </span>
           <input
             type="text"
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
             placeholder="e.g. Valgrow Labs"
-            className="w-full rounded-[20px] border border-border bg-background text-foreground px-4 py-3 text-sm focus:border-amber-500 focus:outline-none placeholder:text-muted-foreground/70 transition-colors"
+            className="w-full rounded-panel border border-border bg-background text-foreground px-4 py-3 text-sm focus:border-line-strong focus:outline-none placeholder:text-muted-foreground/70 transition-colors"
           />
         </label>
 
         <label className="block">
-          <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-foreground mb-2">
-            <Globe size={12} className="text-amber-500" /> Primary Domain
+          <span className="flex items-center gap-1.5 text-caption font-bold text-foreground mb-2">
+            <Globe size={12} className="text-brand-strong" /> Primary Domain
           </span>
           <input
             type="text"
             value={website}
             onChange={(e) => setWebsite(e.target.value)}
             placeholder="e.g. valgrowlabs.com"
-            className={`w-full rounded-[20px] border bg-background text-foreground px-4 py-3 text-sm focus:outline-none placeholder:text-muted-foreground/70 transition-colors ${
+            className={`w-full rounded-panel border bg-background text-foreground px-4 py-3 text-sm focus:outline-none placeholder:text-muted-foreground/70 transition-colors ${
               website.trim() && !websiteOk
                 ? "border-rose-500 focus:border-rose-500"
-                : "border-border focus:border-amber-500"
+                : "border-border focus:border-line-strong"
             }`}
           />
           {website.trim() && !websiteOk && (
@@ -101,7 +101,7 @@ export default function ClientIdentityForm({ clientId, initial, scope = "agency"
  </div>
 
  <div className="mt-6 pt-4 border-t border-white/[0.05] flex items-center justify-between flex-wrap gap-4">
- <p className="text-[11px] font-mono text-gray-500 max-w-md">
+ <p className="text-caption font-mono text-gray-500 max-w-md">
  Updating your identity instantly recalculates brand mentions across all tracked keywords on your next scan.
  </p>
  <div className="flex items-center gap-3">
@@ -113,7 +113,7 @@ export default function ClientIdentityForm({ clientId, initial, scope = "agency"
  <button
  onClick={save}
  disabled={saving || !dirty || !websiteOk || !brand.trim()}
- className="rounded-[20px] bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-2 text-xs font-mono font-bold text-black hover:from-amber-600 hover:to-orange-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+ className="rounded-control bg-ink px-4 py-2 text-support font-medium text-white hover:bg-ink-2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
  >
  {saving ? "SAVING…" : "UPDATE IDENTITY"}
  </button>

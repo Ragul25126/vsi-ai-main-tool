@@ -75,7 +75,7 @@ export default async function AdminFeedbackPage({
               key={s.value}
               href={href}
               className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
-                active ? "bg-[#FF5500] text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
+                active ? "bg-ink text-white " : "text-slate-600 hover:text-slate-900"
               }`}
             >
               {s.label} <span className="ml-1 opacity-75">({s.count})</span>
@@ -85,7 +85,7 @@ export default async function AdminFeedbackPage({
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-[22px] border border-dashed border-slate-200 bg-white p-12 text-center shadow-xs">
+        <div className="rounded-panel border border-dashed border-slate-200 bg-white p-12 text-center">
           <p className="text-sm font-semibold text-slate-400">No feedback in this view yet.</p>
         </div>
       ) : (

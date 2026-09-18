@@ -44,7 +44,7 @@ export default async function AdminQAPage() {
       </div>
 
       {byTester.size === 0 ? (
-        <div className="rounded-[22px] border border-dashed border-slate-200 bg-white p-12 text-center shadow-xs">
+        <div className="rounded-panel border border-dashed border-slate-200 bg-white p-12 text-center">
           <p className="text-sm font-semibold text-slate-400">No QA submissions yet.</p>
         </div>
       ) : (
@@ -55,9 +55,9 @@ export default async function AdminQAPage() {
               const pass = items.filter((i) => i.status === "pass").length;
               const fail = items.filter((i) => i.status === "fail").length;
               return (
-                <div key={id} className="rounded-[22px] border border-slate-200/80 bg-white p-5 shadow-xs">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{t.name}</p>
-                  <p className="text-2xl font-extrabold text-slate-900 mt-1">{items.length}</p>
+                <div key={id} className="rounded-panel border border-slate-200/80 bg-white p-5">
+                  <p className="text-caption font-bold text-slate-400">{t.name}</p>
+                  <p className="text-2xl font-semibold text-slate-900 mt-1">{items.length}</p>
                   <p className="text-xs text-slate-500 font-medium mt-1">
                     <span className="text-emerald-600 font-bold">{pass} pass</span> · <span className="text-rose-600 font-bold">{fail} fail</span>
                   </p>
@@ -66,8 +66,8 @@ export default async function AdminQAPage() {
             })}
           </div>
 
-          <div className="rounded-[22px] border border-slate-200/80 bg-white overflow-hidden shadow-xs">
-            <div className="grid grid-cols-12 gap-2 px-6 py-3 bg-slate-50/70 border-b border-slate-100 text-xs text-slate-400 font-bold uppercase tracking-wider">
+          <div className="rounded-panel border border-slate-200/80 bg-white overflow-hidden">
+            <div className="grid grid-cols-12 gap-2 px-6 py-3 bg-slate-50/70 border-b border-slate-100 text-xs text-slate-400 font-bold">
               <div className="col-span-1">ID</div>
               <div className="col-span-5">Test</div>
               {Array.from(byTester.entries()).map(([id, t]) => (
@@ -83,10 +83,10 @@ export default async function AdminQAPage() {
                   return (
                     <div key={id} className="col-span-3 flex justify-center">
                       <span
-                        className={`rounded-lg px-2.5 py-0.5 text-[10px] font-bold ${statusChip(row?.status)}`}
+                        className={`rounded-lg px-2.5 py-0.5 text-caption font-bold ${statusChip(row?.status)}`}
                         title={row?.notes ?? ""}
                       >
-                        {row?.status ?? "—"}
+                        {row?.status ?? "-"}
                       </span>
                     </div>
                   );

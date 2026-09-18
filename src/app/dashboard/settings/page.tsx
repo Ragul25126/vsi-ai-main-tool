@@ -229,11 +229,11 @@ export default function SettingsPage() {
         
         {/* Left: Gear Icon + Title + Subtitle */}
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-950/40 text-[#FF5A1F] flex items-center justify-center shrink-0 shadow-2xs">
+          <div className="w-12 h-12 rounded-panel bg-orange-50 dark:bg-orange-950/40 text-brand-strong flex items-center justify-center shrink-0">
             <Settings size={24} className="stroke-[2.2]" />
           </div>
           <div className="space-y-0.5">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-foreground tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-foreground tracking-tight">
               Account &amp; Platform Settings
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-muted-foreground font-medium">
@@ -243,13 +243,13 @@ export default function SettingsPage() {
         </div>
 
         {/* Right: Security Badge Banner */}
-        <div className="bg-[#FFF8F3] dark:bg-card border border-orange-100 dark:border-orange-900/40 rounded-2xl px-4 py-2.5 flex items-center gap-3 shrink-0 shadow-2xs">
-          <Shield size={18} className="text-[#FF5A1F] shrink-0 stroke-[2.2]" />
+        <div className="bg-[#FFF8F3] dark:bg-card border border-orange-100 dark:border-orange-900/40 rounded-panel px-4 py-2.5 flex items-center gap-3 shrink-0">
+          <Shield size={18} className="text-brand-strong shrink-0 stroke-[2.2]" />
           <div>
             <p className="text-xs font-bold text-slate-900 dark:text-foreground leading-tight">
               Your information is secure
             </p>
-            <p className="text-[11px] text-slate-500 dark:text-muted-foreground font-medium leading-tight mt-0.5">
+            <p className="text-caption text-slate-500 dark:text-muted-foreground font-medium leading-tight mt-0.5">
               Only you can access these settings
             </p>
           </div>
@@ -259,7 +259,7 @@ export default function SettingsPage() {
 
       {/* Success Notification */}
       {saved && (
-        <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 p-4 flex items-center gap-3 text-emerald-800 dark:text-emerald-300 text-xs font-bold animate-in fade-in">
+        <div className="rounded-panel bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 p-4 flex items-center gap-3 text-emerald-800 dark:text-emerald-300 text-xs font-bold animate-in fade-in">
           <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
           <span>Preferences saved successfully across your workspace.</span>
         </div>
@@ -267,7 +267,7 @@ export default function SettingsPage() {
 
       {/* Error Notification */}
       {saveError && (
-        <div className="rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 p-4 flex items-center gap-3 text-rose-800 dark:text-rose-300 text-xs font-bold animate-in fade-in">
+        <div className="rounded-panel bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 p-4 flex items-center gap-3 text-rose-800 dark:text-rose-300 text-xs font-bold animate-in fade-in">
           <AlertCircle size={18} className="text-rose-600 shrink-0" />
           <span>{saveError}</span>
         </div>
@@ -276,11 +276,11 @@ export default function SettingsPage() {
       <form onSubmit={handleSaveSettings} className="space-y-6">
 
         {/* ── 2. AGENCY PROFILE MAIN CARD ── */}
-        <div className="bg-white dark:bg-card border border-slate-200/80 dark:border-border/80 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
+        <div className="bg-white dark:bg-card border border-slate-200/80 dark:border-border/80 rounded-panel p-6 sm:p-8 space-y-6">
           
           {/* Card Section Header */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-[#FF5A1F] flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-panel bg-orange-50 dark:bg-orange-950/40 text-brand-strong flex items-center justify-center shrink-0">
               <Building2 size={20} className="stroke-[2.2]" />
             </div>
             <div>
@@ -305,17 +305,17 @@ export default function SettingsPage() {
                   <label className="block text-xs font-bold text-slate-800 dark:text-foreground">
                     Company Logo
                   </label>
-                  <p className="text-[11px] text-slate-500 dark:text-muted-foreground font-medium">
+                  <p className="text-caption text-slate-500 dark:text-muted-foreground font-medium">
                     Upload your company logo
                   </p>
                 </div>
 
                 {/* Dashed Dropzone Container */}
-                <div className="border-2 border-dashed border-slate-200 dark:border-border rounded-2xl bg-slate-50/50 dark:bg-muted/20 p-6 flex flex-col items-center justify-center gap-3 text-center min-h-[170px]">
+                <div className="border-2 border-dashed border-slate-200 dark:border-border rounded-panel bg-slate-50/50 dark:bg-muted/20 p-6 flex flex-col items-center justify-center gap-3 text-center min-h-[170px]">
                   
                   {logoDataUrl ? (
                     <div className="space-y-3 flex flex-col items-center">
-                      <div className="w-16 h-16 rounded-xl border border-slate-200 dark:border-border bg-white p-1.5 shadow-2xs flex items-center justify-center overflow-hidden">
+                      <div className="w-16 h-16 rounded-panel border border-slate-200 dark:border-border bg-white p-1.5 flex items-center justify-center overflow-hidden">
                         <Image
                           src={logoDataUrl}
                           alt="Agency Logo"
@@ -326,8 +326,8 @@ export default function SettingsPage() {
                         />
                       </div>
                       <div className="flex items-center gap-2">
-                        <label className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white dark:bg-card px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-foreground hover:bg-slate-50 transition-colors cursor-pointer shadow-2xs">
-                          <Upload size={12} className="text-[#FF5A1F]" />
+                        <label className="inline-flex items-center gap-1.5 rounded-panel border border-slate-200 bg-white dark:bg-card px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-foreground hover:bg-slate-50 transition-colors cursor-pointer">
+                          <Upload size={12} className="text-brand-strong" />
                           <span>Change</span>
                           <input
                             ref={fileInputRef}
@@ -342,7 +342,7 @@ export default function SettingsPage() {
                           type="button"
                           onClick={handleRemoveLogo}
                           disabled={isBusy}
-                          className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white dark:bg-card px-2.5 py-1.5 text-xs font-bold text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer shadow-2xs"
+                          className="inline-flex items-center gap-1 rounded-panel border border-slate-200 bg-white dark:bg-card px-2.5 py-1.5 text-xs font-bold text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer"
                         >
                           <X size={12} />
                           <span>Remove</span>
@@ -352,7 +352,7 @@ export default function SettingsPage() {
                   ) : (
                     <>
                       {/* Orange Image Icon Circle */}
-                      <div className="w-12 h-12 rounded-full bg-orange-100/70 dark:bg-orange-950/50 text-[#FF5A1F] flex items-center justify-center shadow-2xs">
+                      <div className="w-12 h-12 rounded-full bg-orange-100/70 dark:bg-orange-950/50 text-brand-strong flex items-center justify-center">
                         <ImageIcon size={22} className="stroke-[2.2]" />
                       </div>
 
@@ -360,8 +360,8 @@ export default function SettingsPage() {
                         Drag &amp; drop your logo here or click to browse
                       </p>
 
-                      <label className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white dark:bg-card border border-slate-200 dark:border-border shadow-2xs text-xs font-bold text-slate-800 dark:text-foreground hover:bg-slate-50 transition-colors cursor-pointer">
-                        <Upload size={13} className="text-[#FF5A1F]" />
+                      <label className="inline-flex items-center gap-1.5 px-4 py-2 rounded-panel bg-white dark:bg-card border border-slate-200 dark:border-border text-xs font-bold text-slate-800 dark:text-foreground hover:bg-slate-50 transition-colors cursor-pointer">
+                        <Upload size={13} className="text-brand-strong" />
                         <span>Choose Logo</span>
                         <input
                           ref={fileInputRef}
@@ -377,12 +377,12 @@ export default function SettingsPage() {
 
                 </div>
 
-                <p className="text-[11px] text-slate-400 dark:text-muted-foreground font-medium">
+                <p className="text-caption text-slate-400 dark:text-muted-foreground font-medium">
                   PNG, JPG, JPEG, WEBP, SVG • Max 5 MB
                 </p>
 
                 {logoError && (
-                  <p className="text-[11px] text-rose-500 font-bold">{logoError}</p>
+                  <p className="text-caption text-rose-500 font-bold">{logoError}</p>
                 )}
               </div>
 
@@ -402,11 +402,11 @@ export default function SettingsPage() {
                       value={agencyName}
                       onChange={(e) => setAgencyName(e.target.value)}
                       disabled={isBusy}
-                      className="w-full rounded-xl border border-slate-200 dark:border-border bg-slate-50/40 dark:bg-muted/40 pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-foreground placeholder:text-slate-400 focus:outline-none focus:border-[#FF5A1F]"
+                      className="w-full rounded-panel border border-slate-200 dark:border-border bg-slate-50/40 dark:bg-muted/40 pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-foreground placeholder:text-slate-400 focus:outline-none focus:border-line-strong"
                       placeholder="e.g. ValGrow Intelligence"
                     />
                   </div>
-                  <p className="text-[11px] text-slate-400 dark:text-muted-foreground font-medium">
+                  <p className="text-caption text-slate-400 dark:text-muted-foreground font-medium">
                     This will be shown across the platform and in reports.
                   </p>
                 </div>
@@ -424,11 +424,11 @@ export default function SettingsPage() {
                       value={contactEmail}
                       onChange={(e) => setContactEmail(e.target.value)}
                       disabled={isBusy}
-                      className="w-full rounded-xl border border-slate-200 dark:border-border bg-slate-50/40 dark:bg-muted/40 pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-foreground placeholder:text-slate-400 focus:outline-none focus:border-[#FF5A1F]"
+                      className="w-full rounded-panel border border-slate-200 dark:border-border bg-slate-50/40 dark:bg-muted/40 pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-foreground placeholder:text-slate-400 focus:outline-none focus:border-line-strong"
                       placeholder="e.g. agency@valgrow.com"
                     />
                   </div>
-                  <p className="text-[11px] text-slate-400 dark:text-muted-foreground font-medium">
+                  <p className="text-caption text-slate-400 dark:text-muted-foreground font-medium">
                     We&apos;ll use this for important notifications.
                   </p>
                 </div>
@@ -438,27 +438,27 @@ export default function SettingsPage() {
             </div>
 
             {/* Right Live Preview Card */}
-            <div className="lg:col-span-4 bg-[#FFF9F5] dark:bg-card border border-orange-100/80 dark:border-orange-900/40 rounded-3xl p-5 space-y-4">
+            <div className="lg:col-span-4 bg-[#FFF9F5] dark:bg-card border border-orange-100/80 dark:border-orange-900/40 rounded-panel p-5 space-y-4">
               
               {/* Preview Header */}
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-orange-100/70 dark:bg-orange-950/50 text-[#FF5A1F] flex items-center justify-center shrink-0">
+                <div className="w-7 h-7 rounded-lg bg-orange-100/70 dark:bg-orange-950/50 text-brand-strong flex items-center justify-center shrink-0">
                   <Eye size={15} className="stroke-[2.5]" />
                 </div>
                 <div>
                   <h3 className="text-xs font-bold text-slate-900 dark:text-foreground">
                     Preview
                   </h3>
-                  <p className="text-[11px] text-slate-500 dark:text-muted-foreground font-medium">
+                  <p className="text-caption text-slate-500 dark:text-muted-foreground font-medium">
                     How your brand will appear in the platform.
                   </p>
                 </div>
               </div>
 
               {/* White Preview Pill Card */}
-              <div className="bg-white dark:bg-card border border-slate-200/80 dark:border-border rounded-2xl p-4 flex items-center gap-3.5 shadow-2xs">
+              <div className="bg-white dark:bg-card border border-slate-200/80 dark:border-border rounded-panel p-4 flex items-center gap-3.5">
                 {logoDataUrl ? (
-                  <div className="w-14 h-14 rounded-2xl border border-slate-200 bg-white p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                  <div className="w-14 h-14 rounded-panel border border-slate-200 bg-white p-1 flex items-center justify-center overflow-hidden shrink-0">
                     <Image
                       src={logoDataUrl}
                       alt="Brand Logo"
@@ -469,12 +469,12 @@ export default function SettingsPage() {
                     />
                   </div>
                 ) : (
-                  <div className="w-14 h-14 rounded-2xl bg-[#FFF0E6] text-[#FF5A1F] font-black text-xl flex items-center justify-center shrink-0 shadow-2xs tracking-tight">
+                  <div className="w-14 h-14 rounded-panel bg-[#FFF0E6] text-brand-strong font-semibold text-xl flex items-center justify-center shrink-0 tracking-tight">
                     {initials}
                   </div>
                 )}
                 <div className="min-w-0">
-                  <h4 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-foreground truncate tracking-tight">
+                  <h4 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-foreground truncate tracking-tight">
                     {agencyName || "ValGrow Intelligence"}
                   </h4>
                   <p className="text-xs text-slate-500 dark:text-muted-foreground font-medium truncate mt-0.5">
@@ -484,8 +484,8 @@ export default function SettingsPage() {
               </div>
 
               {/* Tip Callout Banner */}
-              <div className="bg-[#FFF3EB] dark:bg-orange-950/30 border border-[#FFE4D3] dark:border-orange-900/40 rounded-2xl p-3.5 flex items-center gap-2.5">
-                <span className="text-[#FF5A1F] text-sm">✦</span>
+              <div className="bg-[#FFF3EB] dark:bg-orange-950/30 border border-[#FFE4D3] dark:border-orange-900/40 rounded-panel p-3.5 flex items-center gap-2.5">
+                <span className="text-brand-strong text-sm">✦</span>
                 <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
                   A professional brand makes your reports look more credible.
                 </p>
@@ -498,15 +498,15 @@ export default function SettingsPage() {
         </div>
 
         {/* ── 3. OTHER SETTINGS ROW (COMING SOON PREFERENCES) ── */}
-        <div className="bg-white dark:bg-card border border-slate-200/80 dark:border-border/80 rounded-3xl p-6 shadow-xs flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+        <div className="bg-white dark:bg-card border border-slate-200/80 dark:border-border/80 rounded-panel p-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           
           {/* Left Title */}
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-muted text-slate-600 dark:text-slate-400 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-panel bg-slate-100 dark:bg-muted text-slate-600 dark:text-slate-400 flex items-center justify-center shrink-0">
               <Settings size={18} />
             </div>
             <div>
-              <h3 className="font-extrabold text-sm text-slate-900 dark:text-foreground">
+              <h3 className="font-semibold text-sm text-slate-900 dark:text-foreground">
                 Other Settings
               </h3>
               <p className="text-xs text-slate-500 dark:text-muted-foreground font-medium">
@@ -519,7 +519,7 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full lg:w-auto">
             
             {/* Card 1: Theme Appearance */}
-            <div className="bg-slate-50/60 dark:bg-muted/30 border border-slate-100 dark:border-border rounded-2xl p-3 flex items-center gap-3 min-w-[160px]">
+            <div className="bg-slate-50/60 dark:bg-muted/30 border border-slate-100 dark:border-border rounded-panel p-3 flex items-center gap-3 min-w-[160px]">
               <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                 <Palette size={16} />
               </div>
@@ -527,14 +527,14 @@ export default function SettingsPage() {
                 <p className="font-bold text-xs text-slate-800 dark:text-foreground leading-tight">
                   Theme Appearance
                 </p>
-                <span className="text-[10px] font-bold text-blue-500">
+                <span className="text-caption font-bold text-blue-500">
                   Coming soon
                 </span>
               </div>
             </div>
 
             {/* Card 2: Security Credentials */}
-            <div className="bg-slate-50/60 dark:bg-muted/30 border border-slate-100 dark:border-border rounded-2xl p-3 flex items-center gap-3 min-w-[160px]">
+            <div className="bg-slate-50/60 dark:bg-muted/30 border border-slate-100 dark:border-border rounded-panel p-3 flex items-center gap-3 min-w-[160px]">
               <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                 <Lock size={16} />
               </div>
@@ -542,14 +542,14 @@ export default function SettingsPage() {
                 <p className="font-bold text-xs text-slate-800 dark:text-foreground leading-tight">
                   Security Credentials
                 </p>
-                <span className="text-[10px] font-bold text-blue-500">
+                <span className="text-caption font-bold text-blue-500">
                   Coming soon
                 </span>
               </div>
             </div>
 
             {/* Card 3: Notification Preferences */}
-            <div className="bg-slate-50/60 dark:bg-muted/30 border border-slate-100 dark:border-border rounded-2xl p-3 flex items-center gap-3 min-w-[160px]">
+            <div className="bg-slate-50/60 dark:bg-muted/30 border border-slate-100 dark:border-border rounded-panel p-3 flex items-center gap-3 min-w-[160px]">
               <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                 <Bell size={16} />
               </div>
@@ -557,7 +557,7 @@ export default function SettingsPage() {
                 <p className="font-bold text-xs text-slate-800 dark:text-foreground leading-tight">
                   Notification Preferences
                 </p>
-                <span className="text-[10px] font-bold text-blue-500">
+                <span className="text-caption font-bold text-blue-500">
                   Coming soon
                 </span>
               </div>
@@ -575,7 +575,7 @@ export default function SettingsPage() {
             <button
               type="submit"
               disabled={isBusy}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#FF5A1F] hover:bg-[#E04B14] disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-black shadow-xs hover:shadow-md transition-all cursor-pointer"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-panel bg-ink hover:bg-[#E04B14] disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-semibold transition-all cursor-pointer"
             >
               {isBusy ? (
                 <>
@@ -594,7 +594,7 @@ export default function SettingsPage() {
               type="button"
               onClick={handleReset}
               disabled={isBusy}
-              className="px-5 py-2.5 rounded-xl bg-white dark:bg-card border border-slate-200 dark:border-border text-xs font-bold text-slate-700 dark:text-foreground hover:bg-slate-50 dark:hover:bg-muted transition-colors cursor-pointer shadow-2xs"
+              className="px-5 py-2.5 rounded-panel bg-white dark:bg-card border border-slate-200 dark:border-border text-xs font-bold text-slate-700 dark:text-foreground hover:bg-slate-50 dark:hover:bg-muted transition-colors cursor-pointer"
             >
               Reset Changes
             </button>

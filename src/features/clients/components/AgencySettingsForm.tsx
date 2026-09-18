@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 interface Initial {
- legal_name: string; // agency.name — readonly here
+ legal_name: string; // agency.name - readonly here
  display_name: string;
  logo_url: string;
  primary_color: string;
@@ -78,7 +78,7 @@ export default function AgencySettingsForm({ agencyId, initial }: { agencyId: st
 
  return (
  <div className="space-y-4">
- <div className="rounded-[20px] border border-gray-200 bg-card p-5 space-y-3">
+ <div className="rounded-panel border border-gray-200 bg-card p-5 space-y-3">
  <div>
  <label className="block text-xs text-gray-500 mb-1">Legal name (internal)</label>
  <input
@@ -98,7 +98,7 @@ export default function AgencySettingsForm({ agencyId, initial }: { agencyId: st
  onChange={(e) => setState((s) => ({ ...s, display_name: e.target.value }))}
  placeholder={state.legal_name}
  maxLength={80}
- className="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-amber-400 focus:outline-none"
+ className="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-line-strong focus:outline-none"
  />
  <p className="mt-1 text-xs text-gray-500">Used wherever your agency name appears to a client. Defaults to your legal name.</p>
  </div>
@@ -110,13 +110,13 @@ export default function AgencySettingsForm({ agencyId, initial }: { agencyId: st
  value={state.support_email}
  onChange={(e) => setState((s) => ({ ...s, support_email: e.target.value }))}
  placeholder="hello@youragency.com"
- className="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-amber-400 focus:outline-none"
+ className="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-line-strong focus:outline-none"
  />
  <p className="mt-1 text-xs text-gray-500">Where clients reply when they receive a report from you.</p>
  </div>
  </div>
 
- <div className="rounded-[20px] border border-gray-200 bg-card p-5 space-y-4">
+ <div className="rounded-panel border border-gray-200 bg-card p-5 space-y-4">
  <div>
  <label className="block text-xs text-gray-500 mb-2">Logo</label>
  <div className="flex items-center gap-4">
@@ -167,7 +167,7 @@ export default function AgencySettingsForm({ agencyId, initial }: { agencyId: st
  onChange={(e) => setState((s) => ({ ...s, primary_color: e.target.value.toUpperCase() }))}
  maxLength={7}
  placeholder="#F59E0B"
- className="rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-900 font-mono w-32 focus:border-amber-400 focus:outline-none"
+ className="rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-900 font-mono w-32 focus:border-line-strong focus:outline-none"
  />
  <div
  className="rounded-md px-3 py-1.5 text-xs font-semibold text-white"
@@ -176,11 +176,11 @@ export default function AgencySettingsForm({ agencyId, initial }: { agencyId: st
  Preview button
  </div>
  </div>
- <p className="mt-1 text-xs text-gray-500">Used in client-facing reports — buttons, headings, accents.</p>
+ <p className="mt-1 text-xs text-gray-500">Used in client-facing reports - buttons, headings, accents.</p>
  </div>
  </div>
 
- <div className="rounded-[20px] border border-gray-200 bg-card p-5">
+ <div className="rounded-panel border border-gray-200 bg-card p-5">
  <label className="block text-xs text-gray-500 mb-1">Report footer text</label>
  <textarea
  value={state.report_footer}
@@ -188,7 +188,7 @@ export default function AgencySettingsForm({ agencyId, initial }: { agencyId: st
  rows={3}
  maxLength={500}
  placeholder="e.g. Prepared by [Agency] for our valued clients. Questions? Reply to this email."
- className="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-amber-400 focus:outline-none"
+ className="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-line-strong focus:outline-none"
  />
  <p className="mt-1 text-xs text-gray-500">Shown at the bottom of every report you generate. Plain text. Keep it short.</p>
  </div>
@@ -202,7 +202,7 @@ export default function AgencySettingsForm({ agencyId, initial }: { agencyId: st
  <button
  onClick={save}
  disabled={saving || uploading}
- className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-50"
+ className="rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-ink-2 disabled:opacity-50"
  >
  {saving ? "Saving..." : "Save branding"}
  </button>

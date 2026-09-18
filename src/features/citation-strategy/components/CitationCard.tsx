@@ -48,50 +48,50 @@ export default function CitationCard({ citation, keyword, clientBrand, preloaded
  const intel = intelligence ?? data?.intelligence ?? null;
 
  return (
-  <div className={`rounded-[20px] border transition-all ${
+  <div className={`rounded-panel border transition-all ${
   citation.isClient
-  ? "border-amber-500/40 bg-amber-50 shadow-xs"
-  : "border-slate-200 bg-slate-50 shadow-xs hover:border-slate-300 hover:bg-slate-100/50"
+  ? "border-line bg-attention-soft "
+  : "border-slate-200 bg-slate-50  hover:border-slate-300 hover:bg-slate-100/50"
   }`}>
   {/* Header row */}
   <div className="flex items-start gap-3 px-4 py-3.5">
   <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-  citation.isClient ? "bg-amber-500 text-white font-extrabold" : "bg-slate-200 text-slate-700 border border-slate-300 font-bold"
+  citation.isClient ? "bg-ink text-white font-semibold" : "bg-slate-200 text-slate-700 border border-slate-300 font-bold"
   }`}>
   {citation.position}
   </span>
 
   <div className="min-w-0 flex-1">
   <div className="flex items-center gap-2 flex-wrap">
-  <span className={`text-xs font-bold ${citation.isClient ? "text-amber-600" : "text-slate-900"}`}>
+  <span className={`text-xs font-bold ${citation.isClient ? "text-attention" : "text-slate-900"}`}>
   {citation.sourceName}
   </span>
   {citation.isClient && (
-  <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-extrabold text-white uppercase tracking-wider">
+  <span className="rounded-full bg-ink px-2 py-0.5 text-caption font-semibold text-white">
   Your Client
   </span>
   )}
   {!citation.isClient && citation.platform !== "other" && citation.platform !== "brand" && (
-  <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${PLATFORM_LABELS[citation.platform].color}`}>
+  <span className={`rounded px-1.5 py-0.5 text-caption font-semibold ${PLATFORM_LABELS[citation.platform].color}`}>
   {PLATFORM_LABELS[citation.platform].label}
   </span>
   )}
   {loadingPreload && (
-  <span className="text-[11px] text-slate-400 animate-pulse">Reading content...</span>
+  <span className="text-caption text-slate-400 animate-pulse">Reading content...</span>
   )}
   {data && !loadingPreload && (
-  <span className="text-[11px] text-slate-500">{data.wordCount.toLocaleString()} words</span>
+  <span className="text-caption text-slate-500">{data.wordCount.toLocaleString()} words</span>
   )}
   </div>
   {citation.title && (
   <p className="mt-0.5 text-xs text-slate-700 truncate font-medium">{citation.title}</p>
   )}
-  <p className="mt-0.5 text-[11px] font-mono text-slate-500 truncate">{citation.domain}</p>
+  <p className="mt-0.5 text-caption font-mono text-slate-500 truncate">{citation.domain}</p>
   </div>
 
   <div className="flex items-center gap-2 shrink-0">
   <a href={citation.url} target="_blank" rel="noopener noreferrer"
-  className="text-xs font-bold text-slate-400 hover:text-amber-600 transition-colors" title="Open in new tab">
+  className="text-xs font-bold text-slate-400 hover:text-attention transition-colors" title="Open in new tab">
   ↗
   </a>
   {(data || loadingPreload) && (
@@ -100,7 +100,7 @@ export default function CitationCard({ citation, keyword, clientBrand, preloaded
   className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-colors ${
   expanded ? "bg-slate-300 text-slate-900"
   : citation.isClient
-  ? "bg-amber-500/20 text-amber-700 hover:bg-amber-500/30"
+  ? "bg-brand-soft text-attention hover:bg-brand-soft"
   : "bg-slate-200 text-slate-700 hover:bg-slate-300 hover:text-slate-900"
   }`}
   >
@@ -117,18 +117,18 @@ export default function CitationCard({ citation, keyword, clientBrand, preloaded
   {/* Intelligence panel */}
   {intel ? (
   <div className="space-y-3">
-  <div className={`rounded-[16px] px-4 py-3 border ${
-  citation.isClient ? "bg-amber-50 border-amber-200" : "bg-slate-50 border-slate-200 shadow-xs"
+  <div className={`rounded-panel px-4 py-3 border ${
+  citation.isClient ? "bg-attention-soft border-line" : "bg-slate-50 border-slate-200 "
   }`}>
   <div className="flex items-start justify-between gap-3">
   <p className="text-xs text-slate-700 leading-relaxed font-medium">{intel.summary}</p>
   {intel.citabilityScore > 0 && (
   <div className="shrink-0 text-center">
-  <div className={`text-base font-extrabold ${
+  <div className={`text-base font-semibold ${
   intel.citabilityScore >= 7 ? "text-rose-600" :
-  intel.citabilityScore >= 4 ? "text-amber-600" : "text-emerald-600"
+  intel.citabilityScore >= 4 ? "text-attention" : "text-emerald-600"
   }`}>{intel.citabilityScore}/10</div>
-  <div className="text-[10px] text-slate-500 uppercase font-bold">Citability</div>
+  <div className="text-caption text-slate-500 font-bold">Citability</div>
   </div>
   )}
   </div>
@@ -136,8 +136,8 @@ export default function CitationCard({ citation, keyword, clientBrand, preloaded
 
   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
   {intel.whyCited.length > 0 && (
-  <div className="rounded-[16px] bg-slate-50 border border-slate-200 p-3 shadow-xs">
-  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Why Google cited this</p>
+  <div className="rounded-panel bg-slate-50 border border-slate-200 p-3">
+  <p className="text-caption font-bold text-slate-500 mb-2">Why Google cited this</p>
   <ul className="space-y-1">
   {intel.whyCited.map((r, i) => (
   <li key={i} className="flex gap-2 text-xs text-slate-700">
@@ -149,30 +149,30 @@ export default function CitationCard({ citation, keyword, clientBrand, preloaded
   )}
 
   {intel.contentSignals.length > 0 && (
-  <div className="rounded-[16px] bg-slate-50 border border-slate-200 p-3 shadow-xs">
-  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Authority signals</p>
+  <div className="rounded-panel bg-slate-50 border border-slate-200 p-3">
+  <p className="text-caption font-bold text-slate-500 mb-2">Authority signals</p>
   <div className="flex flex-wrap gap-1">
   {intel.contentSignals.map((s, i) => (
-  <span key={i} className="rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 text-[11px] text-blue-600 font-medium">{s}</span>
+  <span key={i} className="rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 text-caption text-blue-600 font-medium">{s}</span>
   ))}
   </div>
   </div>
   )}
 
   {intel.keyTopics.length > 0 && (
-  <div className="rounded-[16px] bg-slate-50 border border-slate-200 p-3 shadow-xs">
-  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Topics covered</p>
+  <div className="rounded-panel bg-slate-50 border border-slate-200 p-3">
+  <p className="text-caption font-bold text-slate-500 mb-2">Topics covered</p>
   <div className="flex flex-wrap gap-1">
   {intel.keyTopics.map((t, i) => (
-  <span key={i} className="rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[11px] text-slate-700">{t}</span>
+  <span key={i} className="rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-caption text-slate-700">{t}</span>
   ))}
   </div>
   </div>
   )}
 
   {intel.missingFromClient.length > 0 && (
-  <div className="rounded-[16px] bg-rose-50 border border-rose-200 p-3">
-  <p className="text-[10px] font-bold text-rose-600 uppercase tracking-wider mb-2">
+  <div className="rounded-panel bg-rose-50 border border-rose-200 p-3">
+  <p className="text-caption font-bold text-rose-600 mb-2">
   What {clientBrand || "your client"} is missing
   </p>
   <ul className="space-y-1">
@@ -190,7 +190,7 @@ export default function CitationCard({ citation, keyword, clientBrand, preloaded
   <button
   onClick={runAnalysis}
   disabled={analyzing}
-  className="w-full rounded-[16px] border border-dashed border-blue-300 bg-blue-50 px-4 py-3 text-xs font-bold text-blue-600 hover:bg-blue-100 disabled:opacity-50 transition-colors"
+  className="w-full rounded-panel border border-dashed border-blue-300 bg-blue-50 px-4 py-3 text-xs font-bold text-blue-600 hover:bg-blue-100 disabled:opacity-50 transition-colors"
   >
   {analyzing ? (
   <span className="animate-pulse">Running citation analysis...</span>
@@ -203,14 +203,14 @@ export default function CitationCard({ citation, keyword, clientBrand, preloaded
   {/* Page content */}
   <div>
   <div className="flex items-center justify-between mb-1">
-  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Page Content Extract</p>
-  <span className="text-[11px] text-slate-500">{data.wordCount.toLocaleString()} words</span>
+  <p className="text-caption font-bold text-slate-500">Page Content Extract</p>
+  <span className="text-caption text-slate-500">{data.wordCount.toLocaleString()} words</span>
   </div>
   {data.description && (
   <p className="mb-2 text-xs text-slate-500 italic">{data.description}</p>
   )}
   <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2.5 max-h-48 overflow-y-auto">
-  <pre className="text-[11px] text-slate-700 leading-relaxed whitespace-pre-wrap font-sans">{data.markdown}</pre>
+  <pre className="text-caption text-slate-700 leading-relaxed whitespace-pre-wrap font-sans">{data.markdown}</pre>
   </div>
   </div>
   </div>

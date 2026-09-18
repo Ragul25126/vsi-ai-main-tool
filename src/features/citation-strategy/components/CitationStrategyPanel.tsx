@@ -63,10 +63,10 @@ async function pollCitationStrategy(snapshotId: string): Promise<{ status: strin
  if (data.status === "ready") return { status: "ready", strategy: data.strategy ?? null };
  if (data.status === "failed") return { status: "failed", error: data.error ?? "Failed" };
  } catch {
- // transient — keep polling
+ // transient - keep polling
  }
  }
- return { status: "failed", error: "Analysis timed out — try again in a minute." };
+ return { status: "failed", error: "Analysis timed out - try again in a minute." };
 }
 
 const EFFORT_COLOR = { low: "text-green-700", medium: "text-yellow-700", high: "text-red-700" };
@@ -95,7 +95,7 @@ export default function CitationStrategyPanel({ snapshotId, initial, competitorC
  body: JSON.stringify({ snapshot_id: snapshotId }),
  });
  if (res.redirected) {
- setError("Your session has expired — please reload the page and sign in again.");
+ setError("Your session has expired - please reload the page and sign in again.");
  return;
  }
  const raw = await res.text();
@@ -115,7 +115,7 @@ export default function CitationStrategyPanel({ snapshotId, initial, competitorC
  return;
  }
 
- // Generation runs in the background — poll the status endpoint until
+ // Generation runs in the background - poll the status endpoint until
  // the strategy is ready or generation fails. ~2 minutes ceiling.
  const final = await pollCitationStrategy(snapshotId);
  if (final.status === "ready" && final.strategy) {
@@ -139,11 +139,11 @@ export default function CitationStrategyPanel({ snapshotId, initial, competitorC
  : "⚡ Analyse citations";
 
  return (
- <div className="rounded-[20px] border border-gray-200 bg-card p-5 space-y-4">
+ <div className="rounded-panel border border-gray-200 bg-card p-5 space-y-4">
  <div className="flex items-start justify-between gap-3">
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-2 mb-1">
- <Sparkles size={16} strokeWidth={2} className="text-amber-600" />
+ <Sparkles size={16} strokeWidth={2} className="text-attention" />
  <h3 className="text-base font-semibold text-gray-900">Citation Strategy</h3>
  {strategy && (
  <span className="text-xs text-gray-500">
@@ -158,7 +158,7 @@ export default function CitationStrategyPanel({ snapshotId, initial, competitorC
  <button
  onClick={generate}
  disabled={loading || !hasCompetitors}
- className="shrink-0 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-50 transition-colors"
+ className="shrink-0 rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-ink-2 disabled:opacity-50 transition-colors"
  >
  {buttonLabel}
  </button>
@@ -177,15 +177,15 @@ export default function CitationStrategyPanel({ snapshotId, initial, competitorC
  {strategy && (
  <div className="space-y-4">
  {/* TL;DR */}
- <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
- <p className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-1">TL;DR</p>
+ <div className="rounded-lg bg-attention-soft border border-line p-4">
+ <p className="text-xs font-bold text-attention mb-1">TL;DR</p>
  <p className="text-sm text-gray-800 leading-relaxed">{strategy.summary}</p>
  </div>
 
  {/* Patterns */}
  {strategy.patterns?.length > 0 && (
  <div>
- <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+ <p className="text-xs font-bold text-gray-500 mb-2">
  What earns citations here
  </p>
  <div className="space-y-2">
@@ -202,7 +202,7 @@ export default function CitationStrategyPanel({ snapshotId, initial, competitorC
  {/* Gaps */}
  {strategy.gaps?.length > 0 && (
  <div>
- <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+ <p className="text-xs font-bold text-gray-500 mb-2">
  Likely gaps on the client&rsquo;s page
  </p>
  <div className="space-y-2">
@@ -221,27 +221,27 @@ export default function CitationStrategyPanel({ snapshotId, initial, competitorC
  {/* Client page audit (only when we managed to scrape the client's ranking URL) */}
  {strategy.clientPageAudit && (
  <div>
- <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+ <p className="text-xs font-bold text-gray-500 mb-2">
  Your ranking page vs the cited pages
  </p>
- <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4 space-y-3">
+ <div className="rounded-lg border border-line bg-attention-soft/50 p-4 space-y-3">
  <div className="flex items-baseline justify-between gap-3 flex-wrap">
  <a
  href={strategy.clientPageAudit.url}
  target="_blank"
  rel="noopener noreferrer"
- className="text-sm font-semibold text-amber-800 hover:underline truncate"
+ className="text-sm font-semibold text-attention hover:underline truncate"
  >
  {strategy.clientPageAudit.title ?? strategy.clientPageAudit.url}
  </a>
- <span className="text-[11px] text-amber-700 shrink-0">
+ <span className="text-caption text-attention shrink-0">
  {strategy.clientPageAudit.wordCount} words scraped
  </span>
  </div>
 
  {strategy.clientPageAudit.strengths.length > 0 && (
  <div>
- <p className="text-[10px] font-bold uppercase tracking-wider text-green-700 mb-1">✓ Strengths</p>
+ <p className="text-caption font-bold text-green-700 mb-1">✓ Strengths</p>
  <ul className="space-y-1">
  {strategy.clientPageAudit.strengths.map((s, i) => (
  <li key={i} className="text-xs text-gray-800 leading-relaxed flex items-start gap-2">
@@ -254,7 +254,7 @@ export default function CitationStrategyPanel({ snapshotId, initial, competitorC
 
  {strategy.clientPageAudit.weaknesses.length > 0 && (
  <div>
- <p className="text-[10px] font-bold uppercase tracking-wider text-red-700 mb-1">✗ What&rsquo;s missing</p>
+ <p className="text-caption font-bold text-red-700 mb-1">✗ What&rsquo;s missing</p>
  <ul className="space-y-1">
  {strategy.clientPageAudit.weaknesses.map((s, i) => (
  <li key={i} className="text-xs text-gray-800 leading-relaxed flex items-start gap-2">
@@ -267,7 +267,7 @@ export default function CitationStrategyPanel({ snapshotId, initial, competitorC
 
  {strategy.clientPageAudit.pageChanges.length > 0 && (
  <div>
- <p className="text-[10px] font-bold uppercase tracking-wider text-blue-700 mb-1">→ Specific changes to make</p>
+ <p className="text-caption font-bold text-blue-700 mb-1">→ Specific changes to make</p>
  <ul className="space-y-1">
  {strategy.clientPageAudit.pageChanges.map((s, i) => (
  <li key={i} className="text-xs text-gray-800 leading-relaxed flex items-start gap-2">
@@ -284,14 +284,14 @@ export default function CitationStrategyPanel({ snapshotId, initial, competitorC
  {/* Actions */}
  {strategy.actions?.length > 0 && (
  <div>
- <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+ <p className="text-xs font-bold text-gray-500 mb-2">
  3-step plan
  </p>
  <div className="space-y-2">
  {strategy.actions.map((action) => (
  <div key={action.step} className="rounded-lg bg-card border border-gray-200 p-3">
  <div className="flex items-start gap-3">
- <span className="shrink-0 flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
+ <span className="shrink-0 flex h-6 w-6 items-center justify-center rounded-full bg-ink text-xs font-bold text-white">
  {action.step}
  </span>
  <div className="flex-1 min-w-0">
@@ -312,7 +312,7 @@ export default function CitationStrategyPanel({ snapshotId, initial, competitorC
  {/* Scraped sources transparency */}
  {strategy.scrapedSources?.length > 0 && (
  <div>
- <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+ <p className="text-xs font-bold text-gray-500 mb-2">
  Sources analysed ({strategy.scrapedSources.filter((s) => s.scraped).length} of {strategy.scrapedSources.length})
  </p>
  <div className="space-y-1">
@@ -326,13 +326,13 @@ export default function CitationStrategyPanel({ snapshotId, initial, competitorC
  !s.scraped
  ? "border-red-200 bg-red-50 text-red-700"
  : s.isClient
- ? "border-amber-200 bg-amber-50 hover:bg-amber-100"
+ ? "border-line bg-attention-soft hover:bg-attention-soft"
  : "border-gray-200 bg-gray-50 hover:bg-gray-100"
  }`}
  >
  <span className="shrink-0 text-gray-400">{i + 1}.</span>
  <span className="truncate flex-1">{s.title ?? s.url}</span>
- {s.isClient && <span className="shrink-0 text-amber-700 font-bold">CLIENT</span>}
+ {s.isClient && <span className="shrink-0 text-attention font-bold">CLIENT</span>}
  <span className="shrink-0 text-gray-400">{s.wordCount} words</span>
  {!s.scraped && <span className="shrink-0 text-red-600">scrape failed</span>}
  </a>

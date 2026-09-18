@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClient as createSupabase } from "@/lib/supabase/client";
-import { isAuthenticatedClient, getClientCookie } from "@/lib/auth-client";
 import { TRACK_TYPE_CONFIG, LOCATIONS } from "@/types/search";
 import type { TrackType, Location } from "@/types/search";
 import { Sparkles, Loader2, Plus, Trash2, Edit2, Check, Download, Copy, RotateCw } from "lucide-react";
@@ -160,13 +159,7 @@ export default function AddKeywordsPage() {
     }
 
     if (!agencyId) {
-      if (isAuthenticatedClient() || getClientCookie("vsi_session")) {
-        agencyId = "00000000-0000-0000-0000-000000000001";
-      }
-    }
-
-    if (!agencyId) {
-      setError("Not signed in");
+      setError("Your session has ended. Sign in again to add searches.");
       setSaving(false);
       return;
     }
@@ -239,7 +232,7 @@ export default function AddKeywordsPage() {
       </div>
 
       {error && (
-        <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-500 font-medium">{error}</div>
+        <div className="rounded-panel border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-500 font-medium">{error}</div>
       )}
 
       {/* Mode Selector Tabs */}
@@ -248,7 +241,7 @@ export default function AddKeywordsPage() {
           onClick={() => setMode("ai")}
           className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${
             mode === "ai"
-              ? "bg-[#FF6B00] text-white shadow-md"
+              ? "bg-ink text-white "
               : "bg-card border border-border text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -258,7 +251,7 @@ export default function AddKeywordsPage() {
           onClick={() => setMode("manual")}
           className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
             mode === "manual"
-              ? "bg-[#FF6B00] text-white shadow-md"
+              ? "bg-ink text-white "
               : "bg-card border border-border text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -270,8 +263,8 @@ export default function AddKeywordsPage() {
       {mode === "ai" && (
         <div className="space-y-4">
           {!hasRunAi && !analyzing && (
-            <div className="rounded-[24px] border border-border bg-card p-8 text-center space-y-4 shadow-sm">
-              <div className="w-14 h-14 rounded-2xl bg-[#FF6B00]/10 text-[#FF6B00] flex items-center justify-center mx-auto">
+            <div className="rounded-panel border border-border bg-card p-8 text-center space-y-4">
+              <div className="w-14 h-14 rounded-panel bg-brand-soft text-brand-strong flex items-center justify-center mx-auto">
                 <Sparkles size={28} />
               </div>
               <div>
@@ -282,7 +275,7 @@ export default function AddKeywordsPage() {
               </div>
               <button
                 onClick={runAIQueryDiscovery}
-                className="px-6 py-2.5 bg-[#FF6B00] hover:bg-[#e05e00] text-white text-xs font-bold rounded-full shadow-lg shadow-[#FF6B00]/20 transition-all inline-flex items-center gap-2"
+                className="px-6 py-2.5 bg-ink hover:bg-ink-2 text-white text-xs font-bold rounded-full /20 transition-all inline-flex items-center gap-2"
               >
                 <Sparkles size={15} /> Run AI Website & Query Discovery
               </button>
@@ -290,23 +283,23 @@ export default function AddKeywordsPage() {
           )}
 
           {analyzing && (
-            <div className="rounded-[24px] border border-border bg-card p-12 text-center space-y-3">
-              <Loader2 size={32} className="text-[#FF6B00] animate-spin mx-auto" />
+            <div className="rounded-panel border border-border bg-card p-12 text-center space-y-3">
+              <Loader2 size={32} className="text-brand-strong animate-spin mx-auto" />
               <h3 className="text-base font-bold text-foreground">Analyzing Website & Building Keywords...</h3>
               <p className="text-xs text-muted-foreground">Scanning metadata, headers, and generating multi-intent AI prompts...</p>
             </div>
           )}
 
           {hasRunAi && !analyzing && (
-            <div className="rounded-[24px] border border-border bg-card p-5 space-y-4 shadow-sm">
+            <div className="rounded-panel border border-border bg-card p-5 space-y-4">
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <span className="text-xs font-bold text-foreground">Discovered Queries ({selectedAiCount} Selected)</span>
-                <button onClick={runAIQueryDiscovery} className="text-xs font-bold text-[#FF6B00] flex items-center gap-1 hover:underline">
+                <button onClick={runAIQueryDiscovery} className="text-xs font-bold text-brand-strong flex items-center gap-1 hover:underline">
                   <RotateCw size={13} /> Re-analyze
                 </button>
               </div>
 
-              <div className="rounded-2xl border border-border overflow-hidden max-h-96 overflow-y-auto">
+              <div className="rounded-panel border border-border overflow-hidden max-h-96 overflow-y-auto">
                 {aiQueries.map((q) => (
                   <div key={q.id} className="flex items-center justify-between px-4 py-2.5 border-b border-border last:border-0 hover:bg-muted-bg/30 text-xs">
                     <div className="flex items-center gap-3">
@@ -314,11 +307,11 @@ export default function AddKeywordsPage() {
                         type="checkbox"
                         checked={q.selected}
                         onChange={() => setAiQueries(prev => prev.map(item => item.id === q.id ? { ...item, selected: !item.selected } : item))}
-                        className="w-4 h-4 accent-[#FF6B00] rounded"
+                        className="w-4 h-4 rounded"
                       />
                       <span className="font-medium text-foreground">{q.keyword}</span>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/20">
+                    <span className="px-2 py-0.5 rounded-full text-caption font-bold bg-brand-soft text-brand-strong border border-line-strong">
                       {q.categoryLabel}
                     </span>
                   </div>
@@ -331,23 +324,23 @@ export default function AddKeywordsPage() {
 
       {/* Mode B: Manual Paste */}
       {mode === "manual" && (
-        <div className="rounded-[24px] border border-border bg-card p-5 space-y-4 shadow-sm">
+        <div className="rounded-panel border border-border bg-card p-5 space-y-4">
           <textarea
             value={pasteInput}
             onChange={(e) => { setPasteInput(e.target.value); setParsed(false); }}
             rows={8}
             placeholder={"best seo agency dubai\nwho to hire for seo in uae\ntop digital marketing consultants 2026"}
-            className="w-full rounded-xl border border-border bg-background p-3.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-[#FF6B00] outline-none font-mono"
+            className="w-full rounded-panel border border-border bg-background p-3.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-line-strong outline-none font-mono"
           />
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">{pasteInput.split("\n").filter(l => l.trim()).length} lines</span>
-            <button onClick={parseKeywords} disabled={!pasteInput.trim()} className="px-4 py-1.5 bg-muted-bg border border-border text-xs font-bold text-foreground rounded-full hover:border-[#FF6B00]/50 disabled:opacity-40">
+            <button onClick={parseKeywords} disabled={!pasteInput.trim()} className="px-4 py-1.5 bg-muted-bg border border-border text-xs font-bold text-foreground rounded-full hover:border-line-strong disabled:opacity-40">
               Parse & Preview
             </button>
           </div>
 
           {parsed && keywords.length > 0 && (
-            <div className="rounded-2xl border border-border overflow-hidden max-h-72 overflow-y-auto">
+            <div className="rounded-panel border border-border overflow-hidden max-h-72 overflow-y-auto">
               {keywords.map((kw, i) => (
                 <div key={i} className="flex items-center justify-between px-4 py-2 border-b border-border last:border-0 text-xs">
                   <span className="text-foreground font-medium">{kw.keyword}</span>
@@ -367,7 +360,7 @@ export default function AddKeywordsPage() {
         <button
           onClick={handleSave}
           disabled={saving || (mode === "ai" ? selectedAiCount === 0 : keywords.length === 0)}
-          className="px-6 py-2.5 rounded-full bg-[#FF6B00] hover:bg-[#e05e00] text-xs font-bold text-white disabled:opacity-40 shadow-md shadow-[#FF6B00]/20"
+          className="px-6 py-2.5 rounded-full bg-ink hover:bg-ink-2 text-xs font-bold text-white disabled:opacity-40 /20"
         >
           {saving ? "Saving..." : `Save ${mode === "ai" ? selectedAiCount : keywords.length} Query/Queries`}
         </button>

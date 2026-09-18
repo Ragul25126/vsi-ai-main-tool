@@ -2,21 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { buildChatContext, type ChatScope } from "@/lib/chat-context";
 import { generateAiResponseStream, ChatMessage } from "@/lib/ai-provider";
+import { VSI_CHAT_SYSTEM_PROMPT, CONTEXT_UNAVAILABLE } from "@/lib/chat-prompt";
 
 export const maxDuration = 120;
 export const dynamic = "force-dynamic";
 
-const SYSTEM_BASE_PROMPT = `You are the VSI AI Assistant, an in-house Principal SEO & GEO Strategist for a digital agency. You answer user questions using live data in the context block.
-
-Rules:
-- Be concrete, professional, and practitioner-grade. Reference real domains, SERP positions, and citation share.
-- Provide actionable recommendations for Google AI Overviews, Bing Copilot, ChatGPT Search, and Gemini.
-- Structure responses cleanly with markdown bolding, lists, code snippets, and tables when relevant.
-- Always identify as the VSI AI Assistant.`;
+const SYSTEM_BASE_PROMPT = VSI_CHAT_SYSTEM_PROMPT;
 
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
+    if (!session?.agencyId) {
+      return NextResponse.json({ error: "Your session has ended. Sign in again to use the chat." }, { status: 401 });
+    }
     const body = await req.json();
 
     const {
@@ -40,13 +38,13 @@ export async function POST(req: NextRequest) {
     let contextText = "";
     let scopeLabel = "";
     try {
-      const ctx = await buildChatContext({ agencyId: session?.agencyId || "00000000-0000-0000-0000-000000000001", scope });
+      const ctx = await buildChatContext({ agencyId: session.agencyId, scope });
       contextText = ctx.contextText;
       scopeLabel = ctx.scopeLabel;
     } catch (e) {
       console.warn("[chat] Context build warning:", e);
-      contextText = "(Live SERP data available)";
-      scopeLabel = "Dashboard Scope";
+      contextText = CONTEXT_UNAVAILABLE;
+      scopeLabel = "Unavailable";
     }
 
     const language = body.language || "English";

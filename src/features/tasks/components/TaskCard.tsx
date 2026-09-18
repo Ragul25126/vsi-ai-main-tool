@@ -76,7 +76,7 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
 
  async function toggleAcceptance(i: number) {
  const next: AcceptanceCriterion[] = local.acceptance.map((c, idx) => idx === i ? { ...c, done: !c.done } : c);
- // If toggling completes everything, suggest marking task done (don't auto — let user decide).
+ // If toggling completes everything, suggest marking task done (don't auto - let user decide).
  await patch({ acceptance: next });
  }
 
@@ -93,8 +93,8 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
 
  return (
  <div
- className={`group rounded-[20px] border transition-all duration-300 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.2)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.4)] ${
- status === "done" ? "border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-transparent backdrop-blur-md" : status === "skipped" ? "border-white/5 bg-card/[0.01] opacity-60" : "border-white/10 bg-card/[0.03] backdrop-blur-md hover:border-white/20 hover:bg-card/[0.05]"
+ className={`group rounded-panel border transition-all duration-300   ${
+ status === "done" ? "border-emerald-500/30 bg-surface-2 backdrop-blur-md" : status === "skipped" ? "border-white/5 bg-card/[0.01] opacity-60" : "border-white/10 bg-card/[0.03] backdrop-blur-md hover:border-white/20 hover:bg-card/[0.05]"
  }`}
  >
  <div className="p-5">
@@ -131,34 +131,34 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
 
  {/* Chips row */}
  <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
- <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border ${GROUP_META[local.group_name].chip}`}>
+ <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-caption font-semibold border ${GROUP_META[local.group_name].chip}`}>
  {local.group_name}
  </span>
  {local.owner && (
- <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${OWNER_META[local.owner].chip}`}>
+ <span className={`rounded-full px-2 py-0.5 text-caption font-semibold  ${OWNER_META[local.owner].chip}`}>
  {local.owner}
  </span>
  )}
  {local.effort && (
- <span className="rounded-full bg-card/5 border border-white/10 px-2 py-0.5 text-[10px] font-semibold text-gray-300">
+ <span className="rounded-full bg-card/5 border border-white/10 px-2 py-0.5 text-caption font-semibold text-gray-300">
  {EFFORT_LABEL[local.effort]}
  </span>
  )}
  {local.impact && (
- <span className="rounded-full bg-card/5 border border-white/10 px-2 py-0.5 text-[10px] font-semibold text-gray-300">
+ <span className="rounded-full bg-card/5 border border-white/10 px-2 py-0.5 text-caption font-semibold text-gray-300">
  Impact: {local.impact}
  </span>
  )}
  {progress.total > 0 && (
- <span className="rounded-full bg-card/10 px-2 py-0.5 text-[10px] font-semibold text-white">
+ <span className="rounded-full bg-card/10 px-2 py-0.5 text-caption font-semibold text-white">
  {progress.done}/{progress.total} steps
  </span>
  )}
  {local.due_date && (
- <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+ <span className={`rounded-full px-2 py-0.5 text-caption font-semibold ${
  new Date(local.due_date) < new Date(new Date().toDateString())
  ? "bg-red-100 text-red-700"
- : "bg-amber-100 text-amber-700"
+ : "bg-attention-soft text-attention"
  }`}>
  Due {new Date(local.due_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
  </span>
@@ -166,33 +166,33 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
  {keywordLabel && keywordHref && (
  <Link
  href={keywordHref}
- className="rounded-full bg-card/10 px-2 py-0.5 text-[10px] font-medium text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
+ className="rounded-full bg-card/10 px-2 py-0.5 text-caption font-medium text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
  >
  &ldquo;{keywordLabel}&rdquo;
  </Link>
  )}
  <span
- className="rounded-full bg-card/5 border border-white/10 px-2 py-0.5 text-[10px] font-medium text-gray-400"
+ className="rounded-full bg-card/5 border border-white/10 px-2 py-0.5 text-caption font-medium text-gray-400"
  title={`Created ${fullDateTime(local.created_at)}`}
  >
  Created {relativeDays(local.created_at)}
  </span>
- <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${meta.chip}`}>{meta.label}</span>
+ <span className={`rounded-full px-2 py-0.5 text-caption font-semibold ${meta.chip}`}>{meta.label}</span>
 
  {local.outcome_status === "verified" && (
- <span className="rounded-full bg-green-100 text-green-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+ <span className="rounded-full bg-green-100 text-green-800 px-2 py-0.5 text-caption font-bold">
  ✓ Outcome verified
  </span>
  )}
  {local.outcome_status === "regressed" && (
- <span className="rounded-full bg-red-100 text-red-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+ <span className="rounded-full bg-red-100 text-red-800 px-2 py-0.5 text-caption font-bold">
  ↓ Regressed
  </span>
  )}
 
  {isStale && local.status !== "done" && local.status !== "skipped" && (
  <span
- className="rounded-full bg-yellow-100 text-yellow-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+ className="rounded-full bg-yellow-100 text-yellow-800 px-2 py-0.5 text-caption font-bold"
  title="Underlying SERP/AIO/citation signals shifted significantly since this task was created. Re-evaluate."
  >
  ⚠ Context changed
@@ -206,14 +206,14 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
  <div className="mt-4 pl-8 space-y-3">
  {local.description && (
  <div>
- <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Description</p>
+ <p className="text-caption font-bold text-gray-500 mb-1">Description</p>
  <p className="text-xs text-gray-300 leading-relaxed whitespace-pre-line">{local.description}</p>
  </div>
  )}
 
  {local.acceptance.length > 0 && (
  <div>
- <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Acceptance criteria</p>
+ <p className="text-caption font-bold text-gray-500 mb-1">Acceptance criteria</p>
  <div className="space-y-1.5">
  {local.acceptance.map((c, i) => (
  <label key={i} className="flex items-start gap-2 cursor-pointer group">
@@ -234,14 +234,14 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
  )}
 
  <div>
- <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Status</p>
+ <p className="text-caption font-bold text-gray-500 mb-1">Status</p>
  <div className="flex items-center gap-1.5">
  {(["todo", "in_progress", "done", "skipped"] as TaskStatus[]).map((s) => (
  <button
  key={s}
  onClick={() => setStatus(s)}
  disabled={saving || s === status}
- className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+ className={`rounded-md px-2.5 py-1 text-caption font-semibold transition-colors ${
  s === status
  ? STATUS_META[s].chip
  : "border border-white/10 text-gray-400 hover:bg-card/5 hover:text-white"
@@ -254,8 +254,8 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
  </div>
 
  <div>
- <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Lifecycle</p>
- <div className="space-y-0.5 text-[11px] text-gray-600">
+ <p className="text-caption font-bold text-gray-500 mb-1">Lifecycle</p>
+ <div className="space-y-0.5 text-caption text-gray-600">
  <p>
  <span className="text-gray-400">Created:</span> {fullDateTime(local.created_at)}
  <span className="text-gray-400"> · {relativeDays(local.created_at)}</span>
@@ -275,20 +275,20 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
  {local.context_snapshot && (
  <p>
  <span className="text-gray-400">Context captured:</span> {fullDateTime(local.context_snapshot.capturedAt)}
- <span className="text-gray-400"> · rank {local.context_snapshot.rankPosition ?? "—"}, {local.context_snapshot.citedDomainCount} citations</span>
+ <span className="text-gray-400"> · rank {local.context_snapshot.rankPosition ?? "-"}, {local.context_snapshot.citedDomainCount} citations</span>
  </p>
  )}
  </div>
  </div>
 
  <div className="flex items-center justify-between pt-1">
- <p className="text-[10px] text-gray-400">
+ <p className="text-caption text-gray-400">
  {isStale ? "⚠ Context changed since this task was created" : "Tracking signals match the original context"}
  </p>
  <button
  onClick={deleteTask}
  disabled={saving}
- className="text-[11px] text-red-600 hover:text-red-800 transition-colors"
+ className="text-caption text-red-600 hover:text-red-800 transition-colors"
  >
  Delete
  </button>

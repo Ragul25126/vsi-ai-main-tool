@@ -45,7 +45,7 @@ export default function NotificationsPage() {
   const getIcon = (type: NotificationType) => {
     switch(type) {
       case 'alert': return <AlertCircle size={16} className="text-rose-500" />;
-      case 'system': return <Zap size={16} className="text-amber-500" />;
+      case 'system': return <Zap size={16} className="text-brand-strong" />;
       case 'report': return <FileText size={16} className="text-primary" />;
       case 'user': return <UserPlus size={16} className="text-emerald-500" />;
       default: return <Bell size={16} className="text-blue-500" />;
@@ -55,7 +55,7 @@ export default function NotificationsPage() {
   const getIconBg = (type: NotificationType) => {
     switch(type) {
       case 'alert': return 'bg-rose-500/10 border-rose-500/20';
-      case 'system': return 'bg-amber-500/10 border-amber-500/20';
+      case 'system': return 'bg-brand-soft border-line';
       case 'report': return 'bg-primary/10 border-primary/20';
       case 'user': return 'bg-emerald-500/10 border-emerald-500/20';
       default: return 'bg-blue-500/10 border-blue-500/20';
@@ -101,10 +101,10 @@ export default function NotificationsPage() {
           </button>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
+              <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight flex items-center gap-2">
                 Notifications
                 {unreadCount > 0 && (
-                  <span className="text-xs font-bold bg-amber-500 text-white px-2.5 py-0.5 rounded-full shadow-sm">
+                  <span className="text-xs font-bold bg-ink text-white px-2.5 py-0.5 rounded-full">
                     {unreadCount} New
                   </span>
                 )}
@@ -120,7 +120,7 @@ export default function NotificationsPage() {
           {unreadCount > 0 && (
             <button
               onClick={markAllAsRead}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-foreground hover:bg-muted text-xs font-bold shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-foreground hover:bg-muted text-xs font-bold transition-all active:scale-[0.98] cursor-pointer"
             >
               <Check size={14} />
               Mark All as Read
@@ -137,7 +137,7 @@ export default function NotificationsPage() {
             onClick={() => setFilter('all')}
             className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
               filter === 'all' 
-                ? 'bg-amber-500 text-white shadow-sm' 
+                ? 'bg-ink text-white ' 
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted-bg'
             }`}
           >
@@ -147,13 +147,13 @@ export default function NotificationsPage() {
             onClick={() => setFilter('unread')}
             className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
               filter === 'unread' 
-                ? 'bg-amber-500 text-white shadow-sm' 
+                ? 'bg-ink text-white ' 
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted-bg'
             }`}
           >
             Unread
             {unreadCount > 0 && (
-              <span className={`w-1.5 h-1.5 rounded-full ${filter === 'unread' ? 'bg-white' : 'bg-amber-500'}`} />
+              <span className={`w-1.5 h-1.5 rounded-full ${filter === 'unread' ? 'bg-white' : 'bg-ink'}`} />
             )}
           </button>
         </div>
@@ -166,7 +166,7 @@ export default function NotificationsPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search notifications..."
-            className="w-full bg-card border border-border rounded-full pl-9 pr-4 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 transition-all shadow-sm"
+            className="w-full bg-card border border-border rounded-full pl-9 pr-4 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-line-strong focus:ring-2 focus:ring-ink/10 transition-all"
           />
         </div>
       </div>
@@ -179,7 +179,7 @@ export default function NotificationsPage() {
         className="space-y-3"
       >
         {filteredNotifications.length === 0 ? (
-          <motion.div variants={itemVariants} className="rounded-[20px] border border-dashed border-border bg-card p-12 text-center shadow-sm mt-8">
+          <motion.div variants={itemVariants} className="rounded-panel border border-dashed border-border bg-card p-12 text-center mt-8">
             <Bell size={36} className="text-muted-foreground/50 mx-auto mb-3" />
             <p className="text-base font-bold text-foreground mb-1">No Notifications Found</p>
             <p className="text-xs text-muted-foreground max-w-md mx-auto">
@@ -193,16 +193,16 @@ export default function NotificationsPage() {
               variants={itemVariants}
               whileHover={{ y: -2, scale: 1.01 }}
               whileTap={{ scale: 0.98 }}
-              className={`group relative flex flex-col sm:flex-row gap-4 p-5 rounded-[20px] border transition-all duration-300 cursor-pointer ${
+              className={`group relative flex flex-col sm:flex-row gap-4 p-5 rounded-panel border transition-all duration-300 cursor-pointer ${
                 notification.isRead 
-                  ? 'bg-card border-border/80 hover:border-amber-500/40 hover:shadow-[0_8px_30px_rgba(245,158,11,0.06)]' 
-                  : 'bg-card border-amber-500/40 shadow-[0_4px_20px_rgba(245,158,11,0.08)] hover:border-amber-500/80 hover:shadow-[0_8px_30px_rgba(245,158,11,0.15)]'
+                  ? 'bg-card border-border/80 hover:border-line ' 
+                  : 'bg-card border-line  hover:border-line '
               }`}
               onClick={() => handleNotificationClick(notification)}
             >
               {/* Unread Indicator */}
               {!notification.isRead && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-amber-500 rounded-r-full shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-ink rounded-r-full" />
               )}
 
               {/* Icon */}
@@ -216,7 +216,7 @@ export default function NotificationsPage() {
                   <h3 className={`text-sm font-bold truncate ${notification.isRead ? 'text-foreground' : 'text-foreground'}`}>
                     {notification.title}
                   </h3>
-                  <span className="text-[10px] font-semibold text-muted-foreground shrink-0 whitespace-nowrap bg-muted-bg px-2 py-0.5 rounded-full border border-border group-hover:border-amber-500/30 transition-colors">
+                  <span className="text-caption font-semibold text-muted-foreground shrink-0 whitespace-nowrap bg-muted-bg px-2 py-0.5 rounded-full border border-border group-hover:border-line transition-colors">
                     {notification.timestamp}
                   </span>
                 </div>

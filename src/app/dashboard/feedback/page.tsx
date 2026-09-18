@@ -269,7 +269,7 @@ export default function FeedbackPage() {
  <div className="p-4 sm:p-8 space-y-8 max-w-[1600px] mx-auto font-sans">
  {/* Page Header */}
  <div className="pb-6 border-b border-border">
- <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-3">
+ <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight flex items-center gap-3">
  <MessageSquare className="text-primary" size={28} />
  <span>Feedback & Product Requests</span>
  </h1>
@@ -279,7 +279,7 @@ export default function FeedbackPage() {
  </div>
 
  {submitted && (
- <div className="rounded-[20px] bg-[#22C55E]/10 border border-[#22C55E]/20 p-3.5 flex items-center gap-2 text-[#22C55E] text-xs font-medium">
+ <div className="rounded-panel bg-[#22C55E]/10 border border-[#22C55E]/20 p-3.5 flex items-center gap-2 text-[#22C55E] text-xs font-medium">
  <CheckCircle2 size={16} />
  <span>Thank you! Your feedback has been submitted to the product team.</span>
  </div>
@@ -287,7 +287,7 @@ export default function FeedbackPage() {
 
  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
  {/* Submit Form (5 Cols) */}
- <div className="lg:col-span-5 bg-card rounded-[20px] border border-border p-6 shadow-xs space-y-4">
+ <div className="lg:col-span-5 bg-card rounded-panel border border-border p-6 space-y-4">
  <h2 className="text-base font-bold text-foreground">Submit New Feedback</h2>
 
  <form onSubmit={handleSubmitFeedback} className="space-y-4">
@@ -298,7 +298,7 @@ export default function FeedbackPage() {
  <select
  value={category}
  onChange={(e) => setCategory(e.target.value as FeedbackItem["category"])}
- className="w-full rounded-[20px] border border-border bg-background px-3.5 py-2 text-xs text-foreground focus:outline-none focus:border-amber-500"
+ className="w-full rounded-panel border border-border bg-background px-3.5 py-2 text-xs text-foreground focus:outline-none focus:border-line-strong"
  >
  <option value="Feature Request">Feature Request</option>
  <option value="Bug Report">Bug Report</option>
@@ -316,7 +316,7 @@ export default function FeedbackPage() {
  placeholder="Brief summary of your feedback..."
  value={subject}
  onChange={(e) => setSubject(e.target.value)}
- className="w-full rounded-[20px] border border-border bg-background px-3.5 py-2 text-xs text-foreground focus:outline-none focus:border-amber-500"
+ className="w-full rounded-panel border border-border bg-background px-3.5 py-2 text-xs text-foreground focus:outline-none focus:border-line-strong"
  />
  </div>
 
@@ -330,13 +330,13 @@ export default function FeedbackPage() {
  placeholder="Describe how this feature will improve your workflow..."
  value={message}
  onChange={(e) => setMessage(e.target.value)}
- className="w-full rounded-[20px] border border-border bg-background p-3.5 text-xs text-foreground focus:outline-none focus:border-amber-500"
+ className="w-full rounded-panel border border-border bg-background p-3.5 text-xs text-foreground focus:outline-none focus:border-line-strong"
  />
  </div>
 
  <button
  type="submit"
- className="w-full flex items-center justify-center gap-2 rounded-full bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 text-xs font-bold shadow-sm transition-colors"
+ className="w-full flex items-center justify-center gap-2 rounded-full bg-ink hover:bg-ink-2 text-white px-4 py-2.5 text-xs font-bold transition-colors"
  >
  <Send size={14} />
  <span>Submit Feedback</span>
@@ -352,11 +352,11 @@ export default function FeedbackPage() {
  {feedbackList.map((item) => (
  <div
  key={item.id}
- className="bg-card rounded-[20px] border border-border p-5 shadow-xs flex items-start gap-4"
+ className="bg-card rounded-panel border border-border p-5 flex items-start gap-4"
  >
  <button
  onClick={() => handleUpvote(item.id)}
- className="flex flex-col items-center justify-center rounded-[20px] bg-muted-bg hover:bg-amber-500/10 hover:text-amber-500 border border-border px-3 py-2 text-muted-foreground transition-colors shrink-0"
+ className="flex flex-col items-center justify-center rounded-panel bg-muted-bg hover:bg-brand-soft hover:text-ink border border-border px-3 py-2 text-muted-foreground transition-colors shrink-0"
  >
  <ThumbsUp size={14} />
  <span className="text-xs font-bold mt-1">{item.upvotes}</span>
@@ -364,10 +364,10 @@ export default function FeedbackPage() {
 
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-2 flex-wrap mb-1">
- <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+ <span className="text-caption font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
  {item.category}
  </span>
- <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
+ <span className={`text-caption font-semibold px-2 py-0.5 rounded ${
  item.status === "Resolved" ? "bg-[#22C55E]/10 text-[#22C55E]" :
  item.status === "In Review" ? "bg-[#3B82F6]/10 text-[#3B82F6]" :
  "bg-[#F5F5F3] text-[#666666]"
@@ -379,7 +379,7 @@ export default function FeedbackPage() {
  <h3 className="text-sm font-bold text-foreground">{item.subject}</h3>
  <p className="text-xs text-[#666666] mt-1">{item.message}</p>
 
- <div className="mt-3 flex items-center justify-between text-[11px] text-[#666666]">
+ <div className="mt-3 flex items-center justify-between text-caption text-[#666666]">
  <span>Submitted by {item.author}</span>
  <span>{item.createdAt}</span>
  </div>
@@ -398,19 +398,19 @@ export default function FeedbackPage() {
    </div>
    
    {myFeedback.length === 0 ? (
-     <div className="rounded-[20px] border border-dashed border-border p-10 text-center text-[#666666] text-sm">
+     <div className="rounded-panel border border-dashed border-border p-10 text-center text-[#666666] text-sm">
        You haven't submitted any feedback yet.
      </div>
    ) : (
      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
        {myFeedback.map((item) => (
-         <div key={item.id} className="bg-card rounded-[20px] border border-border p-5 shadow-xs flex flex-col justify-between gap-4">
+         <div key={item.id} className="bg-card rounded-panel border border-border p-5 flex flex-col justify-between gap-4">
             <div className="space-y-3">
                <div className="flex items-center justify-between gap-2 flex-wrap">
-                 <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                 <span className="text-caption font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
                    {item.category}
                  </span>
-                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
+                 <span className={`text-caption font-semibold px-2 py-0.5 rounded ${
                    item.status === "Resolved" ? "bg-[#22C55E]/10 text-[#22C55E]" :
                    item.status === "In Review" ? "bg-[#3B82F6]/10 text-[#3B82F6]" :
                    "bg-[#F5F5F3] text-[#666666]"
@@ -425,7 +425,7 @@ export default function FeedbackPage() {
                </div>
             </div>
             
-            <div className="pt-3 border-t border-border/40 flex items-center justify-between text-[10px] text-[#666666]">
+            <div className="pt-3 border-t border-border/40 flex items-center justify-between text-caption text-[#666666]">
                <span>Submitted by you</span>
                <span>{item.createdAt}</span>
             </div>

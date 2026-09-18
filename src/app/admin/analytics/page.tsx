@@ -79,21 +79,21 @@ export default async function AdminAnalyticsPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Analytics</h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Anonymous interaction data — last 30 days. User IDs are hashed; agency IDs preserved so we can cohort by tenant.
+            Anonymous interaction data - last 30 days. User IDs are hashed; agency IDs preserved so we can cohort by tenant.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <a
             href="/api/admin/analytics/export?format=jsonl&since_days=30"
             download
-            className="rounded-xl bg-[#FF5500] px-4 py-2 text-xs font-bold text-white hover:bg-[#e04800] transition-colors shadow-md shadow-[#FF5500]/20"
+            className="rounded-panel bg-ink px-4 py-2 text-xs font-bold text-white hover:bg-[#e04800] transition-colors /20"
           >
             Export JSONL
           </a>
           <a
             href="/api/admin/analytics/export?format=csv&since_days=30"
             download
-            className="rounded-xl border border-slate-200/80 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs"
+            className="rounded-panel border border-slate-200/80 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
           >
             Export CSV
           </a>
@@ -102,13 +102,13 @@ export default async function AdminAnalyticsPage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card label="Total events (30d)" value={String(count ?? 0)} />
-        <Card label="Brief satisfaction" value={thumbsPct == null ? "—" : `${thumbsPct}%`} sub={thumbsTotal === 0 ? "no thumbs yet" : `${thumbsUp} 👍 · ${thumbsDown} 👎`} />
+        <Card label="Brief satisfaction" value={thumbsPct == null ? "-" : `${thumbsPct}%`} sub={thumbsTotal === 0 ? "no thumbs yet" : `${thumbsUp} 👍 · ${thumbsDown} 👎`} />
         <Card label="High-confidence briefs" value={`${briefConfidence.high}`} sub={`${briefConfidence.medium} medium · ${briefConfidence.low} low`} />
         <Card label="Chat queries" value={String(chatRows.length)} sub={`${byScope.get("keyword") ?? 0} keyword · ${byScope.get("client") ?? 0} client · ${byScope.get("global") ?? 0} global`} />
       </div>
 
-      <div className="rounded-[22px] border border-slate-200/80 bg-white p-6 shadow-xs">
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Events by agency — last 30 days</p>
+      <div className="rounded-panel border border-slate-200/80 bg-white p-6">
+        <p className="text-xs font-bold text-slate-400 mb-4">Events by agency - last 30 days</p>
         { (() => {
           const agencyMap = new Map<string, number>();
           for (const r of rows) {
@@ -123,12 +123,12 @@ export default async function AdminAnalyticsPage() {
                 <div key={id} className="flex-1 flex flex-col items-center justify-end h-full group">
                   <div className="flex-1 w-full flex items-end relative">
                     <div
-                      className="w-full rounded-t-xl bg-[#FF5500] hover:bg-[#e04800] transition-colors"
+                      className="w-full rounded-t-xl bg-ink hover:bg-[#e04800] transition-colors"
                       style={{ height: `${Math.max(6, (count / maxCount) * 100)}%` }}
                       title={`${id}: ${count} events`}
                     />
                   </div>
-                  <p className="text-[10px] font-bold text-slate-400 truncate mt-2 shrink-0">{id.slice(0,6)}</p>
+                  <p className="text-caption font-bold text-slate-400 truncate mt-2 shrink-0">{id.slice(0,6)}</p>
                 </div>
               ))}
             </div>
@@ -136,8 +136,8 @@ export default async function AdminAnalyticsPage() {
         })() }
       </div>
 
-      <div className="rounded-[22px] border border-slate-200/80 bg-white p-6 shadow-xs">
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Daily event volume — last 14 days</p>
+      <div className="rounded-panel border border-slate-200/80 bg-white p-6">
+        <p className="text-xs font-bold text-slate-400 mb-4">Daily event volume - last 14 days</p>
         <div className="flex items-end gap-2 h-36">
           {Array.from(dailyMap.entries()).map(([d, v]) => (
             <div key={d} className="flex-1 flex flex-col items-center justify-end h-full group">
@@ -148,14 +148,14 @@ export default async function AdminAnalyticsPage() {
                   title={`${d}: ${v} events`}
                 />
               </div>
-              <p className="text-[10px] font-bold text-slate-400 mt-2 shrink-0">{d.slice(5)}</p>
+              <p className="text-caption font-bold text-slate-400 mt-2 shrink-0">{d.slice(5)}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="rounded-[22px] border border-slate-200/80 bg-white p-6 shadow-xs">
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Events by type</p>
+      <div className="rounded-panel border border-slate-200/80 bg-white p-6">
+        <p className="text-xs font-bold text-slate-400 mb-4">Events by type</p>
         {typeRows.length === 0 ? (
           <p className="text-xs text-slate-400">No events yet.</p>
         ) : (
@@ -169,7 +169,7 @@ export default async function AdminAnalyticsPage() {
                     <p className="text-slate-500">{n} <span className="text-slate-400">({pct}%)</span></p>
                   </div>
                   <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-                    <div className="h-full bg-[#FF5500] rounded-full" style={{ width: `${pct}%` }} />
+                    <div className="h-full bg-ink rounded-full" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
               );
@@ -183,10 +183,10 @@ export default async function AdminAnalyticsPage() {
 
 function Card({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-[22px] border border-slate-200/80 bg-white p-5 shadow-xs">
-      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
-      <p className="text-2xl font-extrabold text-slate-900 mt-1">{value}</p>
-      {sub && <p className="text-[11px] text-slate-500 font-medium mt-1">{sub}</p>}
+    <div className="rounded-panel border border-slate-200/80 bg-white p-5">
+      <p className="text-caption font-bold text-slate-400">{label}</p>
+      <p className="text-2xl font-semibold text-slate-900 mt-1">{value}</p>
+      {sub && <p className="text-caption text-slate-500 font-medium mt-1">{sub}</p>}
     </div>
   );
 }

@@ -44,6 +44,27 @@ const nextConfig: NextConfig = {
   // Compress responses
   compress: true,
 
+  // Old navigation URLs keep working after the navigation simplification.
+  redirects: async () => [
+    { source: "/dashboard/services/geo", destination: "/dashboard/geo", permanent: false },
+    { source: "/dashboard/services/geo-tracked", destination: "/dashboard/geo", permanent: false },
+    { source: "/dashboard/services/all", destination: "/dashboard/services/seo", permanent: false },
+    { source: "/dashboard/services/all-services", destination: "/dashboard/services/seo", permanent: false },
+    { source: "/dashboard/services/seo-tracked", destination: "/dashboard/services/seo", permanent: false },
+    {
+      source: "/dashboard/check",
+      has: [{ type: "query", key: "tab", value: "aivisibility" }],
+      destination: "/dashboard/geo",
+      permanent: false,
+    },
+    {
+      source: "/dashboard/check",
+      has: [{ type: "query", key: "tab", value: "opportunities" }],
+      destination: "/dashboard/next-actions",
+      permanent: false,
+    },
+  ],
+
   // Apply security headers to every route
   headers: async () => [
     {

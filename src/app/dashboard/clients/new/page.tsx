@@ -3,9 +3,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { isAuthenticatedClient, getClientCookie } from "@/lib/auth-client";
 import { normaliseDomain } from "@/lib/url-input";
-import { saveCustomClient, ClientItem } from "@/lib/client-store";
 import {
   SERVICE_TYPE_LABELS, TRACK_TYPE_CONFIG,
   INDUSTRIES, COUNTRIES, LOCATIONS,
@@ -27,7 +25,7 @@ interface ClientDetails {
 }
 
 function StepIndicator({ current }: { current: number }) {
-  const steps = ["Client Details", "AI Query Analysis"];
+  const steps = ["About the website", "Choose searches"];
   return (
     <div className="flex items-center gap-0 mb-8">
       {steps.map((label, i) => {
@@ -38,8 +36,8 @@ function StepIndicator({ current }: { current: number }) {
           <div key={n} className="flex items-center">
             <div className="flex flex-col items-center">
               <div className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold transition-all border ${
-                done ? "bg-[#FF6B00] text-white border-[#FF6B00] shadow-sm" :
-                active ? "bg-[#FF6B00] text-white border-[#FF6B00] shadow-md ring-4 ring-[#FF6B00]/20" :
+                done ? "bg-ink text-white border-line-strong " :
+                active ? "bg-ink text-white border-line-strong  ring-4 ring-ink/10" :
                 "bg-card text-muted-foreground border-border"
               }`}>
                 {done ? "✓" : n}
@@ -47,7 +45,7 @@ function StepIndicator({ current }: { current: number }) {
               <span className={`mt-1.5 text-xs font-semibold ${active || done ? "text-foreground font-bold" : "text-muted-foreground"}`}>{label}</span>
             </div>
             {i < steps.length - 1 && (
-              <div className={`h-0.5 w-20 mx-3 mb-4 ${done ? "bg-[#FF6B00]" : "bg-border"}`} />
+              <div className={`h-0.5 w-20 mx-3 mb-4 ${done ? "bg-ink" : "bg-border"}`} />
             )}
           </div>
         );
@@ -264,50 +262,39 @@ export default function NewClientPage() {
         // Ignore Supabase auth error if using local/dummy session
       }
 
-      if (!agencyId) {
-        if (isAuthenticatedClient() || getClientCookie("vsi_session")) {
-          agencyId = "00000000-0000-0000-0000-000000000001";
-        }
-      }
-
-      if (!agencyId) throw new Error("Not signed in");
+      if (!agencyId) throw new Error("Your session has ended. Sign in again to add a project.");
 
       const normalised = normaliseDomain(details.website);
       if (!normalised) throw new Error("Enter a valid website like example.com");
       const cleanWebsite = normalised.domain;
 
-      let clientId: string | null = null;
+      // 1. Create the project. No local fallback: if this fails, the user sees why.
+      const { data: client, error: clientErr } = await supabase
+        .from("clients")
+        .insert({
+          name: details.name.trim(),
+          website: cleanWebsite,
+          brand_name: details.brand_name.trim() || details.name.trim(),
+          service_type: serviceType,
+          country: details.country || null,
+          industry: details.industry || null,
+          default_location: details.default_location,
+          agency_id: agencyId,
+        })
+        .select("id")
+        .single();
 
-      // 1. Insert Client
-      try {
-        const { data: client, error: clientErr } = await supabase
-          .from("clients")
-          .insert({
-            name: details.name.trim(),
-            website: cleanWebsite,
-            brand_name: details.brand_name.trim() || details.name.trim(),
-            service_type: serviceType,
-            country: details.country || null,
-            industry: details.industry || null,
-            default_location: details.default_location,
-            agency_id: agencyId,
-          })
-          .select("id")
-          .single();
-
-        if (!clientErr && client?.id) {
-          clientId = client.id;
-        }
-      } catch (err) {
-        console.warn("Supabase client insertion fallback:", err);
+      if (clientErr || !client?.id) {
+        throw new Error(
+          clientErr?.message?.toLowerCase().includes("limit")
+            ? "Your plan's project limit is reached."
+            : "We couldn't create the project. Please try again.",
+        );
       }
+      const clientId = client.id as string;
 
-      if (!clientId) {
-        clientId = `client-${Date.now()}`;
-      }
-
-      // 2. Insert Tracked Keywords
-      const activeQueries = generatedQueries.filter(q => q.selected);
+      // 2. Save the chosen searches.
+      const activeQueries = generatedQueries.filter((q) => q.selected);
       if (activeQueries.length > 0) {
         const rows = activeQueries.map((kw) => ({
           client_id: clientId,
@@ -318,30 +305,12 @@ export default function NewClientPage() {
           track_type: kw.trackType,
           location: kw.location,
         }));
-
-        try {
-          await supabase.from("tracked_keywords").insert(rows);
-        } catch (err) {
-          console.warn("Supabase tracked_keywords insertion fallback:", err);
+        const { error: kwErr } = await supabase.from("tracked_keywords").insert(rows);
+        if (kwErr) {
+          router.push(`/dashboard/clients/${clientId}/keywords?notice=searches_not_saved`);
+          return;
         }
       }
-
-      // Save custom client into localStorage and trigger live update events
-      const customClientItem: ClientItem = {
-        id: clientId,
-        name: details.name.trim(),
-        brand_name: details.brand_name.trim() || details.name.trim(),
-        website: cleanWebsite,
-        service_type: serviceType,
-        country: details.country || "United Arab Emirates",
-        industry: details.industry || "Marketing & Advertising",
-        default_location: details.default_location,
-        keywords: activeQueries.length,
-        winRate: 0,
-        tasks: 0,
-        created_at: new Date().toISOString(),
-      };
-      saveCustomClient(customClientItem, activeQueries);
 
       router.push(`/dashboard/clients/${clientId}`);
       router.refresh();
@@ -356,51 +325,51 @@ export default function NewClientPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-2">
-            Add New Client <span className="px-2.5 py-0.5 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] text-xs font-bold uppercase tracking-wider border border-[#FF6B00]/20 flex items-center gap-1"><Sparkles size={13} /> AI Onboarding</span>
+            Add a project
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Automated AI search intelligence & query discovery onboarding assistant</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Tell VSI about the website. It then suggests the searches your customers are likely to use.</p>
         </div>
       </div>
 
       <StepIndicator current={step} />
 
       {error && (
-        <div className="mb-4 rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-500 font-medium flex items-center gap-2">
+        <div className="mb-4 rounded-panel border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-500 font-medium flex items-center gap-2">
           <AlertTriangle size={18} /> {error}
         </div>
       )}
 
       {/* ── Step 1: Client Details Input ── */}
       {step === 1 && (
-        <div className="rounded-[24px] border border-border bg-card p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="rounded-panel border border-border bg-card p-6 sm:p-8 space-y-6">
           <div className="border-b border-border pb-4">
-            <h2 className="text-base font-bold text-foreground">Client Profile & Target Region</h2>
-            <p className="text-xs text-muted-foreground mt-1">Submit basic business info to trigger automatic AI query discovery</p>
+            <h2 className="text-base font-bold text-foreground">About the website</h2>
+            <p className="text-xs text-muted-foreground mt-1">VSI uses this to suggest searches and to check whether AI answers mention the business.</p>
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5">Client / Company Name *</label>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">Business name *</label>
               <input
                 type="text"
                 value={details.name}
                 onChange={(e) => handleDetailsChange("name", e.target.value)}
                 placeholder="e.g. Valgrow Labs"
-                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                className="w-full rounded-panel border border-border bg-background px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-line-strong focus:outline-none transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5">Website / Domain *</label>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">Website *</label>
               <input
                 type="text"
                 value={details.website}
                 onChange={(e) => handleDetailsChange("website", e.target.value)}
                 placeholder="e.g. valgrowlabs.com"
-                className={`w-full rounded-xl border bg-background px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none transition-colors ${
+                className={`w-full rounded-panel border bg-background px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none transition-colors ${
                   details.website.trim() && !normaliseDomain(details.website)
                     ? "border-rose-500 focus:border-rose-500"
-                    : "border-border focus:border-[#FF6B00]"
+                    : "border-border focus:border-line-strong"
                 }`}
               />
               {details.website.trim() && !normaliseDomain(details.website) && (
@@ -412,14 +381,14 @@ export default function NewClientPage() {
 
             <div>
               <label className="block text-xs font-semibold text-foreground mb-1.5">
-                Brand Name <span className="text-muted-foreground font-normal">(for AIO detection)</span>
+                Name customers know it by <span className="text-muted-foreground font-normal">(if different)</span>
               </label>
               <input
                 type="text"
                 value={details.brand_name}
                 onChange={(e) => handleDetailsChange("brand_name", e.target.value)}
                 placeholder="e.g. Valgrow Labs"
-                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                className="w-full rounded-panel border border-border bg-background px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-line-strong focus:outline-none transition-colors"
               />
             </div>
 
@@ -428,7 +397,7 @@ export default function NewClientPage() {
               <select
                 value={details.industry}
                 onChange={(e) => handleDetailsChange("industry", e.target.value)}
-                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-xs text-foreground focus:border-[#FF6B00] focus:outline-none transition-colors"
+                className="w-full rounded-panel border border-border bg-background px-4 py-2.5 text-xs text-foreground focus:border-line-strong focus:outline-none transition-colors"
               >
                 {INDUSTRIES.map((ind) => (
                   <option key={ind} value={ind}>{ind}</option>
@@ -441,7 +410,7 @@ export default function NewClientPage() {
               <select
                 value={details.country}
                 onChange={(e) => handleDetailsChange("country", e.target.value)}
-                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-xs text-foreground focus:border-[#FF6B00] focus:outline-none transition-colors"
+                className="w-full rounded-panel border border-border bg-background px-4 py-2.5 text-xs text-foreground focus:border-line-strong focus:outline-none transition-colors"
               >
                 {COUNTRIES.map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -454,7 +423,7 @@ export default function NewClientPage() {
               <select
                 value={details.default_location}
                 onChange={(e) => handleDetailsChange("default_location", e.target.value)}
-                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-xs text-foreground focus:border-[#FF6B00] focus:outline-none transition-colors"
+                className="w-full rounded-panel border border-border bg-background px-4 py-2.5 text-xs text-foreground focus:border-line-strong focus:outline-none transition-colors"
               >
                 {(Object.entries(LOCATIONS) as [Location, typeof LOCATIONS[Location]][]).map(([key, val]) => (
                   <option key={key} value={key}>{val.label}</option>
@@ -467,9 +436,9 @@ export default function NewClientPage() {
             <button
               onClick={runAIAnalysis}
               disabled={!step1Valid()}
-              className="flex items-center gap-2 rounded-full bg-[#FF6B00] hover:bg-[#e05e00] px-7 py-3 text-xs font-bold text-white disabled:opacity-40 shadow-lg shadow-[#FF6B00]/20 transition-all hover:scale-[1.02] cursor-pointer"
+              className="flex items-center gap-2 rounded-full bg-ink hover:bg-ink-2 px-7 py-3 text-xs font-bold text-white disabled:opacity-40 /20 transition-all cursor-pointer"
             >
-              <Sparkles size={16} /> Analyze Website & Generate Queries →
+              Suggest searches
             </button>
           </div>
         </div>
@@ -480,18 +449,18 @@ export default function NewClientPage() {
         <div className="space-y-6">
           {analyzing ? (
             // Live Progress Animation Screen
-            <div className="rounded-[24px] border border-border bg-card p-8 sm:p-12 text-center shadow-lg space-y-6">
-              <div className="w-16 h-16 rounded-2xl bg-[#FF6B00]/10 text-[#FF6B00] flex items-center justify-center mx-auto animate-bounce">
+            <div className="rounded-panel border border-border bg-card p-8 sm:p-12 text-center space-y-6">
+              <div className="w-16 h-16 rounded-panel bg-brand-soft text-brand-strong flex items-center justify-center mx-auto">
                 <Sparkles size={32} />
               </div>
 
               <div>
-                <h2 className="text-xl font-bold text-foreground mb-1">AI Onboarding Assistant Active</h2>
+                <h2 className="text-xl font-bold text-foreground mb-1">Choose the searches to track</h2>
                 <p className="text-xs text-muted-foreground">Extracting website metadata, headings, and building multi-intent search prompt clusters...</p>
               </div>
 
               {/* Progress Steps */}
-              <div className="max-w-md mx-auto space-y-2 text-left bg-muted-bg/50 p-4 rounded-2xl border border-border">
+              <div className="max-w-md mx-auto space-y-2 text-left bg-muted-bg/50 p-4 rounded-panel border border-border">
                 {progressSteps.map((stepText, idx) => {
                   const isDone = idx < analysisProgressIndex;
                   const isCurrent = idx === analysisProgressIndex;
@@ -500,11 +469,11 @@ export default function NewClientPage() {
                       {isDone ? (
                         <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
                       ) : isCurrent ? (
-                        <Loader2 size={16} className="text-[#FF6B00] animate-spin shrink-0" />
+                        <Loader2 size={16} className="text-brand-strong animate-spin shrink-0" />
                       ) : (
                         <div className="w-4 h-4 rounded-full border border-border shrink-0" />
                       )}
-                      <span className={isDone ? "text-foreground font-semibold" : isCurrent ? "text-[#FF6B00] font-bold" : "text-muted-foreground"}>
+                      <span className={isDone ? "text-foreground font-semibold" : isCurrent ? "text-brand-strong font-bold" : "text-muted-foreground"}>
                         {stepText}
                       </span>
                     </div>
@@ -517,39 +486,39 @@ export default function NewClientPage() {
             <>
               {/* Toast banner for copy */}
               {copyToast && (
-                <div className="p-3 rounded-full bg-emerald-500 text-white text-xs font-bold shadow-lg text-center flex items-center justify-center gap-2">
+                <div className="p-3 rounded-full bg-emerald-500 text-white text-xs font-bold text-center flex items-center justify-center gap-2">
                   <Check size={16} /> {copyToast}
                 </div>
               )}
 
               {/* Summary Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                <div className="p-4 rounded-2xl bg-card border border-border text-center">
-                  <span className="text-2xl font-bold text-[#FF6B00]">{generatedQueries.length}</span>
-                  <p className="text-[11px] font-semibold text-muted-foreground mt-0.5">Total Queries</p>
+                <div className="p-4 rounded-panel bg-card border border-border text-center">
+                  <span className="text-2xl font-bold text-brand-strong">{generatedQueries.length}</span>
+                  <p className="text-caption font-semibold text-muted-foreground mt-0.5">Total Queries</p>
                 </div>
-                <div className="p-4 rounded-2xl bg-card border border-border text-center">
+                <div className="p-4 rounded-panel bg-card border border-border text-center">
                   <span className="text-2xl font-bold text-emerald-500">{generatedQueries.filter(q => q.category === "primary").length}</span>
-                  <p className="text-[11px] font-semibold text-muted-foreground mt-0.5">Primary Keywords</p>
+                  <p className="text-caption font-semibold text-muted-foreground mt-0.5">Primary Keywords</p>
                 </div>
-                <div className="p-4 rounded-2xl bg-card border border-border text-center">
+                <div className="p-4 rounded-panel bg-card border border-border text-center">
                   <span className="text-2xl font-bold text-blue-400">{generatedQueries.filter(q => q.category === "long_tail").length}</span>
-                  <p className="text-[11px] font-semibold text-muted-foreground mt-0.5">Long-tail Keywords</p>
+                  <p className="text-caption font-semibold text-muted-foreground mt-0.5">Long-tail Keywords</p>
                 </div>
-                <div className="p-4 rounded-2xl bg-card border border-border text-center">
+                <div className="p-4 rounded-panel bg-card border border-border text-center">
                   <span className="text-2xl font-bold text-purple-400">{generatedQueries.filter(q => q.category === "geo").length}</span>
-                  <p className="text-[11px] font-semibold text-muted-foreground mt-0.5">GEO Keywords</p>
+                  <p className="text-caption font-semibold text-muted-foreground mt-0.5">GEO Keywords</p>
                 </div>
-                <div className="p-4 rounded-2xl bg-card border border-border text-center col-span-2 sm:col-span-1">
-                  <span className="text-2xl font-bold text-amber-400">{generatedQueries.filter(q => q.category === "ai_search").length}</span>
-                  <p className="text-[11px] font-semibold text-muted-foreground mt-0.5">AI Search Prompts</p>
+                <div className="p-4 rounded-panel bg-card border border-border text-center col-span-2 sm:col-span-1">
+                  <span className="text-2xl font-bold text-brand-strong">{generatedQueries.filter(q => q.category === "ai_search").length}</span>
+                  <p className="text-caption font-semibold text-muted-foreground mt-0.5">AI Search Prompts</p>
                 </div>
               </div>
 
               {/* Scraped Website Metadata Banner */}
               {analysisMetadata && (
-                <div className="p-4 rounded-2xl bg-card border border-border flex items-start gap-3">
-                  <ShieldCheck size={20} className="text-[#FF6B00] shrink-0 mt-0.5" />
+                <div className="p-4 rounded-panel bg-card border border-border flex items-start gap-3">
+                  <ShieldCheck size={20} className="text-brand-strong shrink-0 mt-0.5" />
                   <div className="text-xs">
                     <span className="font-bold text-foreground">AI Intelligence Domain Context: </span>
                     <span className="text-muted-foreground">{analysisMetadata.title || details.website}</span>
@@ -561,11 +530,11 @@ export default function NewClientPage() {
               )}
 
               {/* Control Toolbar */}
-              <div className="rounded-[24px] border border-border bg-card p-5 space-y-4 shadow-sm">
+              <div className="rounded-panel border border-border bg-card p-5 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
                   <div className="flex items-center gap-2">
                     <h2 className="text-base font-bold text-foreground">Discovered Queries</h2>
-                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/20">
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-brand-soft text-brand-strong border border-line-strong">
                       {selectedCount} of {generatedQueries.length} Selected
                     </span>
                   </div>
@@ -580,25 +549,25 @@ export default function NewClientPage() {
                     </button>
                     <button
                       onClick={runAIAnalysis}
-                      className="px-3 py-1.5 rounded-full bg-muted-bg border border-border text-xs font-bold text-foreground hover:border-[#FF6B00]/50 transition-colors flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-full bg-muted-bg border border-border text-xs font-bold text-foreground hover:border-line-strong transition-colors flex items-center gap-1"
                     >
                       <RotateCw size={13} /> Regenerate
                     </button>
                     <button
                       onClick={copySelectedToClipboard}
-                      className="px-3 py-1.5 rounded-full bg-muted-bg border border-border text-xs font-bold text-foreground hover:border-[#FF6B00]/50 transition-colors flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-full bg-muted-bg border border-border text-xs font-bold text-foreground hover:border-line-strong transition-colors flex items-center gap-1"
                     >
                       <Copy size={13} /> Copy
                     </button>
                     <button
                       onClick={downloadCSV}
-                      className="px-3 py-1.5 rounded-full bg-muted-bg border border-border text-xs font-bold text-foreground hover:border-[#FF6B00]/50 transition-colors flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-full bg-muted-bg border border-border text-xs font-bold text-foreground hover:border-line-strong transition-colors flex items-center gap-1"
                     >
                       <Download size={13} /> Export CSV
                     </button>
                     <button
                       onClick={() => setShowAddCustomInput(!showAddCustomInput)}
-                      className="px-3 py-1.5 rounded-full bg-[#FF6B00] text-white text-xs font-bold hover:bg-[#e05e00] transition-colors flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-full bg-ink text-white text-xs font-bold hover:bg-ink-2 transition-colors flex items-center gap-1"
                     >
                       <Plus size={13} /> Add Query
                     </button>
@@ -607,16 +576,16 @@ export default function NewClientPage() {
 
                 {/* Add Custom Query Input */}
                 {showAddCustomInput && (
-                  <div className="flex gap-2 p-3 bg-muted-bg/50 rounded-xl border border-border">
+                  <div className="flex gap-2 p-3 bg-muted-bg/50 rounded-panel border border-border">
                     <input
                       type="text"
                       value={newCustomQueryText}
                       onChange={(e) => setNewCustomQueryText(e.target.value)}
                       placeholder="Type custom search query or AI prompt..."
-                      className="flex-1 bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground outline-none focus:border-[#FF6B00]"
+                      className="flex-1 bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground outline-none focus:border-line-strong"
                       onKeyDown={(e) => { if (e.key === 'Enter') addCustomQuery(); }}
                     />
-                    <button onClick={addCustomQuery} className="px-4 py-1.5 bg-[#FF6B00] text-white text-xs font-bold rounded-lg hover:bg-[#e05e00]">
+                    <button onClick={addCustomQuery} className="px-4 py-1.5 bg-ink text-white text-xs font-bold rounded-lg hover:bg-ink-2">
                       Add
                     </button>
                   </div>
@@ -638,7 +607,7 @@ export default function NewClientPage() {
                         onClick={() => setSelectedCategory(cat.id)}
                         className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
                           selectedCategory === cat.id
-                            ? "bg-[#FF6B00] text-white"
+                            ? "bg-ink text-white"
                             : "bg-muted-bg text-muted-foreground hover:text-foreground"
                         }`}
                       >
@@ -654,14 +623,14 @@ export default function NewClientPage() {
                       placeholder="Filter queries..."
                       value={searchQueryFilter}
                       onChange={(e) => setSearchQueryFilter(e.target.value)}
-                      className="w-full bg-background border border-border rounded-full pl-8 pr-3 py-1.5 text-xs text-foreground outline-none focus:border-[#FF6B00]"
+                      className="w-full bg-background border border-border rounded-full pl-8 pr-3 py-1.5 text-xs text-foreground outline-none focus:border-line-strong"
                     />
                   </div>
                 </div>
 
                 {/* Query List Table */}
-                <div className="rounded-2xl border border-border overflow-hidden max-h-[420px] overflow-y-auto">
-                  <div className="grid grid-cols-12 gap-2 px-4 py-2.5 bg-muted-bg text-[11px] text-muted-foreground font-bold uppercase sticky top-0 border-b border-border z-10">
+                <div className="rounded-panel border border-border overflow-hidden max-h-[420px] overflow-y-auto">
+                  <div className="grid grid-cols-12 gap-2 px-4 py-2.5 bg-muted-bg text-caption text-muted-foreground font-bold sticky top-0 border-b border-border z-10">
                     <div className="col-span-1">Select</div>
                     <div className="col-span-6">Query / Search Prompt</div>
                     <div className="col-span-3">Category & Track</div>
@@ -681,7 +650,7 @@ export default function NewClientPage() {
                             type="checkbox"
                             checked={q.selected}
                             onChange={() => toggleQuerySelected(q.id)}
-                            className="w-4 h-4 accent-[#FF6B00] rounded cursor-pointer"
+                            className="w-4 h-4 rounded cursor-pointer"
                           />
                         </div>
 
@@ -693,11 +662,11 @@ export default function NewClientPage() {
                                 type="text"
                                 value={editingText}
                                 onChange={(e) => setEditingText(e.target.value)}
-                                className="flex-1 bg-background border border-[#FF6B00] rounded px-2 py-1 text-xs text-foreground outline-none"
+                                className="flex-1 bg-background border border-line-strong rounded px-2 py-1 text-xs text-foreground outline-none"
                                 autoFocus
                                 onKeyDown={(e) => { if (e.key === 'Enter') saveEditQuery(q.id); }}
                               />
-                              <button onClick={() => saveEditQuery(q.id)} className="px-2 py-1 bg-[#FF6B00] text-white text-xs font-bold rounded">
+                              <button onClick={() => saveEditQuery(q.id)} className="px-2 py-1 bg-ink text-white text-xs font-bold rounded">
                                 Save
                               </button>
                             </div>
@@ -705,7 +674,7 @@ export default function NewClientPage() {
                             <span className="text-xs font-medium text-foreground leading-relaxed block">
                               {q.keyword}
                               {q.isTrending && (
-                                <span className="ml-2 px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[9px] font-bold uppercase">
+                                <span className="ml-2 px-1.5 py-0.5 rounded bg-brand-soft text-brand-strong text-caption font-bold">
                                   🔥 Trending
                                 </span>
                               )}
@@ -715,10 +684,10 @@ export default function NewClientPage() {
 
                         {/* Category & Track Type Badge */}
                         <div className="col-span-3 flex items-center gap-1.5 flex-wrap">
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/20">
+                          <span className="px-2 py-0.5 rounded-full text-caption font-bold bg-brand-soft text-brand-strong border border-line-strong">
                             AI Mode
                           </span>
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-muted-bg text-muted-foreground border border-border">
+                          <span className="px-2 py-0.5 rounded-full text-caption font-semibold bg-muted-bg text-muted-foreground border border-border">
                             {q.categoryLabel}
                           </span>
                         </div>
@@ -765,7 +734,7 @@ export default function NewClientPage() {
                   <button
                     onClick={handleSave}
                     disabled={saving || selectedCount === 0}
-                    className="rounded-full bg-[#FF6B00] hover:bg-[#e05e00] px-7 py-2.5 text-xs font-bold text-white disabled:opacity-40 shadow-lg shadow-[#FF6B00]/20 transition-all hover:scale-[1.02] cursor-pointer"
+                    className="rounded-full bg-ink hover:bg-ink-2 px-7 py-2.5 text-xs font-bold text-white disabled:opacity-40 /20 transition-all cursor-pointer"
                   >
                     {saving ? "Saving..." : `Save Client + ${selectedCount} Quer${selectedCount !== 1 ? "ies" : "y"}`}
                   </button>

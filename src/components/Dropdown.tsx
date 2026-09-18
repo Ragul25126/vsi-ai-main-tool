@@ -234,14 +234,14 @@ export function Dropdown({ options, value, onChange, trigger, variant = "default
                             }
                           })}
                           className={`
-                            flex items-center justify-between outline-none cursor-pointer ${variant === "default" ? 'rounded-[8px]' : 'rounded-none'}
+                            flex items-center justify-between outline-none cursor-pointer ${variant === "default" ? 'rounded-control' : 'rounded-none'}
                             transition-colors duration-150 shrink-0
                           `}
                           style={{
                             height: variant === "filter" ? "30px" : (variant === "date-range" ? "30px" : "34px"),
                             padding: variant === "filter" ? "4px 8px" : (variant === "default" ? "0 12px" : "4px 8px"),
                             backgroundColor: isSelected 
-                              ? "#FF5A1F" 
+                              ? "var(--brand-strong)" 
                               : (isActive ? (variant === "filter" ? (isDark ? "#2B2B32" : "#F5F5F5") : (variant === "date-range" ? (isDark ? "#2B2B32" : "#F5F5F5") : "#2B2B32")) : "transparent"),
                             color: isSelected 
                               ? "#FFFFFF" 
@@ -257,7 +257,7 @@ export function Dropdown({ options, value, onChange, trigger, variant = "default
                               {option.label}
                             </span>
                             {option.secondaryLabel && (
-                              <span className={`text-[11px] mt-0.5 ${isSelected ? "text-white/80" : "text-[#9CA3AF]"}`}>
+                              <span className={`text-caption mt-0.5 ${isSelected ? "text-white/80" : "text-[#9CA3AF]"}`}>
                                 {option.secondaryLabel}
                               </span>
                             )}

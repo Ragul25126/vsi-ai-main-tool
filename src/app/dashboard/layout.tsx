@@ -3,99 +3,57 @@ import Topbar from "@/components/Topbar";
 import ChatFloating from "@/components/ChatFloating";
 import PilotBanner from "@/components/PilotBanner";
 import ScrollToTop from "@/components/ScrollToTop";
+import { ProjectProvider } from "@/components/layout/ProjectProvider";
 import { createClient } from "@/lib/supabase/server";
 import { requireAgency, isDummySupabase } from "@/lib/auth";
-import type { ServiceType } from "@/types/search";
+import { getProjectContext } from "@/lib/project-context";
 
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { MessagesProvider } from "@/contexts/MessagesContext";
 import { FeedbackProvider } from "@/contexts/FeedbackContext";
 
+async function loadAgencyLimits(agencyId: string) {
+  if (isDummySupabase()) return null;
+  const supabase = await createClient();
+  const { data } = await supabase.from("agencies").select("max_clients").eq("id", agencyId).maybeSingle();
+  return data as { max_clients: number | null } | null;
+}
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await requireAgency();
-
   const isSuperAdmin = session.role === "super_admin";
 
-  let clients: any[] = [];
-  let agency: any = null;
+  const [projectContext, agency] = await Promise.all([getProjectContext(session), loadAgencyLimits(session.agencyId)]);
 
-  if (isDummySupabase()) {
-    clients = [];
-    agency = { max_clients: 10, is_pilot: false };
-  } else {
-    const supabase = await createClient();
-    const clientsQuery = isSuperAdmin
-      ? supabase
-          .from("clients")
-          .select("id, name, service_type, agencies(name, display_name)")
-          .order("created_at", { ascending: true })
-      : supabase
-          .from("clients")
-          .select("id, name, service_type")
-          .eq("agency_id", session.agencyId)
-          .order("created_at", { ascending: true });
-
-    const [clientsRes, agencyRes] = await Promise.all([
-      clientsQuery,
-      supabase
-        .from("agencies")
-        .select("max_clients, is_pilot")
-        .eq("id", session.agencyId)
-        .maybeSingle(),
-    ]);
-
-    clients = clientsRes.data ?? [];
-    agency = agencyRes.data;
-  }
-
-  const isPilot = !agency?.is_pilot;
-
-  type ClientRow = {
-    id: string; name: string; service_type: string | null;
-    agencies?: { name?: string | null; display_name?: string | null } | { name?: string | null; display_name?: string | null }[] | null;
-  };
-
-  const safeClients = ((clients ?? []) as ClientRow[]).map((c) => {
-    const agencyJoin = Array.isArray(c.agencies) ? c.agencies[0] : c.agencies;
-    const agencyName = agencyJoin?.display_name ?? agencyJoin?.name ?? null;
-    return {
-      id: c.id,
-      name: c.name,
-      service_type: (c.service_type ?? "geo") as ServiceType,
-      agencyName: isSuperAdmin ? agencyName : null,
-    };
-  });
-
-  const maxClients = agency?.max_clients as number | null | undefined;
-  const atClientCap = !isSuperAdmin && typeof maxClients === "number" && safeClients.length >= maxClients;
+  const maxClients = agency?.max_clients;
+  const atClientCap = !isSuperAdmin && typeof maxClients === "number" && projectContext.projects.length >= maxClients;
+  const agencyName = session.branding.displayName || session.agencyName;
 
   return (
     <NotificationsProvider>
       <MessagesProvider>
         <FeedbackProvider>
-          <ScrollToTop />
-          <div className="md:flex min-h-screen md:h-screen bg-[#F8FAFC] text-foreground selection:bg-blue-500/20 relative overflow-x-hidden font-sans" suppressHydrationWarning>
-            <Sidebar
-              agencyName={session.branding.displayName || session.agencyName}
-              agencyLogoUrl={session.branding.logoUrl}
-              clients={safeClients}
-              userRole={session.role}
-              userEmail={session.email}
-              atClientCap={atClientCap}
-            />
-            <div className="flex-1 flex flex-col min-w-0 md:h-screen md:overflow-hidden">
-              <Topbar
-                userEmail={session.email}
+          <ProjectProvider project={projectContext.active}>
+            <ScrollToTop />
+            <div className="relative min-h-screen overflow-x-hidden bg-canvas font-sans text-ink md:flex md:h-screen">
+              <Sidebar
+                agencyName={agencyName}
+                projects={projectContext.projects}
+                activeProjectId={projectContext.active?.id ?? null}
                 userRole={session.role}
-                agencyName={session.branding.displayName || session.agencyName}
+                userEmail={session.email}
+                atClientCap={atClientCap}
               />
-              <PilotBanner />
-              <main className="flex-1 md:overflow-y-auto min-w-0" data-scroll-container>
-                {children}
-              </main>
+              <div className="flex min-w-0 flex-1 flex-col md:h-screen md:overflow-hidden">
+                <Topbar userEmail={session.email} userRole={session.role} agencyName={agencyName} />
+                <PilotBanner />
+                <main className="min-w-0 flex-1 md:overflow-y-auto" data-scroll-container>
+                  {children}
+                </main>
+              </div>
+              <ChatFloating />
             </div>
-            <ChatFloating />
-          </div>
+          </ProjectProvider>
         </FeedbackProvider>
       </MessagesProvider>
     </NotificationsProvider>

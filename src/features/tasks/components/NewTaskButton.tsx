@@ -1,5 +1,7 @@
 "use client";
 
+import { X } from "lucide-react";
+import { buttonClasses } from "@/components/ui/Button";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { TaskGroup, TaskOwner, TaskEffort, TaskImpact } from "@/lib/tasks";
@@ -86,25 +88,26 @@ export default function NewTaskButton({
  return (
  <>
  <button
+ type="button"
  onClick={() => setOpen(true)}
- className="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600 transition-colors"
+ className={buttonClasses("primary", "md")}
  >
  {label}
  </button>
 
  {open && (
- <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={() => !saving && setOpen(false)}>
+ <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/30" onClick={() => !saving && setOpen(false)}>
  <div
- className="w-full max-w-lg rounded-[20px] bg-card shadow-2xl border border-gray-200 overflow-hidden"
+ className="w-full max-w-lg rounded-panel bg-card shadow-overlay border border-line overflow-hidden"
  onClick={(e) => e.stopPropagation()}
  >
- <div className="px-5 py-3.5 border-b border-gray-200 flex items-center justify-between">
- <h2 className="text-base font-semibold text-gray-900">New task</h2>
+ <div className="px-5 py-3.5 border-b border-line flex items-center justify-between">
+ <h2 className="text-section font-semibold text-ink">New task</h2>
  <button
  onClick={() => !saving && setOpen(false)}
  aria-label="Close"
- className="h-7 w-7 rounded hover:bg-gray-100 flex items-center justify-center text-gray-500"
- >✕</button>
+ className="h-7 w-7 rounded hover:bg-surface-2 flex items-center justify-center text-ink-3"
+ ><X size={16} strokeWidth={1.75} /></button>
  </div>
 
  <div className="px-5 py-4 space-y-3 max-h-[70vh] overflow-y-auto">
@@ -113,7 +116,7 @@ export default function NewTaskButton({
  <select
  value={selectedClientId}
  onChange={(e) => setSelectedClientId(e.target.value)}
- className="w-full rounded-md border border-gray-300 bg-card px-2.5 py-1.5 text-sm focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+ className="w-full rounded-control border border-line bg-card px-2.5 py-1.5 text-sm focus:border-line-strong focus:outline-none"
  >
  {clientOptions.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
  </select>
@@ -124,22 +127,22 @@ export default function NewTaskButton({
  <input
  value={title}
  onChange={(e) => setTitle(e.target.value)}
- placeholder="e.g. Publish 'Best GEO Agencies in Dubai' listicle"
- className="w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+ placeholder="For example: Fix the broken links on the About page"
+ className="w-full rounded-control border border-line px-2.5 py-1.5 text-sm focus:border-line-strong focus:outline-none"
  />
  </Field>
 
  <div className="grid grid-cols-2 gap-3">
  <Field label="Group">
  <select value={group} onChange={(e) => setGroup(e.target.value as TaskGroup)}
- className="w-full rounded-md border border-gray-300 bg-card px-2.5 py-1.5 text-sm">
+ className="w-full rounded-control border border-line bg-card px-2.5 py-1.5 text-sm">
  {GROUPS.map((g) => <option key={g} value={g}>{g}</option>)}
  </select>
  </Field>
  <Field label="Owner">
  <select value={owner} onChange={(e) => setOwner(e.target.value as TaskOwner | "")}
- className="w-full rounded-md border border-gray-300 bg-card px-2.5 py-1.5 text-sm">
- <option value="">—</option>
+ className="w-full rounded-control border border-line bg-card px-2.5 py-1.5 text-sm">
+ <option value="">Not set</option>
  {OWNERS.map((o) => <option key={o} value={o}>{o}</option>)}
  </select>
  </Field>
@@ -148,21 +151,21 @@ export default function NewTaskButton({
  <div className="grid grid-cols-3 gap-3">
  <Field label="Effort">
  <select value={effort} onChange={(e) => setEffort(e.target.value as TaskEffort | "")}
- className="w-full rounded-md border border-gray-300 bg-card px-2.5 py-1.5 text-sm">
- <option value="">—</option>
+ className="w-full rounded-control border border-line bg-card px-2.5 py-1.5 text-sm">
+ <option value="">Not set</option>
  {EFFORTS.map((x) => <option key={x} value={x}>{x}</option>)}
  </select>
  </Field>
  <Field label="Impact">
  <select value={impact} onChange={(e) => setImpact(e.target.value as TaskImpact | "")}
- className="w-full rounded-md border border-gray-300 bg-card px-2.5 py-1.5 text-sm">
- <option value="">—</option>
+ className="w-full rounded-control border border-line bg-card px-2.5 py-1.5 text-sm">
+ <option value="">Not set</option>
  {IMPACTS.map((x) => <option key={x} value={x}>{x}</option>)}
  </select>
  </Field>
  <Field label="Due date">
  <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)}
- className="w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm" />
+ className="w-full rounded-control border border-line px-2.5 py-1.5 text-sm" />
  </Field>
  </div>
 
@@ -171,8 +174,8 @@ export default function NewTaskButton({
  value={description}
  onChange={(e) => setDescription(e.target.value)}
  rows={3}
- placeholder="What needs doing and why. Reference real domains/competitors if relevant."
- className="w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none"
+ placeholder="What needs doing and why."
+ className="w-full rounded-control border border-line px-2.5 py-1.5 text-sm focus:border-line-strong focus:outline-none resize-none"
  />
  </Field>
 
@@ -182,23 +185,23 @@ export default function NewTaskButton({
  onChange={(e) => setAcceptanceText(e.target.value)}
  rows={4}
  placeholder={"Client appears in top 3 of the listicle\nArticle indexed in Bing Webmaster\nFAQ section answers 3 adjacent queries"}
- className="w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none"
+ className="w-full rounded-control border border-line px-2.5 py-1.5 text-xs focus:border-line-strong focus:outline-none resize-none"
  />
  </Field>
 
- {err && <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{err}</p>}
+ {err && <p className="text-xs text-critical bg-critical-soft rounded-control px-3 py-2">{err}</p>}
  </div>
 
- <div className="px-5 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-end gap-2">
+ <div className="px-5 py-3 border-t border-line bg-surface-2 flex items-center justify-end gap-2">
  <button
  onClick={() => !saving && setOpen(false)}
  disabled={saving}
- className="rounded-lg border border-gray-300 bg-card px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+ className={buttonClasses("secondary", "md")}
  >Cancel</button>
  <button
  onClick={submit}
  disabled={saving || pending}
- className="rounded-lg bg-amber-500 px-4 py-1.5 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-50 transition-colors"
+ className={buttonClasses("primary", "md")}
  >
  {saving ? "Creating…" : "Create task"}
  </button>
@@ -213,8 +216,8 @@ export default function NewTaskButton({
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
  return (
  <label className="block">
- <span className="block text-xs font-semibold text-gray-700 mb-1">
- {label}{required && <span className="text-red-600">*</span>}
+ <span className="block text-caption font-medium text-ink-2 mb-1">
+ {label}{required && <span className="text-critical">*</span>}
  </span>
  {children}
  </label>

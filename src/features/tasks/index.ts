@@ -1,4 +1,4 @@
-﻿export * from "./components/TasksView";
+export * from "./components/TasksBoard";
 export * from "./components/TaskCard";
 export * from "./components/SortableTaskList";
 export * from "./components/TaskFilterBar";

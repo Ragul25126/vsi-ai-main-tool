@@ -236,7 +236,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
           height: isMinimized ? "52px" : "auto",
         }}
         exit={{ opacity: 0, y: 50, scale: 0.95 }}
-        className="fixed bottom-0 right-4 sm:right-12 z-50 w-full max-w-[680px] bg-card border border-border rounded-t-[20px] shadow-2xl flex flex-col overflow-hidden text-foreground"
+        className="fixed bottom-0 right-4 sm:right-12 z-50 w-full max-w-[680px] bg-card border border-border rounded-t-[20px] shadow-overlay flex flex-col overflow-hidden text-foreground"
         style={{ maxHeight: isMinimized ? "52px" : "85vh" }}
       >
         {/* Header */}
@@ -245,12 +245,12 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
           onClick={() => setIsMinimized(!isMinimized)}
         >
           <div className="flex items-center gap-3 font-bold text-sm text-foreground">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#FF6B00]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-ink" />
             <span>{draftId ? "Edit Draft" : "New Message"}</span>
 
             {/* Auto Save Status Indicator */}
             {saveStatus === "saving" && (
-              <span className="flex items-center gap-1 text-xs text-amber-500 font-medium px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+              <span className="flex items-center gap-1 text-xs text-brand-strong font-medium px-2 py-0.5 rounded-full bg-brand-soft border border-line">
                 <Loader2 size={12} className="animate-spin" /> Saving...
               </span>
             )}
@@ -317,7 +317,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                 <button
                   type="button"
                   onClick={() => setShowCcBcc(!showCcBcc)}
-                  className="text-xs font-semibold text-[#FF6B00] hover:underline ml-1"
+                  className="text-xs font-semibold text-brand-strong hover:underline ml-1"
                 >
                   {showCcBcc ? "Hide Cc/Bcc" : "Cc/Bcc"}
                 </button>
@@ -465,7 +465,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                 <button
                   type="button"
                   onClick={handleSend}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-[#FF6B00] hover:bg-[#e05e00] text-white font-bold text-sm rounded-full transition-all shadow-md shadow-[#FF6B00]/20 hover:scale-[1.02]"
+                  className="flex items-center gap-2 px-6 py-2.5 bg-ink hover:bg-ink-2 text-white font-bold text-sm rounded-full transition-all /20"
                 >
                   <Send size={15} />
                   Send
