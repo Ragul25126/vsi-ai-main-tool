@@ -4,10 +4,9 @@ import { getProjectContext } from "@/lib/project-context";
 import { loadProjectOverview } from "@/lib/project-summary";
 import { formatDate } from "@/lib/format";
 import { PageContainer, PageHeader, Section } from "@/components/ui/Page";
-import { StatusLabel } from "@/components/ui/Status";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { ButtonLink } from "@/components/ui/Button";
-import { AnswerDiagram } from "@/components/diagrams";
+import { Notice } from "@/components/ui/Status";
+import { SetupChecklist } from "@/components/intro/SetupPanel";
+import { Intro } from "@/components/intro/intros";
 import ChatStarter from "@/features/assistant/components/ChatStarter";
 
 export const metadata: Metadata = { title: "AI Chat" };
@@ -15,12 +14,13 @@ export const dynamic = "force-dynamic";
 
 export default async function AIChatPage() {
   const session = await requireAgency();
-  const { active } = await getProjectContext(session);
+  const { active, error } = await getProjectContext(session);
+  if (!active && !error) return <Intro name="chat" />;
 
   const header = (
     <PageHeader
       title="AI Chat"
-      description="Ask about your project in plain language. Answers use your latest site audit, AI checks, Google rankings and tasks."
+      description="Ask questions about your website and visibility. Answers use your latest site audit, AI checks, Google rankings and tasks."
     />
   );
 
@@ -28,9 +28,7 @@ export default async function AIChatPage() {
     return (
       <PageContainer>
         {header}
-        <EmptyState diagram={<AnswerDiagram />} title="Add a project to start chatting" action={<ButtonLink href="/dashboard/clients/new" variant="primary">Add project</ButtonLink>}>
-          The chat answers questions about your own data, so it needs a project with at least one check.
-        </EmptyState>
+        <Notice tone="critical" title={error ?? "We couldn't load your projects."}>Refresh the page to try again.</Notice>
       </PageContainer>
     );
   }
@@ -66,16 +64,10 @@ export default async function AIChatPage() {
         <ChatStarter />
       </Section>
       <Section title="What the chat knows" description="The chat only answers from this data. If something hasn't been checked, it will say so instead of guessing.">
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {sources.map((s) => (
-            <li key={s.label} className="flex items-center justify-between gap-3 border-t border-line pt-3">
-              <StatusLabel tone={s.ok ? "positive" : "neutral"}>
-                <span className="text-ink">{s.label}</span>
-              </StatusLabel>
-              <span className="text-support text-ink-3">{s.detail}</span>
-            </li>
-          ))}
-        </ul>
+        <SetupChecklist
+          className="max-w-2xl"
+          items={sources.map((s) => ({ state: s.ok ? ("done" as const) : ("todo" as const), label: s.label, detail: s.detail }))}
+        />
       </Section>
     </PageContainer>
   );

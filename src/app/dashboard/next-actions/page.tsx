@@ -3,6 +3,7 @@ import { requireAgency } from "@/lib/auth";
 import { getProjectContext } from "@/lib/project-context";
 import { displayDomain } from "@/lib/project-types";
 import { findingTaskKey, loadProjectOverview } from "@/lib/project-summary";
+import { Intro } from "@/components/intro/intros";
 import NextActionsView, { type NextActionsData } from "@/features/actions/components/NextActionsView";
 
 export const metadata: Metadata = { title: "Next Actions" };
@@ -13,8 +14,9 @@ export default async function NextActionsPage({ searchParams }: { searchParams: 
   const session = await requireAgency();
   const { active, error } = await getProjectContext(session);
 
+  if (!active && !error) return <Intro name="actions" />;
   if (!active) {
-    return <NextActionsView data={{ project: null, loadError: error, findings: [], withTasks: [], hasAnyData: false, moduleErrors: [], openKey: null }} />;
+    return <NextActionsView data={{ project: null, loadError: error, findings: [], withTasks: [], hasAnyData: false, moduleErrors: [], openKey: null, setup: { audit: "todo", searches: 0, checked: false } }} />;
   }
 
   const o = await loadProjectOverview(active);
@@ -36,6 +38,11 @@ export default async function NextActionsPage({ searchParams }: { searchParams: 
       (o.search.state === "ok" && o.search.summary.tracked > 0),
     moduleErrors,
     openKey: typeof open === "string" ? open : null,
+    setup: {
+      audit: o.audit.state === "ok" && o.audit.completed ? "done" : o.audit.state === "ok" && o.audit.running ? "running" : "todo",
+      searches: o.geo.state === "ok" ? o.geo.activeSearches : 0,
+      checked: (o.geo.state === "ok" && o.geo.summary.searchesTracked > 0) || (o.search.state === "ok" && o.search.summary.tracked > 0),
+    },
   };
   return <NextActionsView data={data} />;
 }

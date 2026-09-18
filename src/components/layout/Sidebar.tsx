@@ -326,6 +326,40 @@ function ProjectSwitcher({
     }
   }
 
+  if (projects.length === 0) {
+    if (collapsed) {
+      return (
+        <Link
+          href="/dashboard/clients/new"
+          title="Add your website"
+          aria-label="Add your website"
+          className="flex h-9 w-full items-center justify-center rounded-control border border-dashed border-line-strong text-ink-2 hover:border-ink-3 hover:text-ink"
+        >
+          <Plus size={16} strokeWidth={1.75} />
+        </Link>
+      );
+    }
+    return (
+      <div className="space-y-2.5 px-1 py-0.5">
+        <div>
+          <p className="text-caption text-ink-3">Your project</p>
+          <p className="text-support font-medium text-ink">No website added</p>
+        </div>
+        {atClientCap ? (
+          <p className="text-caption text-ink-3">Your plan&apos;s project limit is reached.</p>
+        ) : (
+          <Link
+            href="/dashboard/clients/new"
+            className="flex h-8 w-full items-center justify-center gap-1.5 rounded-control bg-ink text-support font-medium text-white hover:bg-ink-2"
+          >
+            <Plus size={14} strokeWidth={2} aria-hidden />
+            Add your website
+          </Link>
+        )}
+      </div>
+    );
+  }
+
   const initial = (active?.name ?? "?").charAt(0).toUpperCase();
 
   if (collapsed) {
@@ -355,13 +389,13 @@ function ProjectSwitcher({
         aria-expanded={open}
         className="flex w-full items-center gap-2.5 rounded-control border border-line bg-surface px-2.5 py-2 text-left hover:border-line-strong"
       >
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control bg-brand-soft text-support font-semibold text-brand-strong">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control bg-surface-2 text-support font-semibold text-ink">
           {initial}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-support font-medium text-ink">{active?.name ?? "No project yet"}</span>
+          <span className="block truncate text-support font-medium text-ink">{active?.name ?? "Choose a project"}</span>
           <span className="block truncate text-caption text-ink-3">
-            {active ? displayDomain(active.website) ?? "No website set" : "Add your first project"}
+            {active ? displayDomain(active.website) ?? "No website set" : `${projects.length} projects`}
           </span>
         </span>
         <ChevronsUpDown size={14} strokeWidth={1.75} className="shrink-0 text-ink-3" aria-hidden />
@@ -421,7 +455,7 @@ function ProjectSwitcher({
               <p className="px-2.5 py-1.5 text-caption text-ink-3">Your plan&apos;s project limit is reached.</p>
             ) : (
               <MenuLink href="/dashboard/clients/new" Icon={Plus} onClick={() => setOpen(false)}>
-                Add project
+                Add another website
               </MenuLink>
             )}
           </div>

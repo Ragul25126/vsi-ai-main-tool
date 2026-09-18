@@ -5,11 +5,13 @@ import Link from "next/link";
 import { ChevronRight, Search } from "lucide-react";
 import { PageContainer, PageHeader, Section, TextLink } from "@/components/ui/Page";
 import { Notice, StatusIcon, StatusLabel, type Tone } from "@/components/ui/Status";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { ButtonLink } from "@/components/ui/Button";
 import { Disclosure } from "@/components/ui/Disclosure";
 import { Fraction } from "@/components/ui/Metrics";
-import { AnswerDiagram } from "@/components/diagrams";
+import { AnswerScene } from "@/components/illustrations";
+import { CapabilityList } from "@/components/intro/FeatureIntro";
+import { SetupPanel } from "@/components/intro/SetupPanel";
+import { ENGINE_COVERAGE, INTROS } from "@/components/intro/intros";
 import { TrendLine, type TrendPoint } from "@/features/visibility/components/TrajectoryChart";
 import { FindingDrawer } from "@/features/actions/components/FindingDrawer";
 import { COMING_SOON_ENGINES, geoConclusion, SEARCH_STATE_LABEL, type EngineId, type GeoSummary, type SearchState } from "@/lib/geo";
@@ -48,9 +50,9 @@ export default function GeoView({ data }: { data: GeoViewData }) {
 
   const header = (
     <PageHeader
-      category="GEO"
+      category="Generative Engine Optimization (GEO)"
       title="AI Visibility"
-      description="How often AI answers mention your business, and what you can do to appear more."
+      description="See whether AI systems mention your business, and what you can do to appear more often."
       meta={
         project && (
           <>
@@ -67,7 +69,7 @@ export default function GeoView({ data }: { data: GeoViewData }) {
               <Search size={15} strokeWidth={1.75} aria-hidden />
               Check a search
             </ButtonLink>
-            <RunChecksButton clientId={project.id} searches={data.activeSearches ?? 0} />
+            {(summary?.searchesTracked ?? 0) > 0 && <RunChecksButton clientId={project.id} searches={data.activeSearches ?? 0} />}
           </>
         ) : undefined
       }
@@ -78,17 +80,7 @@ export default function GeoView({ data }: { data: GeoViewData }) {
     return (
       <PageContainer>
         {header}
-        {data.state === "error" ? (
-          <Notice tone="critical" title={data.errorMessage ?? "We couldn't load your projects."}>Refresh the page to try again.</Notice>
-        ) : (
-          <EmptyState
-            diagram={<AnswerDiagram />}
-            title="Add a project to see your AI visibility"
-            action={<ButtonLink href="/dashboard/clients/new" variant="primary">Add project</ButtonLink>}
-          >
-            Tell VSI your website and the questions your customers ask. VSI then checks whether AI answers mention your business.
-          </EmptyState>
-        )}
+        <Notice tone="critical" title={data.errorMessage ?? "We couldn't load your projects."}>Refresh the page to try again.</Notice>
       </PageContainer>
     );
   }
@@ -104,30 +96,46 @@ export default function GeoView({ data }: { data: GeoViewData }) {
     );
   }
 
-  if ((data.activeSearches ?? 0) === 0 && summary.searchesTracked === 0) {
-    return (
-      <PageContainer>
-        {header}
-        <EmptyState
-          diagram={<AnswerDiagram />}
-          title="Choose the questions to check"
-          action={<ButtonLink href={`/dashboard/clients/${project.id}/keywords`} variant="primary">Add searches</ButtonLink>}
-        >
-          Add the searches and questions your customers type, like &ldquo;best accountant in Dubai&rdquo;. VSI asks Google&apos;s AI and
-          ChatGPT each one and shows whether they mention you.
-        </EmptyState>
-      </PageContainer>
-    );
-  }
-
   if (summary.searchesTracked === 0) {
+    const searches = data.activeSearches ?? 0;
     return (
       <PageContainer>
         {header}
-        <EmptyState diagram={<AnswerDiagram />} title="Run your first AI check">
-          Your {data.activeSearches === 1 ? "search is" : `${data.activeSearches} searches are`} ready. Use Run AI check above to see which
-          AI answers mention your business. Results stay here so you can track changes over time.
-        </EmptyState>
+        <SetupPanel
+          title={searches === 0 ? "Choose the searches to check in AI answers" : "Run your first AI check"}
+          description={
+            searches === 0
+              ? "Add the searches and questions your customers ask, like “best accountant in Dubai”. VSI asks AI systems each one and shows whether they mention you."
+              : "Your searches are ready. One check asks AI systems each search and looks up your Google position at the same time. It uses search credits, so it only runs when you start it."
+          }
+          items={[
+            { state: "done", label: "Website added", detail: project.domain ?? undefined },
+            searches === 0
+              ? { state: "todo", label: "Searches to check", detail: "None yet" }
+              : { state: "done", label: "Searches to check", detail: `${searches} ${searches === 1 ? "search" : "searches"}` },
+            { state: "todo", label: "First AI check", detail: "Not checked yet" },
+          ]}
+          action={
+            searches === 0 ? (
+              <ButtonLink href={`/dashboard/clients/${project.id}/keywords/new`} variant="primary">
+                Add searches
+              </ButtonLink>
+            ) : (
+              <RunChecksButton clientId={project.id} searches={searches} label="Run first check" align="start" />
+            )
+          }
+          illustration={<AnswerScene />}
+        />
+        {INTROS.ai.capabilities && (
+          <CapabilityList
+            {...INTROS.ai.capabilities}
+            note={
+              <p>
+                Checked today in {ENGINE_COVERAGE.live.join(", ")}. Coming soon: {ENGINE_COVERAGE.soon.join(" and ")}.
+              </p>
+            }
+          />
+        )}
       </PageContainer>
     );
   }

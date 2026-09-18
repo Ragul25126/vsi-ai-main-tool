@@ -6,6 +6,7 @@ import { loadPageComparisons, loadSiteAudits } from "@/lib/site-audit/load";
 import { formatDate, formatDateTime, formatShortDate } from "@/lib/format";
 import { PageContainer, PageHeader } from "@/components/ui/Page";
 import LiveSearchCheckView from "@/features/diagnosis/components/LiveSearchCheckView";
+import { Intro } from "@/components/intro/intros";
 import SiteAuditView, { type SiteAuditViewData } from "@/features/diagnosis/components/SiteAuditView";
 
 export const metadata: Metadata = { title: "Site Audit" };
@@ -27,6 +28,8 @@ export default async function CheckPage({ searchParams }: { searchParams: Promis
       </PageContainer>
     );
   }
+
+  if (!active && !error) return <Intro name="audit" />;
 
   const project = active ? { id: active.id, name: active.name, domain: displayDomain(active.website) } : null;
   let data: SiteAuditViewData;

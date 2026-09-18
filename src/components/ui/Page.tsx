@@ -13,7 +13,7 @@ export function PageContainer({ children, className }: { children: ReactNode; cl
 }
 
 interface PageHeaderProps {
-  /** Small category label above the title, e.g. "GEO". One per page at most. */
+  /** Small category label above the title, e.g. the GEO name on AI Visibility. One per page at most. */
   category?: string;
   title: string;
   description?: ReactNode;
@@ -25,7 +25,7 @@ export function PageHeader({ category, title, description, meta, actions }: Page
   return (
     <header className="flex flex-col gap-4 border-b border-line pb-6 md:flex-row md:items-end md:justify-between">
       <div className="min-w-0 space-y-1.5">
-        {category && <p className="text-caption font-medium text-brand-strong">{category}</p>}
+        {category && <p className="text-caption text-ink-3">{category}</p>}
         <h1 className="text-title font-semibold text-ink">{title}</h1>
         {description && <p className="max-w-[65ch] text-body text-ink-2">{description}</p>}
         {meta && <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-support text-ink-3">{meta}</div>}

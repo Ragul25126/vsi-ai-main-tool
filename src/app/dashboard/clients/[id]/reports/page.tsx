@@ -1,114 +1,138 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { requireAgency } from "@/lib/auth";
+import { requireAgency, isDummySupabase } from "@/lib/auth";
+import { displayDomain } from "@/lib/project-types";
+import { loadSetupStatus } from "@/lib/setup-status";
+import { formatDateTime, plural } from "@/lib/format";
+import { PageContainer, PageHeader, Section } from "@/components/ui/Page";
+import { Notice } from "@/components/ui/Status";
+import { ReportScene } from "@/components/illustrations";
+import { CapabilityList } from "@/components/intro/FeatureIntro";
+import { SetupPanel } from "@/components/intro/SetupPanel";
+import { INTROS } from "@/components/intro/intros";
 import GenerateReportButton from "@/components/GenerateReportButton";
-import { Sparkles, ArrowLeft, ExternalLink, FileText } from "lucide-react";
+
+export const metadata: Metadata = { title: "Reports" };
+export const dynamic = "force-dynamic";
+
+const TYPE_LABEL: Record<string, string> = {
+  weekly: "Weekly progress report",
+  keyword_summary: "Search summary",
+  keyword_detailed: "Search deep dive",
+  keyword_tasks: "Search task log",
+};
+
+type ReportRow = {
+  id: string;
+  type: string;
+  share_token: string;
+  generated_at: string;
+  expires_at: string | null;
+  tracked_keywords: { keyword: string } | { keyword: string }[] | null;
+};
 
 export default async function ClientReportsPage({ params }: { params: Promise<{ id: string }> }) {
- const { id } = await params;
- const supabase = await createClient();
- const session = await requireAgency();
+  const { id } = await params;
+  const session = await requireAgency();
+  if (isDummySupabase()) notFound();
+  const supabase = await createClient();
 
- const isSuperAdmin = session.role === "super_admin";
- const clientQ = supabase.from("clients").select("id, name").eq("id", id);
- const { data: client } = await (isSuperAdmin ? clientQ : clientQ.eq("agency_id", session.agencyId)).single();
- if (!client) notFound();
+  const isSuperAdmin = session.role === "super_admin";
+  const clientQ = supabase.from("clients").select("id, name, website").eq("id", id);
+  const { data: client } = await (isSuperAdmin ? clientQ : clientQ.eq("agency_id", session.agencyId)).maybeSingle();
+  if (!client) notFound();
 
- const reportsQ = supabase
- .from("reports")
- .select("id, type, share_token, generated_at, expires_at, tracked_keyword_id, tracked_keywords(keyword)")
- .eq("client_id", id)
- .order("generated_at", { ascending: false })
- .limit(50);
- const { data: reports } = await (isSuperAdmin ? reportsQ : reportsQ.eq("agency_id", session.agencyId));
+  const reportsQ = supabase
+    .from("reports")
+    .select("id, type, share_token, generated_at, expires_at, tracked_keywords(keyword)")
+    .eq("client_id", id)
+    .order("generated_at", { ascending: false })
+    .limit(50);
+  const [{ data: reports, error }, status] = await Promise.all([
+    isSuperAdmin ? reportsQ : reportsQ.eq("agency_id", session.agencyId),
+    loadSetupStatus(id),
+  ]);
 
- const TYPE_LABEL: Record<string, string> = {
- weekly: "Weekly Snapshot Report",
- keyword_summary: "Keyword · Executive Summary",
- keyword_detailed: "Keyword · Detailed Diagnostic",
- keyword_tasks: "Keyword · Task Execution Log",
- };
+  const domain = displayDomain(client.website as string | null);
+  const rows = ((reports ?? []) as unknown as ReportRow[]).map((r) => {
+    const kw = Array.isArray(r.tracked_keywords) ? r.tracked_keywords[0]?.keyword : r.tracked_keywords?.keyword;
+    const expired = !!r.expires_at && new Date(r.expires_at) < new Date();
+    return { ...r, keyword: kw ?? null, label: TYPE_LABEL[r.type] ?? "Report", expired };
+  });
+  const hasData = status.audits > 0 || status.checks > 0;
 
- const rows = (reports ?? []).map((r) => {
- const kw = (r.tracked_keywords as unknown as { keyword: string }[] | { keyword: string } | null);
- const keyword = Array.isArray(kw) ? kw[0]?.keyword : kw?.keyword;
- return { ...r, _keyword: keyword ?? null, _label: TYPE_LABEL[r.type as string] ?? r.type };
- });
+  return (
+    <PageContainer>
+      <PageHeader
+        title="Reports"
+        description="Understand your progress over time. Each report brings your website, search and AI visibility together in one page you can share."
+        meta={domain && <span>{domain}</span>}
+        actions={rows.length > 0 ? <GenerateReportButton clientId={id} /> : undefined}
+      />
 
- return (
- <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-6">
- <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-line pb-6">
- <div>
- <div className="flex items-center gap-2 mb-1.5 text-xs font-mono text-ink-3">
- <Link href={`/dashboard/clients/${id}`} className="hover:text-ink transition-colors flex items-center gap-1">
- <ArrowLeft size={13} />
- <span>{client.name}</span>
- </Link>
- <span className="text-ink-3">/</span>
- <span className="text-ink font-bold">Branded Reports</span>
- </div>
- <h1 className="text-2xl font-heading font-semibold text-ink tracking-tight">Executive Intelligence Reports</h1>
- <p className="text-xs font-mono text-ink-3 mt-1 max-w-2xl">
- Snapshot AI visibility and rank tracking into shareable, white-labeled client briefs. Reports can be exported directly as high-resolution PDFs.
- </p>
- </div>
- <GenerateReportButton clientId={id} />
- </div>
-
- {rows.length === 0 ? (
- <div className="rounded-panel border border-dashed border-white/15 bg-[#121215] p-16 text-center shadow-overlay">
- <FileText size={36} className="text-brand-strong mx-auto mb-4 animate-pulse" />
- <p className="text-lg font-heading font-bold text-ink mb-1">No Reports Generated Yet</p>
- <p className="text-xs text-ink-3 max-w-md mx-auto">
- Click &ldquo;Generate Report&rdquo; above to build your first shareable AI & search intelligence overview.
- </p>
- </div>
- ) : (
- <div className="rounded-panel border border-white/[0.08] bg-[#121215] overflow-hidden shadow-overlay">
- <div className="hidden sm:grid grid-cols-12 gap-3 px-6 py-3.5 bg-black/40 text-xs font-mono font-bold text-gray-400 border-b border-white/[0.06]">
- <div className="col-span-4">Report Type</div>
- <div className="col-span-3">Generated Date</div>
- <div className="col-span-3">Public Share Link</div>
- <div className="col-span-2 text-right">Actions</div>
- </div>
- {rows.map((r) => {
- const shareUrl = `/r/${r.share_token}`;
- return (
- <div
- key={r.id}
- className="border-t border-line hover:bg-card/[0.04] transition-all px-6 py-4 text-xs flex flex-col gap-2 sm:grid sm:grid-cols-12 sm:gap-3 sm:items-center"
- >
- <div className="sm:col-span-4 min-w-0">
- <p className="text-sm font-heading font-bold text-ink">{r._label}</p>
- {r._keyword && <p className="text-xs font-mono text-brand-strong/80 truncate mt-0.5">&ldquo;{r._keyword}&rdquo;</p>}
- </div>
- <div className="sm:col-span-3 font-mono text-ink-3">
- {new Date(r.generated_at).toLocaleDateString("en-GB", {
- day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
- })}
- </div>
- <div className="sm:col-span-3 min-w-0">
- <Link href={shareUrl} className="text-cyan-400 hover:text-cyan-300 transition-colors font-mono truncate flex items-center gap-1.5">
- <span>{shareUrl}</span>
- <ExternalLink size={12} className="shrink-0" />
- </Link>
- </div>
- <div className="sm:col-span-2 sm:text-right flex sm:justify-end gap-2">
- <Link
- href={shareUrl}
- target="_blank"
- className="inline-flex items-center gap-1.5 rounded-panel border border-line bg-card/[0.03] hover:bg-card/[0.08] px-3.5 py-1.5 text-xs font-mono font-bold text-ink-2 hover:text-white transition-all"
- >
- <span>View Report</span>
- <ExternalLink size={12} />
- </Link>
- </div>
- </div>
- );
- })}
- </div>
- )}
- </div>
- );
+      {error ? (
+        <Notice tone="critical" title="We couldn't load your reports right now.">
+          Refresh the page to try again.
+        </Notice>
+      ) : rows.length === 0 ? (
+        <>
+          <SetupPanel
+            title="Create your first report"
+            description="A report covers the last 7 days compared with the 7 days before: your website health score, Google rankings, AI citations, competitor gaps and the tasks your team finished. You get a private link to share."
+            items={[
+              { state: "done", label: "Website added", detail: domain ?? undefined },
+              status.audits > 0
+                ? { state: "done", label: "Site audit", detail: "Done" }
+                : { state: "todo", label: "Site audit", detail: "Not run yet", href: "/dashboard/check", hrefLabel: "Run site audit" },
+              status.checks > 0
+                ? { state: "done", label: "Search and AI checks", detail: "Done" }
+                : { state: "todo", label: "Search and AI checks", detail: "Not checked yet", href: "/dashboard/geo", hrefLabel: "Run first check" },
+              status.tasks > 0
+                ? { state: "done", label: "Tasks", detail: plural(status.tasks, "task") }
+                : { state: "todo", label: "Tasks", detail: "None yet" },
+            ]}
+            action={
+              <div className="space-y-2">
+                <GenerateReportButton clientId={id} align="start" disabled={!hasData} />
+                {!hasData && <p className="text-support text-ink-3">Run a site audit or a first check so the report has something to show.</p>}
+              </div>
+            }
+            illustration={<ReportScene />}
+          />
+          {INTROS.reports.capabilities && <CapabilityList {...INTROS.reports.capabilities} />}
+        </>
+      ) : (
+        <Section title="Your reports" description="Anyone with a report's link can open it. Links stop working when a report expires.">
+          <ul className="divide-y divide-line rounded-panel border border-line bg-surface">
+            {rows.map((r) => (
+              <li key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3.5">
+                <div className="min-w-0 flex-1">
+                  <p className="text-body font-medium text-ink">{r.label}</p>
+                  <p className="text-support text-ink-3">
+                    {formatDateTime(r.generated_at)}
+                    {r.keyword ? ` · “${r.keyword}”` : ""}
+                  </p>
+                </div>
+                {r.expired ? (
+                  <span className="text-support text-ink-3">Expired</span>
+                ) : (
+                  <a
+                    href={`/r/${r.share_token}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-support font-medium text-ink underline-offset-4 hover:underline"
+                  >
+                    Open report
+                    <ExternalLink size={13} strokeWidth={1.75} aria-hidden />
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+    </PageContainer>
+  );
 }

@@ -6,6 +6,7 @@ import { loadGeo } from "@/lib/geo-load";
 import { geoFindings, pageClarityFinding } from "@/lib/geo-findings";
 import { loadPageComparisons } from "@/lib/site-audit/load";
 import { daysAgo, formatDate, formatDateTime, formatShortDate } from "@/lib/format";
+import { Intro } from "@/components/intro/intros";
 import GeoView, { type GeoViewData } from "@/features/geo/components/GeoView";
 
 export const metadata: Metadata = { title: "AI Visibility" };
@@ -15,6 +16,7 @@ export default async function GeoPage() {
   const session = await requireAgency();
   const { active, error } = await getProjectContext(session);
 
+  if (!active && !error) return <Intro name="ai" />;
   if (!active) {
     const data: GeoViewData = { project: null, state: error ? "error" : "no_project", errorMessage: error ?? undefined, findings: [], evidence: [], trend: [] };
     return <GeoView data={data} />;

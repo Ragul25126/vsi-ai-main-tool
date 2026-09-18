@@ -5,6 +5,8 @@ import { getProjectContext } from "@/lib/project-context";
 import { displayDomain } from "@/lib/project-types";
 import { parseTaskSource } from "@/lib/task-payload";
 import { formatDate } from "@/lib/format";
+import { loadSetupStatus } from "@/lib/setup-status";
+import { Intro } from "@/components/intro/intros";
 import TasksBoard, { type BoardTask, type TasksBoardData } from "@/features/tasks/components/TasksBoard";
 
 export const metadata: Metadata = { title: "Tasks" };
@@ -32,6 +34,7 @@ export default async function TasksPage() {
   const session = await requireAgency();
   const { active, error } = await getProjectContext(session);
 
+  if (!active && !error) return <Intro name="tasks" />;
   if (!active) {
     return <TasksBoard data={{ project: null, loadError: error, tasks: [] }} />;
   }
@@ -78,6 +81,12 @@ export default async function TasksPage() {
     }
   }
 
-  const data: TasksBoardData = { project, loadError, tasks };
+  const status = tasks.length === 0 && !loadError ? await loadSetupStatus(active.id) : null;
+  const data: TasksBoardData = {
+    project,
+    loadError,
+    tasks,
+    setup: status ? { audit: status.audits > 0, checked: status.checks > 0 } : undefined,
+  };
   return <TasksBoard data={data} />;
 }

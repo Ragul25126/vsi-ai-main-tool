@@ -1,19 +1,19 @@
 import Link from "next/link";
-import { ArrowRight, Circle, CheckCircle2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { PageContainer, PageHeader, Section } from "@/components/ui/Page";
 import { Notice, StatusIcon } from "@/components/ui/Status";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { ButtonLink } from "@/components/ui/Button";
-import { ChecklistDiagram } from "@/components/diagrams";
+import { SetupChecklist, type SetupItem } from "@/components/intro/SetupPanel";
+import { Welcome } from "@/components/intro/Welcome";
+import { RunChecksButton } from "@/features/geo/components/RunChecksButton";
+import { formatDate } from "@/lib/format";
 import { TrendLine, type TrendPoint } from "./TrajectoryChart";
 import type { Finding } from "@/lib/findings";
-import { cn } from "@/lib/utils";
 import KeywordLookup from "./KeywordLookup";
 
 export interface OverviewData {
   project: { id: string; name: string; domain: string | null } | null;
   loadError: string | null;
-  website: { score: number | null; problems: number; checkedAt: string | null; error: string | null };
+  website: { score: number | null; problems: number; checkedAt: string | null; running: boolean; error: string | null };
   search: { tracked: number; top10: number; improved: number; declined: number; checkedAt: string | null; error: string | null };
   ai: { visibility: number | null; appears: number; answered: number; checkedAt: string | null; error: string | null; topCompetitor: { domain: string; answers: number } | null; yourCitations: number };
   tasks: { todo: number; inProgress: number; doneLast30: number; verified: number } | null;
@@ -35,60 +35,67 @@ export default function OverviewView({ data }: { data: OverviewData }) {
   const { project } = data;
 
   if (!project) {
+    if (!data.loadError) return <Welcome />;
     return (
       <PageContainer>
-        <PageHeader title="Overview" description="Where your business stands in Google and AI answers, and what to do next." />
-        {data.loadError ? (
-          <Notice tone="critical" title={data.loadError}>Refresh the page to try again.</Notice>
-        ) : (
-          <EmptyState
-            diagram={<ChecklistDiagram />}
-            title="Add your first project"
-            action={<ButtonLink href="/dashboard/clients/new" variant="primary">Add project</ButtonLink>}
-          >
-            A project is one website. Add it with the searches your customers use and the competitors you watch, and VSI checks the rest.
-          </EmptyState>
-        )}
+        <PageHeader title="Overview" />
+        <Notice tone="critical" title={data.loadError}>Refresh the page to try again.</Notice>
       </PageContainer>
     );
   }
 
-  const setup = [
-    { done: !!project.domain, label: "Add your website address", href: `/dashboard/clients/${project.id}/settings` },
-    { done: data.activeSearches > 0, label: "Choose the searches your customers use", href: `/dashboard/clients/${project.id}/keywords` },
-    { done: data.website.checkedAt !== null, label: "Run a site audit", href: "/dashboard/check" },
-    { done: data.ai.checkedAt !== null || data.search.checkedAt !== null, label: "Run your first search and AI check", href: "/dashboard/geo" },
+  const searchChecked = data.search.checkedAt !== null;
+  const aiChecked = data.ai.checkedAt !== null;
+  const anyChecks = searchChecked || aiChecked;
+  const setup: SetupItem[] = [
+    project.domain
+      ? { state: "done", label: "Website added", detail: project.domain }
+      : { state: "todo", label: "Website address", detail: "Missing", href: `/dashboard/clients/${project.id}/settings`, hrefLabel: "Add it" },
+    data.activeSearches > 0
+      ? { state: "done", label: "Searches to track", detail: `${data.activeSearches} ${data.activeSearches === 1 ? "search" : "searches"}` }
+      : { state: "todo", label: "Searches to track", detail: "None yet", href: `/dashboard/clients/${project.id}/keywords/new`, hrefLabel: "Add searches" },
+    data.website.checkedAt
+      ? { state: "done", label: "Site audit", detail: data.website.score !== null ? `Score ${data.website.score} / 100` : "Done" }
+      : data.website.running
+        ? { state: "running", label: "Site audit", detail: "Running now" }
+        : { state: "todo", label: "Site audit", detail: "Not run yet", href: "/dashboard/check", hrefLabel: "Run site audit" },
+    searchChecked
+      ? { state: "done", label: "Search visibility", detail: `Checked ${formatDate(data.search.checkedAt)}` }
+      : { state: "todo", label: "Search visibility", detail: "Not checked yet" },
+    aiChecked
+      ? { state: "done", label: "AI visibility", detail: `Checked ${formatDate(data.ai.checkedAt)}` }
+      : { state: "todo", label: "AI visibility", detail: "Not checked yet" },
   ];
-  const setupDone = setup.every((s) => s.done);
+  const setupDone = setup.every((s) => s.state === "done");
 
   return (
     <PageContainer>
       <PageHeader
         title={project.name}
-        description="Where your business stands in Google and AI answers, and what to do next."
+        description="See your website health, search visibility, AI visibility and the actions that can improve them, all in one place."
         meta={project.domain && <span>{project.domain}</span>}
       />
 
       {!setupDone && (
-        <Section title="Finish setting up" description="Each step unlocks a part of VSI. They take a few minutes in total.">
-          <ol className="grid gap-x-8 gap-y-3 md:grid-cols-2">
-            {setup.map((s, i) => (
-              <li key={i}>
-                <Link href={s.href} className={cn("flex items-center gap-2.5 text-body", s.done ? "text-ink-3" : "text-ink hover:underline")}>
-                  {s.done ? (
-                    <CheckCircle2 size={17} strokeWidth={1.75} className="shrink-0 text-positive" aria-hidden />
-                  ) : (
-                    <Circle size={17} strokeWidth={1.75} className="shrink-0 text-line-strong" aria-hidden />
-                  )}
-                  <span className={s.done ? "line-through decoration-line-strong" : undefined}>{s.label}</span>
-                </Link>
-              </li>
-            ))}
-          </ol>
+        <Section title="Getting started" description="What has been set up for this project so far. Each step unlocks more of VSI.">
+          <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
+            <SetupChecklist items={setup} />
+            {!anyChecks && data.activeSearches > 0 && (
+              <div className="space-y-3 rounded-panel bg-surface-2 p-5">
+                <p className="text-body font-medium text-ink">Run your first search and AI check</p>
+                <p className="text-support text-ink-2">
+                  One check looks up your Google position and asks AI systems about each of your {data.activeSearches}{" "}
+                  {data.activeSearches === 1 ? "search" : "searches"}. It uses search credits, so VSI only runs it when you start it.
+                </p>
+                <RunChecksButton clientId={project.id} searches={data.activeSearches} label="Run first check" align="start" />
+              </div>
+            )}
+          </div>
         </Section>
       )}
 
-      <p className="max-w-[60ch] text-title font-medium text-ink">{headline(data)}</p>
+      {/* Only claim "nothing needs attention" once something has actually been checked. */}
+      {(anyChecks || data.website.checkedAt) && <p className="max-w-[60ch] text-title font-medium text-ink">{headline(data)}</p>}
 
       {/* At a glance */}
       <section aria-label="At a glance" className="grid grid-cols-1 border-y border-line sm:grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-line">
@@ -170,7 +177,8 @@ export default function OverviewView({ data }: { data: OverviewData }) {
         )}
       </Section>
 
-      {/* Progress */}
+      {/* Progress: only once there is something to track. */}
+      {(anyChecks || data.website.checkedAt) && (
       <Section title="Progress over time" description="Each point is one check. Lines appear once there are two or more checks.">
         <div className="grid gap-8 md:grid-cols-3">
           <TrendBlock title="Website health" points={data.trends.website} format={(v) => `${v}`} empty="After your second site audit" />
@@ -178,6 +186,7 @@ export default function OverviewView({ data }: { data: OverviewData }) {
           <TrendBlock title="Searches on Google's first page" points={data.trends.search} format={(v) => `${v}%`} empty="After your second ranking check" />
         </div>
       </Section>
+      )}
 
       {data.ai.topCompetitor && (
         <Section title="Competitors" action={{ label: "Competitors", href: "/dashboard/competitors" }}>

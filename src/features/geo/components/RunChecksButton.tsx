@@ -20,10 +20,13 @@ export function RunChecksButton({
   clientId,
   searches,
   label = "Run AI check",
+  align = "end",
 }: {
   clientId: string;
   searches: number;
   label?: string;
+  /** "end" in page headers, "start" inside content. */
+  align?: "start" | "end";
 }) {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
@@ -66,7 +69,7 @@ export function RunChecksButton({
 
   if (phase.kind === "confirm") {
     return (
-      <div className="flex max-w-sm flex-col gap-2 rounded-panel border border-line bg-surface p-3 md:items-end">
+      <div className={align === "end" ? "flex max-w-sm flex-col gap-2 rounded-panel border border-line bg-surface p-3 md:items-end" : "flex max-w-md flex-col gap-2 rounded-panel border border-line bg-surface p-3"}>
         <p className="text-support text-ink-2">
           This checks your {searches === 1 ? "search" : `${searches} searches`} in Google and the AI answers that are turned on. It uses
           search credits and can take a few minutes.
@@ -84,7 +87,7 @@ export function RunChecksButton({
   }
 
   return (
-    <div className="flex flex-col items-start gap-1.5 md:items-end">
+    <div className={align === "end" ? "flex flex-col items-start gap-1.5 md:items-end" : "flex flex-col items-start gap-1.5"}>
       <Button variant="primary" onClick={() => setPhase({ kind: "confirm" })} disabled={phase.kind === "running" || searches === 0}>
         {phase.kind === "running" ? (
           <>

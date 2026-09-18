@@ -28,6 +28,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const maxClients = agency?.max_clients;
   const atClientCap = !isSuperAdmin && typeof maxClients === "number" && projectContext.projects.length >= maxClients;
   const agencyName = session.branding.displayName || session.agencyName;
+  const projectKey = projectContext.active?.id ?? "none";
 
   return (
     <NotificationsProvider>
@@ -48,10 +49,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 <Topbar userEmail={session.email} userRole={session.role} agencyName={agencyName} />
                 <PilotBanner />
                 <main className="min-w-0 flex-1 md:overflow-y-auto" data-scroll-container>
-                  {children}
+                  {/* Keyed by project: switching project remounts the page, so no state from the previous project survives. */}
+                  <div key={projectKey} className="contents">
+                    {children}
+                  </div>
                 </main>
               </div>
-              <ChatFloating />
+              <ChatFloating key={projectKey} />
             </div>
           </ProjectProvider>
         </FeedbackProvider>

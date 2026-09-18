@@ -5,6 +5,7 @@ import { displayDomain } from "@/lib/project-types";
 import { loadSearch } from "@/lib/search-load";
 import { searchFindings } from "@/lib/search";
 import { formatDateTime, formatShortDate } from "@/lib/format";
+import { Intro } from "@/components/intro/intros";
 import SearchVisibilityView, { type SearchViewData } from "@/features/visibility/components/SearchVisibilityView";
 
 export const metadata: Metadata = { title: "Search Visibility" };
@@ -14,6 +15,7 @@ export default async function SearchVisibilityPage() {
   const session = await requireAgency();
   const { active, error } = await getProjectContext(session);
 
+  if (!active && !error) return <Intro name="search" />;
   if (!active) {
     return <SearchVisibilityView data={{ project: null, state: error ? "error" : "no_project", errorMessage: error ?? undefined, findings: [], trend: [] }} />;
   }

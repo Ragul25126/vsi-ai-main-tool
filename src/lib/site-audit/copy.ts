@@ -1,13 +1,13 @@
 import type { CheckId, CheckResult } from "./types";
 import type { TaskGroup, TaskOwner } from "@/lib/tasks";
 
-export type AuditArea = "access" | "search" | "content" | "business";
+export type AuditArea = "health" | "search" | "ai" | "content";
 
 export const AREA_LABEL: Record<AuditArea, string> = {
-  access: "Can visitors and AI reach your site",
-  search: "How you appear in search results",
-  content: "How clearly your pages answer questions",
-  business: "How well search engines understand your business",
+  health: "Website health",
+  search: "Search readiness",
+  ai: "AI readiness",
+  content: "Content",
 };
 
 interface CheckCopy {
@@ -30,7 +30,7 @@ const pagesAre = (n: number) => `${pages(n)} ${n === 1 ? "is" : "are"}`;
 
 export const CHECK_COPY: Record<CheckId, CheckCopy> = {
   https: {
-    area: "access",
+    area: "health",
     problem: () => "Your website isn't using a secure connection",
     healthy: "Your website uses a secure connection",
     why: "Browsers warn visitors about insecure sites, and search engines rank them lower.",
@@ -40,7 +40,7 @@ export const CHECK_COPY: Record<CheckId, CheckCopy> = {
     owner: "Developer",
   },
   ai_crawlers: {
-    area: "access",
+    area: "ai",
     problem: (c) =>
       c.detail.blocksEveryone ? "Your website blocks search engines and AI assistants" : `Your website blocks ${c.count} AI ${c.count === 1 ? "assistant" : "assistants"} from reading it`,
     healthy: "AI assistants are allowed to read your website",
@@ -52,7 +52,7 @@ export const CHECK_COPY: Record<CheckId, CheckCopy> = {
     owner: "Developer",
   },
   page_errors: {
-    area: "access",
+    area: "health",
     problem: (c) => (c.impact === "high" ? "Your homepage isn't loading" : `${pages(c.count)} didn't load when we checked`),
     healthy: "All the pages we checked loaded correctly",
     why: "Visitors and search engines who reach a page that doesn't load usually leave and don't come back.",
@@ -62,7 +62,7 @@ export const CHECK_COPY: Record<CheckId, CheckCopy> = {
     owner: "Developer",
   },
   indexable: {
-    area: "access",
+    area: "search",
     problem: (c) => (c.impact === "high" ? "Your homepage is hidden from search engines" : `${pagesAre(c.count)} hidden from search engines`),
     healthy: "Your pages can appear in search results",
     why: "Hidden pages can't show up in Google or be used by AI assistants.",
@@ -72,7 +72,7 @@ export const CHECK_COPY: Record<CheckId, CheckCopy> = {
     owner: "Developer",
   },
   broken_links: {
-    area: "access",
+    area: "health",
     problem: (c) => `${c.count} ${c.count === 1 ? "link leads" : "links lead"} to a page that doesn't exist`,
     healthy: "We didn't find any broken links",
     why: "Broken links send visitors to dead ends and make your site look neglected to search engines.",
@@ -114,7 +114,7 @@ export const CHECK_COPY: Record<CheckId, CheckCopy> = {
     owner: "Writer",
   },
   structured_data: {
-    area: "business",
+    area: "ai",
     problem: (c) => (c.status === "fail" ? "Search engines can't read your business details" : "Your business details could be clearer to search engines"),
     healthy: "Search engines can read your business details",
     why: "When search engines understand who you are, where you are and what you do, they show and recommend you more confidently.",
@@ -124,7 +124,7 @@ export const CHECK_COPY: Record<CheckId, CheckCopy> = {
     owner: "Developer",
   },
   answer_content: {
-    area: "content",
+    area: "ai",
     problem: () => "Your pages don't answer common customer questions directly",
     healthy: "Your pages answer customer questions directly",
     why: "AI assistants and Google's AI answers quote pages that answer questions clearly. This is one of the strongest ways to be mentioned.",
@@ -144,7 +144,7 @@ export const CHECK_COPY: Record<CheckId, CheckCopy> = {
     owner: "Writer",
   },
   sitemap: {
-    area: "access",
+    area: "search",
     problem: () => "We couldn't find a list of your pages for search engines",
     healthy: "Search engines have a list of your pages",
     why: "A sitemap helps search engines find every page, including new ones, faster.",
@@ -154,7 +154,7 @@ export const CHECK_COPY: Record<CheckId, CheckCopy> = {
     owner: "Developer",
   },
   mobile_viewport: {
-    area: "content",
+    area: "health",
     problem: (c) => `${pages(c.count)} may not display well on phones`,
     healthy: "Your pages are set up for phones",
     why: "Most visitors use phones, and Google ranks mobile-friendly pages higher.",

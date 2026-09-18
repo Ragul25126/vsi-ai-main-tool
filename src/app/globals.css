@@ -145,6 +145,9 @@
   --font-display: var(--font-geist), "Helvetica Neue", sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
 
+  --text-display: 1.625rem;
+  --text-display--line-height: 2rem;
+  --text-display--letter-spacing: -0.02em;
   --text-metric: 2.75rem;
   --text-metric--line-height: 3rem;
   --text-metric--letter-spacing: -0.02em;

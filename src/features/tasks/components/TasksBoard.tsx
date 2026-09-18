@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { PageContainer, PageHeader } from "@/components/ui/Page";
 import { Notice, StatusLabel } from "@/components/ui/Status";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { ButtonLink } from "@/components/ui/Button";
-import { ChecklistDiagram } from "@/components/diagrams";
+import { BoardScene } from "@/components/illustrations";
+import { CapabilityList } from "@/components/intro/FeatureIntro";
+import { SetupPanel } from "@/components/intro/SetupPanel";
+import { INTROS } from "@/components/intro/intros";
 import { cn } from "@/lib/utils";
 import NewTaskButton from "./NewTaskButton";
 
@@ -32,6 +34,8 @@ export interface BoardTask {
 }
 
 export interface TasksBoardData {
+  /** Real setup state: whether there are any findings to turn into tasks yet. */
+  setup?: { audit: boolean; checked: boolean };
   project: { id: string; name: string; domain: string | null } | null;
   loadError: string | null;
   tasks: BoardTask[];
@@ -111,13 +115,7 @@ export default function TasksBoard({ data }: { data: TasksBoardData }) {
     return (
       <PageContainer>
         {header}
-        {data.loadError ? (
-          <Notice tone="critical" title={data.loadError}>Refresh the page to try again.</Notice>
-        ) : (
-          <EmptyState diagram={<ChecklistDiagram />} title="Add a project first" action={<ButtonLink href="/dashboard/clients/new" variant="primary">Add project</ButtonLink>}>
-            Tasks belong to a project, so VSI can check whether each one made a difference.
-          </EmptyState>
-        )}
+        <Notice tone="critical" title={data.loadError ?? "We couldn't load your projects."}>Refresh the page to try again.</Notice>
       </PageContainer>
     );
   }
@@ -135,9 +133,26 @@ export default function TasksBoard({ data }: { data: TasksBoardData }) {
     return (
       <PageContainer>
         {header}
-        <EmptyState diagram={<ChecklistDiagram />} title="No tasks yet" action={<ButtonLink href="/dashboard/next-actions" variant="primary">See Next Actions</ButtonLink>}>
-          Open any finding in Next Actions, Site Audit or AI Visibility and choose Create task. It will appear here with everything your team needs.
-        </EmptyState>
+        <SetupPanel
+          title="No tasks yet"
+          description="Tasks come from findings. Open any finding in Next Actions, Site Audit or AI Visibility and choose Create task. It appears here with everything your team needs, and VSI checks the result when it's done."
+          items={[
+            data.setup?.audit
+              ? { state: "done", label: "Site audit", detail: "Done" }
+              : { state: "todo", label: "Site audit", detail: "Not run yet", href: "/dashboard/check", hrefLabel: "Run site audit" },
+            data.setup?.checked
+              ? { state: "done", label: "Search and AI check", detail: "Done" }
+              : { state: "todo", label: "Search and AI check", detail: "Not checked yet", href: "/dashboard/geo", hrefLabel: "Run first check" },
+            { state: "todo", label: "First task", detail: "None yet" },
+          ]}
+          action={
+            <ButtonLink href="/dashboard/next-actions" variant="primary">
+              See Next Actions
+            </ButtonLink>
+          }
+          illustration={<BoardScene />}
+        />
+        {INTROS.tasks.capabilities && <CapabilityList {...INTROS.tasks.capabilities} />}
       </PageContainer>
     );
   }

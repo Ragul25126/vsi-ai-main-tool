@@ -5,10 +5,12 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { PageContainer, PageHeader, Section } from "@/components/ui/Page";
 import { Notice, StatusIcon, StatusLabel } from "@/components/ui/Status";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { ButtonLink } from "@/components/ui/Button";
 import { Disclosure } from "@/components/ui/Disclosure";
-import { SiteDiagram } from "@/components/diagrams";
+import { SiteAuditScene } from "@/components/illustrations";
+import { CapabilityList } from "@/components/intro/FeatureIntro";
+import { SetupPanel } from "@/components/intro/SetupPanel";
+import { INTROS } from "@/components/intro/intros";
 import { TrendLine, type TrendPoint } from "@/features/visibility/components/TrajectoryChart";
 import { FindingDrawer } from "@/features/actions/components/FindingDrawer";
 import { AREA_LABEL, auditConclusion, CHECK_COPY, checkHeadline, type AuditArea } from "@/lib/site-audit/copy";
@@ -30,7 +32,7 @@ export interface SiteAuditViewData {
   comparisons: PageComparison[];
 }
 
-const AREA_ORDER: AuditArea[] = ["access", "search", "content", "business"];
+const AREA_ORDER: AuditArea[] = ["health", "search", "ai", "content"];
 
 export default function SiteAuditView({ data }: { data: SiteAuditViewData }) {
   const { project } = data;
@@ -48,7 +50,7 @@ export default function SiteAuditView({ data }: { data: SiteAuditViewData }) {
   const header = (
     <PageHeader
       title="Site Audit"
-      description="Checks whether visitors, search engines and AI assistants can find, read and understand your website."
+      description="Find problems that could be hurting your website, and what to do about each one."
       meta={
         project && (
           <>
@@ -59,24 +61,20 @@ export default function SiteAuditView({ data }: { data: SiteAuditViewData }) {
         )
       }
       actions={
-        project?.domain && data.state === "ok" ? (
-          <RunAuditButton clientId={project.id} runningId={data.running?.id} label={data.completed ? "Run again" : "Run audit"} />
+        project?.domain && data.state === "ok" && data.completed ? (
+          <RunAuditButton clientId={project.id} runningId={data.running?.id} label="Run again" />
         ) : undefined
       }
     />
   );
 
-  if (data.state === "no_project" || !project) {
+  if (!project) {
     return (
       <PageContainer>
         {header}
-        <EmptyState
-          diagram={<SiteDiagram />}
-          title="Add a project to audit your website"
-          action={<ButtonLink href="/dashboard/clients/new" variant="primary">Add project</ButtonLink>}
-        >
-          A project holds your website address, the searches you care about and your competitors. Every part of VSI uses it.
-        </EmptyState>
+        <Notice tone="critical" title={data.errorMessage ?? "We couldn't load your projects."}>
+          Refresh the page to try again.
+        </Notice>
       </PageContainer>
     );
   }
@@ -121,6 +119,37 @@ export default function SiteAuditView({ data }: { data: SiteAuditViewData }) {
     );
   }
 
+  if (!data.completed) {
+    return (
+      <PageContainer>
+        {header}
+        {data.lastFailed && (
+          <Notice tone="critical" title={`The last audit didn't finish (${data.lastFailed.when})`}>
+            {data.lastFailed.message}
+          </Notice>
+        )}
+        <SetupPanel
+          title={data.running ? "Your first audit is running" : "Run your first site audit"}
+          description={
+            <>
+              VSI checks {project.domain} and up to 9 more of its pages: whether they load, whether search engines and AI systems can
+              read them, and how clearly they explain your business. The audit is free and usually takes about a minute.
+            </>
+          }
+          items={[
+            { state: "done", label: "Website added", detail: project.domain },
+            data.running
+              ? { state: "running", label: "First site audit", detail: "Running now. This page updates when it's done." }
+              : { state: "todo", label: "First site audit", detail: "Not run yet" },
+          ]}
+          action={<RunAuditButton clientId={project.id} runningId={data.running?.id} label="Run first audit" align="start" />}
+          illustration={<SiteAuditScene />}
+        />
+        {INTROS.audit.capabilities && <CapabilityList {...INTROS.audit.capabilities} />}
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer>
       {header}
@@ -136,15 +165,7 @@ export default function SiteAuditView({ data }: { data: SiteAuditViewData }) {
         </Notice>
       )}
 
-      {!data.completed ? (
-        !data.running && (
-          <EmptyState diagram={<SiteDiagram />} title="Run your first audit">
-            VSI checks your homepage and up to 9 more pages: whether they load, whether search engines and AI assistants may read
-            them, how they look in search results, and how clearly they answer customer questions. You get a plain list of what to fix.
-          </EmptyState>
-        )
-      ) : (
-        <>
+      <>
           {/* Conclusion */}
           <section aria-label="Website health" className="grid gap-8 md:grid-cols-[auto_1fr_minmax(0,260px)] md:items-center">
             <div>
@@ -268,8 +289,7 @@ export default function SiteAuditView({ data }: { data: SiteAuditViewData }) {
               })}
             </div>
           </Section>
-        </>
-      )}
+      </>
 
       <FindingDrawer
         finding={open}

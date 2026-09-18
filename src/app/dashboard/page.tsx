@@ -24,7 +24,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const empty: OverviewData = {
     project: null,
     loadError: error,
-    website: { score: null, problems: 0, checkedAt: null, error: null },
+    website: { score: null, problems: 0, checkedAt: null, running: false, error: null },
     search: { tracked: 0, top10: 0, improved: 0, declined: 0, checkedAt: null, error: null },
     ai: { visibility: null, appears: 0, answered: 0, checkedAt: null, error: null, topCompetitor: null, yourCitations: 0 },
     tasks: null,
@@ -49,6 +49,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       score: audit?.completed?.score ?? null,
       problems: audit?.completed ? audit.completed.checks.filter((c) => c.status !== "pass").length : 0,
       checkedAt: audit?.completed?.completed_at ?? null,
+      running: !!audit?.running,
       error: o.audit.state === "error" ? o.audit.message : o.audit.state === "setup_required" ? "Site Audit needs a one-time setup" : null,
     },
     search: {

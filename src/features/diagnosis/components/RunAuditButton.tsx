@@ -19,11 +19,14 @@ export function RunAuditButton({
   runningId,
   label = "Run audit",
   variant = "primary",
+  align = "end",
 }: {
   clientId: string;
   runningId?: string | null;
   label?: string;
   variant?: "primary" | "secondary";
+  /** "end" in page headers, "start" inside content. */
+  align?: "start" | "end";
 }) {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>(runningId ? { kind: "running" } : { kind: "idle" });
@@ -89,7 +92,7 @@ export function RunAuditButton({
   }
 
   return (
-    <div className="flex flex-col items-start gap-1.5 md:items-end">
+    <div className={align === "end" ? "flex flex-col items-start gap-1.5 md:items-end" : "flex flex-col items-start gap-1.5"}>
       <Button variant={variant} onClick={start} disabled={phase.kind === "running"}>
         {phase.kind === "running" ? (
           <>

@@ -94,10 +94,15 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       {
         label: "Reports",
-        href: (id) => (id ? `/dashboard/clients/${id}/reports` : "/dashboard/clients"),
+        href: () => "/dashboard/reports",
         Icon: FileText,
-        isActive: (p) => clientSub(p, "reports"),
+        isActive: (p) => p.startsWith("/dashboard/reports") || clientSub(p, "reports"),
       },
+    ],
+  },
+  {
+    title: "AI",
+    items: [
       {
         label: "AI Chat",
         href: () => "/dashboard/chat",
@@ -118,7 +123,7 @@ export function pageTitleFor(pathname: string, tab: string | null): string | nul
     }
   }
   if (pathname === "/dashboard/clients") return "Projects";
-  if (pathname === "/dashboard/clients/new") return "New project";
+  if (pathname === "/dashboard/clients/new") return "Add your website";
   if (/^\/dashboard\/clients\/[^/]+\/settings/.test(pathname)) return "Project settings";
   if (/^\/dashboard\/clients\/[^/]+\/keywords/.test(pathname)) return "Searches";
   if (/^\/dashboard\/clients\/[^/]+\/results/.test(pathname)) return "Check history";

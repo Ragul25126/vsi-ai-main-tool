@@ -4,10 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { PageContainer, PageHeader, Section } from "@/components/ui/Page";
 import { Notice } from "@/components/ui/Status";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 import { Disclosure } from "@/components/ui/Disclosure";
-import { CompareDiagram } from "@/components/diagrams";
+import { CompareScene } from "@/components/illustrations";
+import { CapabilityList } from "@/components/intro/FeatureIntro";
+import { SetupPanel } from "@/components/intro/SetupPanel";
+import { INTROS } from "@/components/intro/intros";
+import { RunChecksButton } from "@/features/geo/components/RunChecksButton";
 import { FindingDrawer } from "@/features/actions/components/FindingDrawer";
 import type { CompetitorRow } from "@/lib/competitors";
 import type { Finding } from "@/lib/findings";
@@ -23,6 +26,8 @@ export interface CompetitorsViewData {
   platforms: { name: string; answers: number }[];
   namedByChatGPT: { name: string; answers: number }[];
   finding: Finding | null;
+  /** Real setup state, used when there is nothing to compare yet. */
+  setup: { searches: number; checked: boolean };
 }
 
 export default function CompetitorsView({ data }: { data: CompetitorsViewData }) {
@@ -33,7 +38,7 @@ export default function CompetitorsView({ data }: { data: CompetitorsViewData })
   const header = (
     <PageHeader
       title="Competitors"
-      description="The other websites that appear in Google and AI answers for your searches."
+      description="See where competitors appear in Google and AI answers, and where you can win."
       meta={project?.domain && <span>{project.domain}</span>}
     />
   );
@@ -42,13 +47,7 @@ export default function CompetitorsView({ data }: { data: CompetitorsViewData })
     return (
       <PageContainer>
         {header}
-        {data.state === "error" ? (
-          <Notice tone="critical" title={data.errorMessage ?? "We couldn't load competitor data."}>Refresh the page to try again.</Notice>
-        ) : (
-          <EmptyState diagram={<CompareDiagram />} title="Add a project to see your competitors" action={<ButtonLink href="/dashboard/clients/new" variant="primary">Add project</ButtonLink>}>
-            VSI finds the businesses that show up instead of you, straight from your Google and AI checks.
-          </EmptyState>
-        )}
+        <Notice tone="critical" title={data.errorMessage ?? "We couldn't load competitor data."}>Refresh the page to try again.</Notice>
       </PageContainer>
     );
   }
@@ -57,9 +56,30 @@ export default function CompetitorsView({ data }: { data: CompetitorsViewData })
     return (
       <PageContainer>
         {header}
-        <EmptyState diagram={<CompareDiagram />} title="No competitors found yet" action={<ButtonLink href="/dashboard/geo" variant="primary">Go to AI Visibility</ButtonLink>}>
-          Competitors appear here after VSI checks your searches in Google and AI answers. Run a check from AI Visibility or Search Visibility.
-        </EmptyState>
+        <SetupPanel
+          title={data.setup.checked ? "No competitors found in your checks yet" : "Compare yourself with your competitors"}
+          description={
+            data.setup.checked
+              ? "Your latest checks didn't show other businesses for your searches. Competitors appear here as soon as Google or an AI answer shows one."
+              : "VSI compares you with the businesses that appear for your searches in Google and AI answers. That needs your searches and a first check."
+          }
+          items={[
+            { state: "done", label: "Website added", detail: project.domain ?? undefined },
+            data.setup.searches > 0
+              ? { state: "done", label: "Searches to compare on", detail: `${data.setup.searches} ${data.setup.searches === 1 ? "search" : "searches"}` }
+              : { state: "todo", label: "Searches to compare on", detail: "None yet", href: `/dashboard/clients/${project.id}/keywords/new`, hrefLabel: "Add searches" },
+            data.setup.checked
+              ? { state: "done", label: "First search and AI check", detail: "Done" }
+              : { state: "todo", label: "First search and AI check", detail: "Not checked yet" },
+          ]}
+          action={
+            !data.setup.checked && data.setup.searches > 0 ? (
+              <RunChecksButton clientId={project.id} searches={data.setup.searches} label="Run first check" align="start" />
+            ) : undefined
+          }
+          illustration={<CompareScene />}
+        />
+        {INTROS.competitors.capabilities && <CapabilityList {...INTROS.competitors.capabilities} />}
       </PageContainer>
     );
   }

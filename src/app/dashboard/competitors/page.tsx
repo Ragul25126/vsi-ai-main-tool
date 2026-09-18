@@ -7,6 +7,7 @@ import { loadGeo } from "@/lib/geo-load";
 import { loadSearch } from "@/lib/search-load";
 import { geoFindings } from "@/lib/geo-findings";
 import { computeGooglePresence, mergeCompetitors, type SerpSnapshot } from "@/lib/competitors";
+import { Intro } from "@/components/intro/intros";
 import CompetitorsView, { type CompetitorsViewData } from "@/features/visibility/components/CompetitorsView";
 
 export const metadata: Metadata = { title: "Competitors" };
@@ -38,14 +39,15 @@ async function loadSerpSnapshots(project: ProjectSummary): Promise<SerpSnapshot[
 export default async function CompetitorsPage() {
   const session = await requireAgency();
   const { active, error } = await getProjectContext(session);
+  if (!active && !error) return <Intro name="competitors" />;
   if (!active) {
-    return <CompetitorsView data={{ project: null, state: error ? "error" : "no_project", errorMessage: error ?? undefined, rows: [], gaps: [], platforms: [], namedByChatGPT: [], you: null, finding: null }} />;
+    return <CompetitorsView data={{ project: null, state: error ? "error" : "no_project", errorMessage: error ?? undefined, rows: [], gaps: [], platforms: [], namedByChatGPT: [], you: null, finding: null, setup: { searches: 0, checked: false } }} />;
   }
 
   const project = { id: active.id, name: active.name, domain: displayDomain(active.website) };
   const [geo, search, snapshots] = await Promise.all([loadGeo(active, { evidence: false }), loadSearch(active), loadSerpSnapshots(active)]);
   if (geo.state === "error") {
-    return <CompetitorsView data={{ project, state: "error", errorMessage: geo.message, rows: [], gaps: [], platforms: [], namedByChatGPT: [], you: null, finding: null }} />;
+    return <CompetitorsView data={{ project, state: "error", errorMessage: geo.message, rows: [], gaps: [], platforms: [], namedByChatGPT: [], you: null, finding: null, setup: { searches: 0, checked: false } }} />;
   }
 
   const summary = geo.summary;
@@ -68,6 +70,7 @@ export default async function CompetitorsPage() {
     platforms: summary.platforms,
     namedByChatGPT: summary.namedByChatGPT.slice(0, 10),
     finding: geoFindings(summary, active.id).find((f) => f.key === "geo:competitors_linked") ?? null,
+    setup: { searches: geo.activeSearches, checked: summary.searchesTracked > 0 || snapshots.length > 0 },
   };
   return <CompetitorsView data={data} />;
 }

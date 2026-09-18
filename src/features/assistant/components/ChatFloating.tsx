@@ -28,12 +28,15 @@ function scopeFromPath(pathname: string): { scope: Scope; label: string } {
   return { scope: { kind: "global" }, label: "all clients" };
 }
 
-const SESSION_KEY = "vsi.chat.session";
+/** One conversation per project, so switching project never shows another project's chat. */
+function sessionKey(projectId: string | null) {
+  return `vsi.chat.session.${projectId ?? "none"}`;
+}
 
-function loadSession(): Msg[] {
+function loadSession(key: string): Msg[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
+    const raw = sessionStorage.getItem(key);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed;
@@ -41,9 +44,9 @@ function loadSession(): Msg[] {
   return [];
 }
 
-function saveSession(msgs: Msg[]) {
+function saveSession(key: string, msgs: Msg[]) {
   try {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(msgs));
+    sessionStorage.setItem(key, JSON.stringify(msgs));
   } catch {}
 }
 
@@ -129,9 +132,11 @@ const FEATURE_CHIPS = [
 
 export default function ChatFloating() {
   const pathname = usePathname();
+  const project = useActiveProject();
+  const storageKey = sessionKey(project?.id ?? null);
   const [open, setOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState<Msg[]>(() => (typeof window === "undefined" ? [] : loadSession()));
+  const [messages, setMessages] = useState<Msg[]>(() => (typeof window === "undefined" ? [] : loadSession(storageKey)));
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [streamBuffer, setStreamBuffer] = useState("");
@@ -144,7 +149,6 @@ export default function ChatFloating() {
   const abortRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const project = useActiveProject();
   // Outside project-specific pages, the chat talks about the active project.
   const { scope, label } = useMemo(() => {
     const fromPath = scopeFromPath(pathname);
@@ -155,8 +159,8 @@ export default function ChatFloating() {
   }, [pathname, project]);
 
   useEffect(() => {
-    saveSession(messages);
-  }, [messages]);
+    saveSession(storageKey, messages);
+  }, [storageKey, messages]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -173,7 +177,7 @@ export default function ChatFloating() {
   function clearChat() {
     setMessages([]);
     try {
-      sessionStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem(storageKey);
     } catch {}
   }
 
@@ -377,7 +381,8 @@ export default function ChatFloating() {
     URL.revokeObjectURL(url);
   }
 
-  if (pathname.startsWith("/login") || pathname === "/qa" || pathname.startsWith("/r/")) return null;
+  // Chat answers from a project's data, so it isn't offered until a project exists.
+  if (!project || pathname.startsWith("/login") || pathname === "/qa" || pathname.startsWith("/r/")) return null;
 
   return (
     <>

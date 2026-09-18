@@ -10,7 +10,8 @@ import { PageContainer, PageHeader } from "@/components/ui/Page";
 import { Notice } from "@/components/ui/Status";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ButtonLink } from "@/components/ui/Button";
-import { ChecklistDiagram } from "@/components/diagrams";
+import { OverviewScene } from "@/components/illustrations";
+import { AddWebsiteButton } from "@/components/intro/FeatureIntro";
 
 export const metadata: Metadata = { title: "Projects" };
 export const dynamic = "force-dynamic";
@@ -50,18 +51,20 @@ export default async function ProjectsPage() {
         title="Projects"
         description="Each project is one website with its own searches, checks, tasks and reports."
         actions={
-          <ButtonLink href="/dashboard/clients/new" variant="primary">
-            <Plus size={15} strokeWidth={1.75} aria-hidden />
-            Add project
-          </ButtonLink>
+          projects.length > 0 ? (
+            <ButtonLink href="/dashboard/clients/new" variant="primary">
+              <Plus size={15} strokeWidth={1.75} aria-hidden />
+              Add another website
+            </ButtonLink>
+          ) : undefined
         }
       />
 
       {error && <Notice tone="critical" title={error}>Refresh the page to try again.</Notice>}
 
       {!error && projects.length === 0 ? (
-        <EmptyState diagram={<ChecklistDiagram />} title="No projects yet" action={<ButtonLink href="/dashboard/clients/new" variant="primary">Add project</ButtonLink>}>
-          Add your website to start auditing it and checking how you appear in Google and AI answers.
+        <EmptyState diagram={<OverviewScene />} title="No websites yet" action={<AddWebsiteButton />}>
+          Add your website to start auditing it and checking how you appear in Google and AI answers. One website powers every part of VSI.
         </EmptyState>
       ) : (
         <div className="rounded-panel border border-line bg-surface">

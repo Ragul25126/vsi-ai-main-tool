@@ -75,7 +75,7 @@ export default function Topbar({ userEmail, userRole, agencyName }: TopbarProps)
         {project ? (
           <span className="truncate text-ink-3">{project.name}</span>
         ) : (
-          <span className="text-ink-3">No project selected</span>
+          <span className="text-ink-3">No website added</span>
         )}
         {pageTitle && (
           <>

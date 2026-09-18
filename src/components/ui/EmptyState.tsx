@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Empty and first-run states: say what is missing and how to get it.
- * The diagram slot takes one of the VSI concept diagrams.
+ * The diagram slot takes one of the VSI illustrations.
  */
 export function EmptyState({
   diagram,
@@ -25,7 +25,7 @@ export function EmptyState({
         className,
       )}
     >
-      {diagram && <div className="w-40 shrink-0 text-ink-3">{diagram}</div>}
+      {diagram && <div className="w-48 shrink-0 text-ink-3">{diagram}</div>}
       <div className="min-w-0 space-y-2">
         <h3 className="text-section font-semibold text-ink">{title}</h3>
         {children && <div className="max-w-[60ch] text-body text-ink-2">{children}</div>}

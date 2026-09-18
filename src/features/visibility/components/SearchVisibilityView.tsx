@@ -5,9 +5,11 @@ import Link from "next/link";
 import { ChevronRight, Search } from "lucide-react";
 import { PageContainer, PageHeader, Section } from "@/components/ui/Page";
 import { Notice, StatusIcon } from "@/components/ui/Status";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { ButtonLink } from "@/components/ui/Button";
-import { SiteDiagram } from "@/components/diagrams";
+import { SearchScene } from "@/components/illustrations";
+import { CapabilityList } from "@/components/intro/FeatureIntro";
+import { SetupPanel } from "@/components/intro/SetupPanel";
+import { INTROS } from "@/components/intro/intros";
 import { FindingDrawer } from "@/features/actions/components/FindingDrawer";
 import { RunChecksButton } from "@/features/geo/components/RunChecksButton";
 import { searchConclusion, type SearchSummary, type RankedSearch } from "@/lib/search";
@@ -43,7 +45,7 @@ export default function SearchVisibilityView({ data }: { data: SearchViewData })
   const header = (
     <PageHeader
       title="Search Visibility"
-      description="Where your website appears in Google for the searches your customers use."
+      description="See how your website appears in search, for the searches that matter to your business."
       meta={
         project && (
           <>
@@ -59,7 +61,7 @@ export default function SearchVisibilityView({ data }: { data: SearchViewData })
               <Search size={15} strokeWidth={1.75} aria-hidden />
               Check a search
             </ButtonLink>
-            <RunChecksButton clientId={project.id} searches={data.activeSearches ?? 0} label="Check rankings now" />
+            {(s?.tracked ?? 0) > 0 && <RunChecksButton clientId={project.id} searches={data.activeSearches ?? 0} label="Check rankings now" />}
           </>
         ) : undefined
       }
@@ -70,13 +72,7 @@ export default function SearchVisibilityView({ data }: { data: SearchViewData })
     return (
       <PageContainer>
         {header}
-        {data.state === "error" ? (
-          <Notice tone="critical" title={data.errorMessage ?? "We couldn't load your rankings."}>Refresh the page to try again.</Notice>
-        ) : (
-          <EmptyState diagram={<SiteDiagram />} title="Add a project to track your Google rankings" action={<ButtonLink href="/dashboard/clients/new" variant="primary">Add project</ButtonLink>}>
-            VSI checks where your website appears in Google for the searches you choose, and keeps the history so you can see progress.
-          </EmptyState>
-        )}
+        <Notice tone="critical" title={data.errorMessage ?? "We couldn't load your rankings."}>Refresh the page to try again.</Notice>
       </PageContainer>
     );
   }
@@ -97,22 +93,36 @@ export default function SearchVisibilityView({ data }: { data: SearchViewData })
   }
 
   if (s.tracked === 0) {
+    const searches = data.activeSearches ?? 0;
     return (
       <PageContainer>
         {header}
-        <EmptyState
-          diagram={<SiteDiagram />}
-          title={(data.activeSearches ?? 0) === 0 ? "Choose the searches to track" : "Run your first ranking check"}
-          action={
-            (data.activeSearches ?? 0) === 0 ? (
-              <ButtonLink href={`/dashboard/clients/${project.id}/keywords`} variant="primary">Add searches</ButtonLink>
-            ) : undefined
+        <SetupPanel
+          title={searches === 0 ? "Add the searches you want to track" : "Run your first ranking check"}
+          description={
+            searches === 0
+              ? "Add the searches your customers type into Google. VSI then checks where your website appears for each one and keeps the history."
+              : "Your searches are ready. One check looks up your Google position for each search and checks AI answers at the same time. It uses search credits, so it only runs when you start it."
           }
-        >
-          {(data.activeSearches ?? 0) === 0
-            ? "Add the searches your customers type into Google. VSI checks your position for each one."
-            : "Your searches are ready. Use Check rankings now above to see where you appear."}
-        </EmptyState>
+          items={[
+            { state: "done", label: "Website added", detail: project.domain ?? undefined },
+            searches === 0
+              ? { state: "todo", label: "Searches to track", detail: "None yet" }
+              : { state: "done", label: "Searches to track", detail: `${searches} ${searches === 1 ? "search" : "searches"}` },
+            { state: "todo", label: "First ranking check", detail: "Not checked yet" },
+          ]}
+          action={
+            searches === 0 ? (
+              <ButtonLink href={`/dashboard/clients/${project.id}/keywords/new`} variant="primary">
+                Add searches
+              </ButtonLink>
+            ) : (
+              <RunChecksButton clientId={project.id} searches={searches} label="Run first check" align="start" />
+            )
+          }
+          illustration={<SearchScene />}
+        />
+        {INTROS.search.capabilities && <CapabilityList {...INTROS.search.capabilities} />}
       </PageContainer>
     );
   }

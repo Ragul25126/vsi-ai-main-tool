@@ -6,7 +6,10 @@ import { PageContainer, PageHeader } from "@/components/ui/Page";
 import { Notice, StatusIcon } from "@/components/ui/Status";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ButtonLink } from "@/components/ui/Button";
-import { ChecklistDiagram } from "@/components/diagrams";
+import { ActionsScene } from "@/components/illustrations";
+import { StepRail } from "@/components/intro/FeatureIntro";
+import { SetupPanel } from "@/components/intro/SetupPanel";
+import { INTROS } from "@/components/intro/intros";
 import type { Finding } from "@/lib/findings";
 import { TASK_SOURCE_LABEL, type TaskSource } from "@/lib/task-payload";
 import { cn } from "@/lib/utils";
@@ -20,6 +23,8 @@ export interface NextActionsData {
   hasAnyData: boolean;
   moduleErrors: string[];
   openKey: string | null;
+  /** Real setup state, used before any findings exist. */
+  setup: { audit: "done" | "running" | "todo"; searches: number; checked: boolean };
 }
 
 type Filter = "all" | TaskSource;
@@ -36,7 +41,7 @@ export default function NextActionsView({ data }: { data: NextActionsData }) {
   const header = (
     <PageHeader
       title="Next Actions"
-      description="Everything VSI found across your website, Google and AI answers, most important first. Turn each one into a task."
+      description="Know what to work on next. Everything VSI found across your website, Google and AI answers, most important first."
       meta={data.project?.domain && <span>{data.project.domain}</span>}
       actions={<ButtonLink href="/dashboard/tasks">View tasks</ButtonLink>}
     />
@@ -46,13 +51,7 @@ export default function NextActionsView({ data }: { data: NextActionsData }) {
     return (
       <PageContainer>
         {header}
-        {data.loadError ? (
-          <Notice tone="critical" title={data.loadError}>Refresh the page to try again.</Notice>
-        ) : (
-          <EmptyState diagram={<ChecklistDiagram />} title="Add a project first" action={<ButtonLink href="/dashboard/clients/new" variant="primary">Add project</ButtonLink>}>
-            Next Actions collects what to fix from Site Audit, AI Visibility and Search Visibility for your project.
-          </EmptyState>
-        )}
+        <Notice tone="critical" title={data.loadError ?? "We couldn't load your projects."}>Refresh the page to try again.</Notice>
       </PageContainer>
     );
   }
@@ -71,15 +70,31 @@ export default function NextActionsView({ data }: { data: NextActionsData }) {
         </Notice>
       )}
 
-      {data.findings.length === 0 ? (
-        <EmptyState
-          diagram={<ChecklistDiagram />}
-          title={data.hasAnyData ? "Nothing to do right now" : "Nothing to show yet"}
-          action={!data.hasAnyData ? <ButtonLink href="/dashboard/check" variant="primary">Run a site audit</ButtonLink> : undefined}
-        >
-          {data.hasAnyData
-            ? "Your latest checks didn't find anything to fix. New findings appear here after each check."
-            : "Findings appear here once VSI has audited your website and checked your searches in Google and AI answers."}
+      {data.findings.length === 0 && !data.hasAnyData ? (
+        <>
+          <SetupPanel
+            title="Actions appear after your first checks"
+            description="VSI turns what it finds in your site audit, Google rankings and AI answers into clear actions, most important first. Run the checks below to get your first list."
+            items={[
+              { state: "done", label: "Website added", detail: data.project.domain ?? undefined },
+              data.setup.audit === "done"
+                ? { state: "done", label: "Site audit", detail: "Done" }
+                : data.setup.audit === "running"
+                  ? { state: "running", label: "Site audit", detail: "Running now" }
+                  : { state: "todo", label: "Site audit", detail: "Not run yet", href: "/dashboard/check", hrefLabel: "Run site audit" },
+              data.setup.checked
+                ? { state: "done", label: "Search and AI check", detail: "Done" }
+                : data.setup.searches > 0
+                  ? { state: "todo", label: "Search and AI check", detail: "Not checked yet", href: "/dashboard/geo", hrefLabel: "Run first check" }
+                  : { state: "todo", label: "Search and AI check", detail: "Add searches first", href: `/dashboard/clients/${data.project.id}/keywords/new`, hrefLabel: "Add searches" },
+            ]}
+            illustration={<ActionsScene />}
+          />
+          <StepRail title={INTROS.actions.stepsTitle} steps={INTROS.actions.steps} />
+        </>
+      ) : data.findings.length === 0 ? (
+        <EmptyState title="Nothing to do right now">
+          Your latest checks didn&apos;t find anything to fix. New findings appear here after each check.
         </EmptyState>
       ) : (
         <>

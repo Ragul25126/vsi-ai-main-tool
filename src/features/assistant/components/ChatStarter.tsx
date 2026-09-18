@@ -1,13 +1,11 @@
 "use client";
 
 import { MessageSquareText } from "lucide-react";
+import { CHAT_QUESTIONS } from "@/components/intro/story";
 
 const QUESTIONS = [
-  "What should I fix first?",
-  "Why is my AI visibility where it is?",
+  ...CHAT_QUESTIONS,
   "Which competitors show up instead of us, and why?",
-  "Which of our searches are close to Google's first page?",
-  "What did the last site audit find?",
   "Which open tasks will make the biggest difference?",
 ];
 
