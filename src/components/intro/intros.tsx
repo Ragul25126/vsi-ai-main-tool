@@ -75,8 +75,8 @@ export const INTROS: Record<IntroKey, IntroContent> = {
   },
   search: {
     page: "Search Visibility",
-    headline: "See how your website appears in search.",
-    description: "Track the searches that matter to your business and understand where your website appears on Google.",
+    headline: "See where your website appears in search.",
+    description: "Track important searches and understand what is improving, dropping, and worth your attention.",
     capabilities: {
       title: "What you can track",
       items: [
@@ -85,7 +85,7 @@ export const INTROS: Record<IntroKey, IntroContent> = {
         { Icon: Target, title: "Important searches", text: "Focus on the searches that matter to your business." },
       ],
     },
-    steps: ["Add searches", "VSI tracks your rankings", "See changes over time", "Find opportunities"],
+    steps: ["Add searches", "VSI checks", "See changes", "Act on what matters"],
   },
   ai: {
     page: "AI Visibility",

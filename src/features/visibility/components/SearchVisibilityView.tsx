@@ -46,7 +46,7 @@ export default function SearchVisibilityView({ data }: { data: SearchViewData })
   const header = (
     <PageHeader
       title="Search Visibility"
-      description="See how your website appears in search, for the searches that matter to your business."
+      description="See where your website appears in search, and what is improving, dropping or worth your attention."
       meta={
         project && (
           <>

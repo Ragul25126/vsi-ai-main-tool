@@ -121,7 +121,12 @@ export function StepRail({ title = "How it works", steps, footer }: { title?: st
           <li key={s} className="flex items-baseline gap-3 sm:block sm:space-y-2.5">
             <div className="flex shrink-0 items-center gap-3" aria-hidden>
               <span className="font-mono text-caption text-ink-3">{String(i + 1).padStart(2, "0")}</span>
-              {i < steps.length - 1 && <span className="hidden h-px flex-1 bg-line-strong lg:block" />}
+              {i < steps.length - 1 && (
+                <span className="hidden flex-1 items-center lg:flex">
+                  <span className="h-px flex-1 bg-line-strong" />
+                  <ChevronRight size={14} strokeWidth={1.75} className="-ml-1.5 shrink-0 text-ink-3" />
+                </span>
+              )}
             </div>
             <p className="text-body font-medium text-ink">
               <span className="sr-only">Step {i + 1}: </span>
@@ -135,34 +140,34 @@ export function StepRail({ title = "How it works", steps, footer }: { title?: st
   );
 }
 
-/** Shows how this page fits in the VSI story, with links to every other part. */
+/**
+ * Shows where this page sits in the VSI story: your website, then the parts
+ * of VSI around this one (two before, two after), each linking to its page.
+ */
 export function ProductStory({ current }: { current: StoryKey }) {
   const index = STORY.findIndex((s) => s.key === current);
-  const here = STORY[index];
-  const next = STORY[index + 1];
+  const from = Math.max(0, index - 2);
+  const shown = STORY.slice(from, index + 3);
   return (
     <section className="space-y-4 border-t border-line pt-8">
       <h2 className="text-section font-semibold text-ink">Where this fits</h2>
-      <p className="max-w-[65ch] text-body text-ink-2">
-        Everything in VSI starts with your website. {here.label} answers &ldquo;{here.question}&rdquo;
-        {next ? (
-          <>
-            {" "}
-            Then {next.label} answers &ldquo;{next.question}&rdquo;
-          </>
-        ) : null}
-      </p>
-      <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-2 text-support" aria-label="The parts of VSI, in order">
-        <li className="text-ink-3">Your website</li>
-        {STORY.map((s) => (
+      <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-2 text-support" aria-label="Where this page fits in VSI">
+        <li className="text-ink-3">Website</li>
+        {from > 0 && (
+          <li className="flex items-center gap-1.5 text-ink-3" aria-hidden>
+            <ChevronRight size={13} strokeWidth={1.75} className="text-line-strong" />
+            …
+          </li>
+        )}
+        {shown.map((s) => (
           <li key={s.key} className="flex items-center gap-1.5">
             <ChevronRight size={13} strokeWidth={1.75} className="text-line-strong" aria-hidden />
             {s.key === current ? (
-              <span aria-current="page" className="font-medium text-ink underline decoration-brand decoration-2 underline-offset-[6px]">
+              <span aria-current="page" title={s.question} className="font-medium text-ink underline decoration-brand decoration-2 underline-offset-[6px]">
                 {s.label}
               </span>
             ) : (
-              <Link href={s.href} className="text-ink-3 hover:text-ink hover:underline">
+              <Link href={s.href} title={s.question} className="text-ink-3 hover:text-ink hover:underline">
                 {s.label}
               </Link>
             )}
