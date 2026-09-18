@@ -3,15 +3,15 @@ import AdminNav from "@/components/AdminNav";
 import ChatFloating from "@/components/ChatFloating";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
- await requireSuperAdmin();
+  await requireSuperAdmin();
 
- return (
- <div className="min-h-screen bg-[#111111] p-2 sm:p-5 font-sans text-gray-200" suppressHydrationWarning>
- <div className="max-w-[1400px] mx-auto bg-[#1C1C1E] rounded-[2.5rem] p-5 lg:p-7 shadow-2xl border border-white/5 min-h-[calc(100vh-2.5rem)]">
- <AdminNav />
- <main>{children}</main>
- </div>
- <ChatFloating />
- </div>
- );
+  return (
+    <div className="min-h-screen bg-[#F0F3F8] p-3 sm:p-6 font-sans text-slate-800" suppressHydrationWarning>
+      <div className="max-w-[1440px] mx-auto bg-[#F7F9FC] rounded-[2.5rem] p-6 lg:p-8 shadow-xl border border-slate-200/60 min-h-[calc(100vh-3rem)]">
+        <AdminNav />
+        <main>{children}</main>
+      </div>
+      <ChatFloating />
+    </div>
+  );
 }

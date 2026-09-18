@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export type UserRole = "super_admin" | "pilot";
@@ -107,7 +108,7 @@ import { isAuthorizedEmail } from "@/lib/auth-config";
  * Server-side: fetch current authenticated user + their profile + their agency.
  * Returns null if not signed in or not the authorized ValGrow Labs account.
  */
-export async function getSession(): Promise<SessionContext | null> {
+export const getSession = cache(async (): Promise<SessionContext | null> => {
   try {
     const cookieStore = await cookies();
     const hasSession = cookieStore.has("vsi_session") || cookieStore.has("sb-access-token");
@@ -178,7 +179,7 @@ export async function getSession(): Promise<SessionContext | null> {
   }
 
   return null;
-}
+});
 
 export async function requireAgency(): Promise<SessionContext & { agencyId: string; agencyName: string }> {
   const session = await getSession();
