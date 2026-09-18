@@ -11,6 +11,8 @@ import { CapabilityList } from "@/components/intro/FeatureIntro";
 import { SetupPanel } from "@/components/intro/SetupPanel";
 import { INTROS } from "@/components/intro/intros";
 import { RunChecksButton } from "@/features/geo/components/RunChecksButton";
+import { CompetitorManager } from "@/features/competitors/components/CompetitorManager";
+import type { TrackedCompetitor } from "@/lib/project-competitors";
 import { FindingDrawer } from "@/features/actions/components/FindingDrawer";
 import type { CompetitorRow } from "@/lib/competitors";
 import type { Finding } from "@/lib/findings";
@@ -28,6 +30,11 @@ export interface CompetitorsViewData {
   finding: Finding | null;
   /** Real setup state, used when there is nothing to compare yet. */
   setup: { searches: number; checked: boolean };
+  /** Competitors the user added to this project. */
+  tracked: TrackedCompetitor[];
+  /** "setup_required" until migration 036 is applied. */
+  trackedState: "ok" | "setup_required" | "error";
+  ownWebsite: string | null;
 }
 
 export default function CompetitorsView({ data }: { data: CompetitorsViewData }) {
@@ -52,7 +59,12 @@ export default function CompetitorsView({ data }: { data: CompetitorsViewData })
     );
   }
 
-  if (data.rows.length === 0) {
+  const yours = (
+    <YourCompetitors data={data} projectId={project.id} />
+  );
+
+  if (!data.setup.checked || data.rows.every((r) => !r.seen)) {
+    const n = data.tracked.length;
     return (
       <PageContainer>
         {header}
@@ -60,14 +72,17 @@ export default function CompetitorsView({ data }: { data: CompetitorsViewData })
           title={data.setup.checked ? "No competitors found in your checks yet" : "Compare yourself with your competitors"}
           description={
             data.setup.checked
-              ? "Your latest checks didn't show other businesses for your searches. Competitors appear here as soon as Google or an AI answer shows one."
-              : "VSI compares you with the businesses that appear for your searches in Google and AI answers. That needs your searches and a first check."
+              ? "Your latest checks didn't show your competitors or other businesses for your searches. They appear here as soon as Google or an AI answer shows one."
+              : "Add the competitors your customers compare you with. After your first check, VSI shows where they appear in Google and AI answers, and where you don't."
           }
           items={[
             { state: "done", label: "Website added", detail: project.domain ?? undefined },
             data.setup.searches > 0
               ? { state: "done", label: "Searches to compare on", detail: `${data.setup.searches} ${data.setup.searches === 1 ? "search" : "searches"}` }
               : { state: "todo", label: "Searches to compare on", detail: "None yet", href: `/dashboard/clients/${project.id}/keywords/new`, hrefLabel: "Add searches" },
+            n > 0
+              ? { state: "done", label: "Your competitors", detail: `${n} ${n === 1 ? "competitor" : "competitors"}` }
+              : { state: "todo", label: "Your competitors", detail: "None yet" },
             data.setup.checked
               ? { state: "done", label: "First search and AI check", detail: "Done" }
               : { state: "todo", label: "First search and AI check", detail: "Not checked yet" },
@@ -79,12 +94,14 @@ export default function CompetitorsView({ data }: { data: CompetitorsViewData })
           }
           illustration={<CompareScene />}
         />
+        {yours}
         {INTROS.competitors.capabilities && <CapabilityList {...INTROS.competitors.capabilities} />}
       </PageContainer>
     );
   }
 
-  const top = data.rows[0];
+  // The most visible competitor that actually appeared in a check (yours are listed first, not necessarily most visible).
+  const top = data.rows.filter((r) => r.seen).sort((a, b) => b.aiAnswers + b.googleTop10 - (a.aiAnswers + a.googleTop10))[0];
   const max = Math.max(data.you?.aiAnswers ?? 0, ...data.rows.map((r) => r.aiAnswers), 1);
 
   return (
@@ -108,12 +125,24 @@ export default function CompetitorsView({ data }: { data: CompetitorsViewData })
             {data.you && (
               <Row name={`${project.name} (you)`} you ai={data.you.aiAnswers} max={max} google={data.you.googleTop10} gap={null} />
             )}
-            {data.rows.map((r) => (
-              <Row key={r.domain} name={r.domain} ai={r.aiAnswers} max={max} google={r.googleTop10} gap={r.aiGapSearches} />
-            ))}
+            {data.rows.map((r) =>
+              r.seen ? (
+                <Row key={r.domain} name={r.domain} tracked={r.tracked} ai={r.aiAnswers} max={max} google={r.googleTop10} gap={r.aiGapSearches} />
+              ) : (
+                <li key={r.domain} className="grid gap-1 px-4 py-3 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] md:items-center md:gap-4">
+                  <span className="truncate text-support text-ink-2">
+                    {r.domain}
+                    <span className="ml-2 text-caption text-ink-3">Added by you</span>
+                  </span>
+                  <span className="text-support text-ink-3">Not seen in your checks yet</span>
+                </li>
+              ),
+            )}
           </ul>
         </div>
       </Section>
+
+      {yours}
 
       <Section
         title="Where competitors appear and you don't"
@@ -185,9 +214,10 @@ export default function CompetitorsView({ data }: { data: CompetitorsViewData })
 
       <Disclosure summary="How VSI finds competitors">
         <p className="max-w-[70ch] text-support text-ink-2">
-          VSI doesn&apos;t need a competitor list. It reads the websites that Google&apos;s first page and AI answers show for the searches you
-          track. &ldquo;AI answers linking to them&rdquo; counts each AI answer once per website, exactly as your own number is counted.
-          Community and review sites such as Reddit or G2 are listed separately.
+          VSI compares you with two kinds of competitor: the ones you add, and the websites Google&apos;s first page and AI answers show
+          for the searches you track. &ldquo;AI answers linking to them&rdquo; counts each AI answer once per website, exactly as your own
+          number is counted. Competitors you add are always listed, even before they appear in a check. Community and review sites such as
+          Reddit or G2 are listed separately.
         </p>
       </Disclosure>
 
@@ -196,10 +226,29 @@ export default function CompetitorsView({ data }: { data: CompetitorsViewData })
   );
 }
 
-function Row({ name, you, ai, max, google, gap }: { name: string; you?: boolean; ai: number; max: number; google: number; gap: number | null }) {
+function Row({
+  name,
+  you,
+  tracked,
+  ai,
+  max,
+  google,
+  gap,
+}: {
+  name: string;
+  you?: boolean;
+  tracked?: boolean;
+  ai: number;
+  max: number;
+  google: number;
+  gap: number | null;
+}) {
   return (
     <li className={cn("grid gap-2 px-4 py-3 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1.6fr)_9rem_9rem] md:items-center md:gap-4", you && "bg-brand-soft/40")}>
-      <span className={cn("truncate text-support", you ? "font-medium text-ink" : "text-ink-2")}>{name}</span>
+      <span className={cn("truncate text-support", you ? "font-medium text-ink" : "text-ink-2")}>
+        {name}
+        {tracked && <span className="ml-2 text-caption text-ink-3">Added by you</span>}
+      </span>
       <span className="flex items-center gap-3">
         <span className="h-2 flex-1 overflow-hidden rounded-full bg-surface-2">
           <span className={cn("block h-full rounded-full", you ? "bg-brand" : "bg-ink-3")} style={{ width: `${(ai / max) * 100}%` }} />
@@ -221,5 +270,27 @@ function Row({ name, you, ai, max, google, gap }: { name: string; you?: boolean;
         )}
       </span>
     </li>
+  );
+}
+
+function YourCompetitors({ data, projectId }: { data: CompetitorsViewData; projectId: string }) {
+  return (
+    <Section
+      title="Your competitors"
+      description="The businesses your customers compare you with. VSI tracks them in every check, alongside the ones it discovers."
+    >
+      {data.trackedState === "setup_required" ? (
+        <Notice tone="attention" title="Saving your own competitors needs a one-time database update">
+          Until it&apos;s applied, VSI shows only the competitors it discovers in your checks.
+          <Disclosure summary="Technical details" className="mt-2">
+            <p className="font-mono text-caption">Apply supabase/migrations/migration_036_project_competitors.sql to the Supabase project.</p>
+          </Disclosure>
+        </Notice>
+      ) : data.trackedState === "error" ? (
+        <Notice tone="critical" title="We couldn't load your competitors right now.">Refresh the page to try again.</Notice>
+      ) : (
+        <CompetitorManager projectId={projectId} ownWebsite={data.ownWebsite} competitors={data.tracked} />
+      )}
+    </Section>
   );
 }

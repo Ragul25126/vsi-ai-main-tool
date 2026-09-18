@@ -33,4 +33,24 @@ describe("competitors", () => {
     expect(merged.map((m) => m.domain)).toEqual(["rival.com", "other.com"]);
     expect(merged.find((m) => m.domain === "other.com")).toMatchObject({ aiAnswers: 1, aiGapSearches: 1, googleTop10: 0 });
   });
+
+  it("always lists competitors you added, and never invents numbers for unseen ones", () => {
+    const merged = mergeCompetitors(null, google, ["https://www.rival.com", "quiet.com"]);
+    const rival = merged.find((m) => m.domain === "rival.com");
+    const quiet = merged.find((m) => m.domain === "quiet.com");
+    expect(rival).toMatchObject({ tracked: true, seen: true, googleTop10: 2, bestPosition: 1 });
+    expect(quiet).toMatchObject({ tracked: true, seen: false, aiAnswers: 0, googleTop10: 0, bestPosition: null });
+    // Competitors you added come first.
+    expect(merged.slice(0, 2).every((m) => m.tracked)).toBe(true);
+  });
+
+  it("folds subdomains into a tracked competitor without double counting", () => {
+    const g = computeGooglePresence(
+      [{ keywordId: "a", keyword: "a", results: [{ position: 3, domain: "blog.rival.com" }, { position: 6, domain: "rival.com" }] }],
+      "example.com",
+    );
+    const merged = mergeCompetitors(null, g, ["rival.com"]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0]).toMatchObject({ domain: "rival.com", googleTop10: 1, bestPosition: 3, tracked: true });
+  });
 });

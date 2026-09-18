@@ -7,6 +7,7 @@ import { loadGeo } from "@/lib/geo-load";
 import { loadSearch } from "@/lib/search-load";
 import { geoFindings } from "@/lib/geo-findings";
 import { computeGooglePresence, mergeCompetitors, type SerpSnapshot } from "@/lib/competitors";
+import { loadProjectCompetitors } from "@/lib/project-competitors-load";
 import { Intro } from "@/components/intro/intros";
 import CompetitorsView, { type CompetitorsViewData } from "@/features/visibility/components/CompetitorsView";
 
@@ -41,17 +42,24 @@ export default async function CompetitorsPage() {
   const { active, error } = await getProjectContext(session);
   if (!active && !error) return <Intro name="competitors" />;
   if (!active) {
-    return <CompetitorsView data={{ project: null, state: error ? "error" : "no_project", errorMessage: error ?? undefined, rows: [], gaps: [], platforms: [], namedByChatGPT: [], you: null, finding: null, setup: { searches: 0, checked: false } }} />;
+    return <CompetitorsView data={{ project: null, state: error ? "error" : "no_project", errorMessage: error ?? undefined, rows: [], gaps: [], platforms: [], namedByChatGPT: [], you: null, finding: null, setup: { searches: 0, checked: false }, tracked: [], trackedState: "ok", ownWebsite: null }} />;
   }
 
   const project = { id: active.id, name: active.name, domain: displayDomain(active.website) };
-  const [geo, search, snapshots] = await Promise.all([loadGeo(active, { evidence: false }), loadSearch(active), loadSerpSnapshots(active)]);
+  const [geo, search, snapshots, tracked] = await Promise.all([
+    loadGeo(active, { evidence: false }),
+    loadSearch(active),
+    loadSerpSnapshots(active),
+    loadProjectCompetitors(active.id),
+  ]);
   if (geo.state === "error") {
-    return <CompetitorsView data={{ project, state: "error", errorMessage: geo.message, rows: [], gaps: [], platforms: [], namedByChatGPT: [], you: null, finding: null, setup: { searches: 0, checked: false } }} />;
+    return <CompetitorsView data={{ project, state: "error", errorMessage: geo.message, rows: [], gaps: [], platforms: [], namedByChatGPT: [], you: null, finding: null, setup: { searches: 0, checked: false }, tracked: [], trackedState: "ok", ownWebsite: null }} />;
   }
 
   const summary = geo.summary;
-  const rows = mergeCompetitors(summary, computeGooglePresence(snapshots, active.website)).slice(0, 12);
+  const merged = mergeCompetitors(summary, computeGooglePresence(snapshots, active.website), tracked.competitors.map((c) => c.domain));
+  // Every competitor you added, then the most visible discovered ones.
+  const rows = [...merged.filter((r) => r.tracked), ...merged.filter((r) => !r.tracked).slice(0, 10)];
   const gaps = summary.searches
     .filter((s) => s.answered && !s.appears && s.competitorsLinked.length > 0)
     .map((s) => ({ keyword: s.keyword, keywordId: s.keywordId, competitors: s.competitorsLinked.filter((d) => rows.some((r) => r.domain === d)).slice(0, 4) }))
@@ -71,6 +79,9 @@ export default async function CompetitorsPage() {
     namedByChatGPT: summary.namedByChatGPT.slice(0, 10),
     finding: geoFindings(summary, active.id).find((f) => f.key === "geo:competitors_linked") ?? null,
     setup: { searches: geo.activeSearches, checked: summary.searchesTracked > 0 || snapshots.length > 0 },
+    tracked: tracked.competitors,
+    trackedState: tracked.state,
+    ownWebsite: active.website,
   };
   return <CompetitorsView data={data} />;
 }
