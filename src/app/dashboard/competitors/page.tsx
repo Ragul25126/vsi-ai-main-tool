@@ -3,8 +3,7 @@ import { requireAgency, isDummySupabase } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getProjectContext } from "@/lib/project-context";
 import { displayDomain, type ProjectSummary } from "@/lib/project-types";
-import { loadGeo } from "@/lib/geo-load";
-import { loadSearch } from "@/lib/search-load";
+import { loadVisibility } from "@/lib/visibility-load";
 import { geoFindings } from "@/lib/geo-findings";
 import { computeGooglePresence, mergeCompetitors, type SerpSnapshot } from "@/lib/competitors";
 import { loadProjectCompetitors } from "@/lib/project-competitors-load";
@@ -46,9 +45,8 @@ export default async function CompetitorsPage() {
   }
 
   const project = { id: active.id, name: active.name, domain: displayDomain(active.website) };
-  const [geo, search, snapshots, tracked] = await Promise.all([
-    loadGeo(active, { evidence: false }),
-    loadSearch(active),
+  const [{ geo, search }, snapshots, tracked] = await Promise.all([
+    loadVisibility(active, { evidence: false }),
     loadSerpSnapshots(active),
     loadProjectCompetitors(active.id),
   ]);

@@ -3,9 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { isDummySupabase } from "@/lib/auth";
 import type { ProjectSummary } from "@/lib/project-types";
 import type { Finding } from "@/lib/findings";
-import { loadGeo, type GeoLoad } from "@/lib/geo-load";
+import type { GeoLoad } from "@/lib/geo-load";
 import { geoFindings, pageClarityFinding } from "@/lib/geo-findings";
-import { loadSearch, type SearchLoad } from "@/lib/search-load";
+import type { SearchLoad } from "@/lib/search-load";
+import { loadVisibility } from "@/lib/visibility-load";
 import { searchFindings } from "@/lib/search";
 import { loadPageComparisons, loadSiteAudits } from "@/lib/site-audit/load";
 import { auditFinding } from "@/lib/site-audit/findings";
@@ -70,10 +71,9 @@ async function loadTasks(clientId: string): Promise<{ counts: TaskCounts; keys: 
  * It reads each module's real data and never fills gaps with estimates.
  */
 export async function loadProjectOverview(project: ProjectSummary): Promise<ProjectOverview> {
-  const [audit, geo, search, comparisons, tasks, competitors] = await Promise.all([
+  const [audit, { geo, search }, comparisons, tasks, competitors] = await Promise.all([
     loadSiteAudits(project.id),
-    loadGeo(project, { evidence: false }),
-    loadSearch(project),
+    loadVisibility(project, { evidence: false }),
     loadPageComparisons(project.id),
     loadTasks(project.id),
     loadProjectCompetitors(project.id),

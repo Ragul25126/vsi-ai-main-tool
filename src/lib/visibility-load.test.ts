@@ -1,0 +1,145 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// A tiny in-memory stand-in for the Supabase query builder: it applies the
+// filters the loaders use and returns only the selected columns.
+type Row = Record<string, unknown>;
+const tables: Record<string, Row[]> = {};
+const queries: { table: string; columns: string }[] = [];
+const failing = new Set<string>();
+
+function query(table: string) {
+  let rows = [...(tables[table] ?? [])];
+  let columns = "*";
+  const b = {
+    select(c: string) {
+      columns = c;
+      queries.push({ table, columns: c });
+      return b;
+    },
+    eq(k: string, v: unknown) {
+      rows = rows.filter((r) => r[k] === v);
+      return b;
+    },
+    gte(k: string, v: string) {
+      rows = rows.filter((r) => String(r[k]) >= v);
+      return b;
+    },
+    in(k: string, vs: unknown[]) {
+      rows = rows.filter((r) => vs.includes(r[k]));
+      return b;
+    },
+    order(k: string, o: { ascending: boolean }) {
+      rows.sort((a, z) => (String(a[k]) < String(z[k]) ? -1 : 1) * (o.ascending ? 1 : -1));
+      return b;
+    },
+    limit(n: number) {
+      rows = rows.slice(0, n);
+      return b;
+    },
+    async maybeSingle() {
+      if (failing.has(table)) return { data: null, error: { code: "57014" } };
+      return { data: project(rows)[0] ?? null, error: null };
+    },
+    then(resolve: (v: { data: Row[] | null; error: { code: string } | null }) => unknown) {
+      const result = failing.has(table) ? { data: null, error: { code: "57014" } } : { data: project(rows), error: null };
+      return Promise.resolve(result).then(resolve);
+    },
+  };
+  function project(rs: Row[]) {
+    if (columns === "*") return rs;
+    const cols = columns.split(",").map((c) => c.trim());
+    return rs.map((r) => Object.fromEntries(cols.map((c) => [c, r[c] ?? null])));
+  }
+  return b;
+}
+
+vi.mock("@/lib/supabase/server", () => ({ createClient: async () => ({ from: query }) }));
+vi.mock("@/lib/auth", () => ({ isDummySupabase: () => false }));
+vi.mock("@/lib/settings", () => ({ getSetting: async () => true }));
+
+const PROJECT = {
+  id: "p1",
+  name: "Acme",
+  website: "https://acme.com",
+  brandName: "Acme",
+  serviceType: null,
+  defaultLocation: null,
+  agencyId: "a1",
+  agencyName: null,
+};
+
+const day = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString();
+
+beforeEach(() => {
+  queries.length = 0;
+  failing.clear();
+  tables.clients = [{ id: "p1", rank_tracking_enabled: true, ai_mode_enabled: true, ai_overview_enabled: true, chatgpt_enabled: null }];
+  tables.tracked_keywords = [
+    { id: "k1", client_id: "p1", is_active: true, track_type: "both" },
+    { id: "k2", client_id: "p1", is_active: true, track_type: "seo" },
+    { id: "k3", client_id: "p1", is_active: false, track_type: "geo" },
+  ];
+  const base = {
+    client_id: "p1",
+    gap_label: null,
+    ai_overview_present: false,
+    ai_overview_client_cited: false,
+    ai_overview_cited_domains: [],
+    chatgpt_checked: false,
+    chatgpt_brand_mentioned: null,
+    chatgpt_brand_cited: null,
+    chatgpt_competitors: [],
+    chatgpt_cited_urls: [],
+  };
+  tables.search_results = [
+    { ...base, id: "r1", tracked_keyword_id: "k1", keyword: "best widgets", created_at: day(1), aio_present: true, mentioned_in_text: true, client_cited: true, cited_domains: ["acme.com", "rival.com"], rank_position: 3, rank_url: "https://acme.com/w" },
+    { ...base, id: "r2", tracked_keyword_id: "k1", keyword: "best widgets", created_at: day(8), aio_present: true, mentioned_in_text: false, client_cited: false, cited_domains: ["rival.com"], rank_position: 5, rank_url: "https://acme.com/w" },
+    { ...base, id: "r3", tracked_keyword_id: "k2", keyword: "widget price", created_at: day(2), aio_present: false, mentioned_in_text: null, client_cited: null, cited_domains: null, rank_position: 12, rank_url: "https://acme.com/p" },
+    { ...base, id: "r4", tracked_keyword_id: "k1", keyword: "best widgets", created_at: day(200), aio_present: true, mentioned_in_text: true, client_cited: true, cited_domains: [], rank_position: 1, rank_url: "https://acme.com/w" },
+    { ...base, id: "x1", client_id: "other", tracked_keyword_id: "k9", keyword: "not mine", created_at: day(1), aio_present: true, mentioned_in_text: true, client_cited: true, cited_domains: [], rank_position: 1, rank_url: null },
+  ];
+});
+
+describe("loadVisibility", () => {
+  it("returns exactly what the separate loaders return", async () => {
+    const { loadGeo } = await import("./geo-load");
+    const { loadSearch } = await import("./search-load");
+    const { loadVisibility } = await import("./visibility-load");
+
+    const [geo, search] = await Promise.all([loadGeo(PROJECT, { evidence: false }), loadSearch(PROJECT)]);
+    const combined = await loadVisibility(PROJECT, { evidence: false });
+
+    expect(geo.state === "ok" && geo.summary.searches.length).toBeGreaterThan(0);
+    expect(search.state === "ok" && search.summary.searches.length).toBeGreaterThan(0);
+    expect(combined).toEqual({ geo, search });
+  });
+
+  it("reads recent checks once instead of once per summary", async () => {
+    const { loadVisibility } = await import("./visibility-load");
+    await loadVisibility(PROJECT, { evidence: false });
+    expect(queries.filter((q) => q.table === "search_results")).toHaveLength(1);
+    expect(queries.filter((q) => q.table === "tracked_keywords")).toHaveLength(1);
+    expect(queries.filter((q) => q.table === "clients")).toHaveLength(1);
+  });
+
+  it("reports the same errors as the separate loaders when checks can't be read", async () => {
+    const { loadGeo } = await import("./geo-load");
+    const { loadSearch } = await import("./search-load");
+    const { loadVisibility } = await import("./visibility-load");
+    failing.add("search_results");
+
+    const [geo, search] = await Promise.all([loadGeo(PROJECT, { evidence: false }), loadSearch(PROJECT)]);
+    const combined = await loadVisibility(PROJECT, { evidence: false });
+
+    expect(geo.state).toBe("error");
+    expect(search.state).toBe("error");
+    expect(combined).toEqual({ geo, search });
+  });
+});
+
+describe("mergeColumns", () => {
+  it("joins column lists without duplicates", async () => {
+    const { mergeColumns } = await import("./project-data-load");
+    expect(mergeColumns("a, b,c", "b, d")).toBe("a, b, c, d");
+  });
+});
