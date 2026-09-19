@@ -1,95 +1,101 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
-import { requireSuperAdmin } from "@/lib/auth";
+import { requireSuperAdmin, isDummySupabase } from "@/lib/auth";
+import { param, type Params } from "@/lib/admin/common";
+import { PageContainer, PageHeader } from "@/components/ui/Page";
+import { TableToolbar } from "@/components/admin/TableToolbar";
+import { LoadFailed } from "@/components/admin/bits";
 import FeedbackAdminRow from "@/components/FeedbackAdminRow";
 
+export const metadata: Metadata = { title: "Feedback" };
 export const dynamic = "force-dynamic";
 
-interface SearchParams { status?: string; category?: string }
+type Named = { name: string | null; display_name: string | null } | { name: string | null; display_name: string | null }[] | null;
+type Person = { full_name: string | null } | { full_name: string | null }[] | null;
+type Row = {
+  id: string;
+  category: string;
+  message: string;
+  page_url: string | null;
+  status: string;
+  admin_notes: string | null;
+  created_at: string;
+  agencies: Named;
+  profiles: Person;
+};
 
-export default async function AdminFeedbackPage({
-  searchParams,
-}: {
-  searchParams: Promise<SearchParams>;
-}) {
+export default async function AdminFeedbackPage({ searchParams }: { searchParams: Promise<Params> }) {
+  await requireSuperAdmin();
   const sp = await searchParams;
-  const supabase = await createClient();
+  const status = param(sp, "status") || "new";
+  const category = param(sp, "category");
 
-  const { data } = await supabase
+  const header = <PageHeader title="Feedback" description="What customers have sent from inside VSI. Set a status as you go; notes are private to platform admins." />;
+
+  if (isDummySupabase()) {
+    return (
+      <PageContainer>
+        {header}
+        <LoadFailed message="VSI isn't connected to its database in this environment." />
+      </PageContainer>
+    );
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
     .from("feedback")
-    .select("*, agencies(name, display_name), profiles(full_name)")
+    .select("id, category, message, page_url, status, admin_notes, created_at, agencies(name, display_name), profiles(full_name)")
     .order("created_at", { ascending: false })
     .limit(500);
 
-  type Row = {
-    id: string;
-    agency_id: string | null;
-    user_id: string | null;
-    category: string;
-    message: string;
-    page_url: string | null;
-    status: string;
-    admin_notes: string | null;
-    context_data: unknown;
-    user_agent: string | null;
-    created_at: string;
-    agencies: { name: string | null; display_name: string | null } | { name: string | null; display_name: string | null }[] | null;
-    profiles: { full_name: string | null } | { full_name: string | null }[] | null;
-  };
-  const rows = (data ?? []) as Row[];
+  if (error) {
+    return (
+      <PageContainer>
+        {header}
+        <LoadFailed message="Feedback couldn't be loaded right now." />
+      </PageContainer>
+    );
+  }
 
-  const filtered = rows.filter((r) => {
-    if (sp.status && sp.status !== "all" && r.status !== sp.status) return false;
-    if (sp.category && r.category !== sp.category) return false;
-    return true;
-  });
-
-  const counts = {
-    all: rows.length,
-    new: rows.filter((r) => r.status === "new").length,
-    triaged: rows.filter((r) => r.status === "triaged").length,
-    done: rows.filter((r) => r.status === "done").length,
-  };
-
-  const STATUS_CHIPS: Array<{ value: string; label: string; count: number }> = [
-    { value: "all", label: "All", count: counts.all },
-    { value: "new", label: "New", count: counts.new },
-    { value: "triaged", label: "Triaged", count: counts.triaged },
-    { value: "done", label: "Done", count: counts.done },
-  ];
+  const rows = (data ?? []) as unknown as Row[];
+  const count = (s: string) => rows.filter((r) => r.status === s).length;
+  const filtered = rows.filter((r) => (status === "all" || r.status === status) && (!category || r.category === category));
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">User feedback</h1>
-        <p className="text-sm text-slate-500 mt-0.5">
-          Everything pilot testers and paid agencies have sent. Update status inline; notes are private to admins.
-        </p>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2 bg-slate-100/90 rounded-full p-1 border border-slate-200/80 w-fit">
-        {STATUS_CHIPS.map((s) => {
-          const active = (sp.status ?? "new") === s.value || (!sp.status && s.value === "new");
-          const href = s.value === "new" ? "/admin/feedback" : `/admin/feedback?status=${s.value}`;
-          return (
-            <a
-              key={s.value}
-              href={href}
-              className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
-                active ? "bg-ink text-white " : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              {s.label} <span className="ml-1 opacity-75">({s.count})</span>
-            </a>
-          );
-        })}
-      </div>
-
+    <PageContainer>
+      {header}
+      <TableToolbar
+        filters={[
+          {
+            param: "status",
+            label: "Status",
+            options: [
+              { value: "", label: `New (${count("new")})` },
+              { value: "triaged", label: `Triaged (${count("triaged")})` },
+              { value: "in_progress", label: `In progress (${count("in_progress")})` },
+              { value: "done", label: `Done (${count("done")})` },
+              { value: "archived", label: `Archived (${count("archived")})` },
+              { value: "all", label: `All (${rows.length})` },
+            ],
+          },
+          {
+            param: "category",
+            label: "Type",
+            options: [
+              { value: "", label: "All types" },
+              { value: "bug", label: "Bugs" },
+              { value: "idea", label: "Ideas" },
+              { value: "question", label: "Questions" },
+              { value: "praise", label: "Praise" },
+              { value: "general", label: "Other" },
+            ],
+          },
+        ]}
+      />
       {filtered.length === 0 ? (
-        <div className="rounded-panel border border-dashed border-slate-200 bg-white p-12 text-center">
-          <p className="text-sm font-semibold text-slate-400">No feedback in this view yet.</p>
-        </div>
+        <p className="rounded-panel border border-line bg-surface px-4 py-8 text-center text-body text-ink-2">{rows.length === 0 ? "No feedback yet." : "No feedback in this view."}</p>
       ) : (
-        <div className="space-y-3">
+        <ul className="divide-y divide-line rounded-panel border border-line bg-surface">
           {filtered.map((r) => {
             const agency = Array.isArray(r.agencies) ? r.agencies[0] : r.agencies;
             const profile = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
@@ -104,14 +110,14 @@ export default async function AdminFeedbackPage({
                   page_url: r.page_url,
                   admin_notes: r.admin_notes,
                   created_at: r.created_at,
-                  agency_name: agency?.display_name ?? agency?.name ?? "Unknown agency",
+                  agency_name: agency?.display_name ?? agency?.name ?? "Unknown organization",
                   user_name: profile?.full_name ?? null,
                 }}
               />
             );
           })}
-        </div>
+        </ul>
       )}
-    </div>
+    </PageContainer>
   );
 }

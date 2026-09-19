@@ -1,3 +1,4 @@
+import { recordAdminAction } from "@/lib/admin/audit";
 import { adminApiSession, adminDbError, adminUnexpected } from "@/lib/admin/api";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
@@ -14,8 +15,8 @@ const ENGINE_KEYS = [
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
  try {
- const guard = await adminApiSession();
- if (guard instanceof NextResponse) return guard;
+ const session = await adminApiSession();
+ if (session instanceof NextResponse) return session;
  const { id } = await ctx.params;
  const supabase = await createClient();
  const body = (await req.json()) as Record<string, unknown>;
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
  }
  const { error } = await supabase.from("clients").update(update).eq("id", id);
  if (error) return adminDbError("clients/[id]/engines", error);
+ await recordAdminAction(session, { action: "project.engines_updated", targetType: "project", targetId: id, summary: "changed which checks a project runs" });
  return NextResponse.json({ ok: true });
  } catch (e) {
  return adminUnexpected("clients/[id]/engines", e);

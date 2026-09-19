@@ -1,3 +1,4 @@
+import { recordAdminAction } from "@/lib/admin/audit";
 import { adminApiSession, adminDbError, adminUnexpected } from "@/lib/admin/api";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
@@ -47,8 +48,24 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
  return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
  }
 
- const { error } = await supabase.from("agencies").update(patch).eq("id", id);
+ const { data: updated, error } = await supabase.from("agencies").update(patch).eq("id", id).select("id, name");
  if (error) return adminDbError("agencies/[id]", error);
+ if (!updated || updated.length === 0) return NextResponse.json({ error: "That organization isn't available." }, { status: 404 });
+ const orgName = (updated[0] as { name: string }).name;
+ const action = body.is_disabled === true ? "organization.disabled" : body.is_disabled === false ? "organization.enabled" : "organization.updated";
+ await recordAdminAction(session, {
+ action,
+ targetType: "organization",
+ targetId: id,
+ agencyId: id,
+ summary:
+ action === "organization.disabled"
+ ? `disabled ${orgName}${body.disabled_reason ? ` (${body.disabled_reason})` : ""}`
+ : action === "organization.enabled"
+ ? `re-enabled ${orgName}`
+ : `changed limits for ${orgName}`,
+ meta: patch,
+ });
  return NextResponse.json({ ok: true });
  } catch (e) {
  return adminUnexpected("agencies/[id]", e);
@@ -66,8 +83,10 @@ export async function DELETE(_req: NextRequest, ctx: { params: Promise<{ id: str
  const supabase = await createClient();
  // Cascade FKs already remove clients / keywords / search_results /
  // reports / tasks tied to this agency. We don't touch auth.users.
- const { error } = await supabase.from("agencies").delete().eq("id", id);
+ const { data: removed, error } = await supabase.from("agencies").delete().eq("id", id).select("id, name");
  if (error) return adminDbError("agencies/[id]", error);
+ if (!removed || removed.length === 0) return NextResponse.json({ error: "That organization isn't available." }, { status: 404 });
+ await recordAdminAction(session, { action: "organization.deleted", targetType: "organization", targetId: id, summary: `deleted organization ${(removed[0] as { name: string }).name}` });
  return NextResponse.json({ ok: true });
  } catch (e) {
  return adminUnexpected("agencies/[id]", e);

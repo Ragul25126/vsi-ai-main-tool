@@ -1,3 +1,4 @@
+import { recordAdminAction } from "@/lib/admin/audit";
 import { adminApiSession, adminDbError, adminUnexpected } from "@/lib/admin/api";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
@@ -8,8 +9,8 @@ const VALID_STATUS = ["new", "triaged", "in_progress", "done", "archived"];
 
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
  try {
- const guard = await adminApiSession();
- if (guard instanceof NextResponse) return guard;
+ const session = await adminApiSession();
+ if (session instanceof NextResponse) return session;
  const { id } = await ctx.params;
  const supabase = await createClient();
  const body = (await req.json()) as { status?: string; admin_notes?: string };
@@ -28,6 +29,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
  const { error } = await supabase.from("feedback").update(patch).eq("id", id);
  if (error) return adminDbError("feedback/[id]", error);
+ await recordAdminAction(session, { action: "feedback.updated", targetType: "feedback", targetId: id, summary: "updated a feedback item" });
  return NextResponse.json({ ok: true });
  } catch (e) {
  return adminUnexpected("feedback/[id]", e);

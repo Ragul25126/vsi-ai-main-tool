@@ -1,182 +1,150 @@
-"use client";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { requireSuperAdmin, isDummySupabase } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
+import { loadUsers } from "@/lib/admin/platform";
+import { hrefWith, matches, pageOf, paginate, param, roleLabel, type Params } from "@/lib/admin/common";
+import { PageContainer, PageHeader, Section } from "@/components/ui/Page";
+import { StatusLabel } from "@/components/ui/Status";
+import { DataTable, Pagination } from "@/components/admin/DataTable";
+import { TableToolbar } from "@/components/admin/TableToolbar";
+import { AccountStatus, LoadFailed, PartialData, Tabs, When } from "@/components/admin/bits";
+import { UserActions } from "@/components/admin/UserActions";
+import InviteCreator from "@/components/admin/InviteCreator";
 
-import { useState } from "react";
-import { Users, Shield, UserX, UserCheck, Building2, Calendar, Mail, Search } from "lucide-react";
+export const metadata: Metadata = { title: "Users" };
+export const dynamic = "force-dynamic";
 
-const MOCK_USERS = [
-  { id: "00000000-0000-0000-0000-000000000002", email: "admin@valgrow.com", full_name: "Valgrow Admin", role: "super_admin", agency_name: "Valgrow Enterprise", is_disabled: false, agency_is_disabled: false, created_at: "2026-01-01" },
-];
+export default async function UsersPage({ searchParams }: { searchParams: Promise<Params> }) {
+  const session = await requireSuperAdmin();
+  const sp = await searchParams;
+  const tab = param(sp, "tab") === "invites" ? "invites" : "users";
 
-const ROLE_BADGE: Record<string, string> = {
-  super_admin: "bg-orange-50 text-brand-strong border-orange-200",
-  admin: "bg-blue-50 text-blue-600 border-blue-200",
-  member: "bg-emerald-50 text-emerald-600 border-emerald-200",
-  viewer: "bg-slate-100 text-slate-600 border-slate-200",
-};
+  return (
+    <PageContainer>
+      <PageHeader title="Users" description="Everyone who can sign in to VSI, and the invites that let new people join." />
+      <Tabs
+        current={tab}
+        tabs={[
+          { key: "users", label: "Users", href: "/admin/users" },
+          { key: "invites", label: "Invites", href: "/admin/users?tab=invites" },
+        ]}
+      />
+      {tab === "users" ? <UsersTab sp={sp} selfId={session.userId} /> : <InvitesTab />}
+    </PageContainer>
+  );
+}
 
-const ROLE_FILTERS = ["all", "super_admin", "admin", "member", "viewer"];
+async function UsersTab({ sp, selfId }: { sp: Params; selfId: string }) {
+  const load = await loadUsers();
+  if (!load.ok) return <LoadFailed message={load.message} />;
+  const q = param(sp, "q");
+  const status = param(sp, "status");
+  const role = param(sp, "role");
+  const filtered = load.data.filter(
+    (u) =>
+      matches([u.email, u.name, u.agencyName], q) &&
+      (!role || u.role === role) &&
+      (!status || (status === "disabled" ? u.isDisabled || u.agencyDisabled : !u.isDisabled && !u.agencyDisabled)),
+  );
+  const page = paginate(filtered, pageOf(sp));
 
-export default function UsersPage() {
-  const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
+  return (
+    <div className="space-y-4">
+      <TableToolbar
+        searchPlaceholder="Search name, email or organization"
+        filters={[
+          { param: "role", label: "Role", options: [{ value: "", label: "All roles" }, { value: "super_admin", label: "Platform admin" }, { value: "pilot", label: "Member" }] },
+          { param: "status", label: "Status", options: [{ value: "", label: "All" }, { value: "active", label: "Active" }, { value: "disabled", label: "Disabled" }] },
+        ]}
+      />
+      <DataTable
+        caption="Users"
+        columns={[{ label: "User" }, { label: "Organization" }, { label: "Role" }, { label: "Status" }, { label: "Last active" }, { label: "Actions" }]}
+        rows={page.items.map((u) => ({
+          key: u.id,
+          cells: [
+            <span key="n" className="block min-w-0">
+              <span className="block truncate font-medium text-ink">{u.name ?? u.email ?? "Unnamed user"}</span>
+              {u.name && u.email && <span className="block truncate text-caption text-ink-3">{u.email}</span>}
+            </span>,
+            u.agencyId ? (
+              <Link key="o" href={`/admin/organizations/${u.agencyId}`} className="hover:text-ink hover:underline">
+                {u.agencyName ?? "Unnamed organization"}
+              </Link>
+            ) : (
+              <span key="o" className="text-ink-3">No organization yet</span>
+            ),
+            roleLabel(u.role),
+            <AccountStatus key="s" disabled={u.isDisabled} orgDisabled={u.agencyDisabled} />,
+            u.lastSignIn === undefined ? <span key="l" className="text-ink-3">Data unavailable</span> : <When key="l" iso={u.lastSignIn} missing="Never signed in" />,
+            <UserActions key="a" id={u.id} email={u.email} isDisabled={u.isDisabled} isSelf={u.id === selfId} />,
+          ],
+        }))}
+        empty={load.data.length === 0 ? "No users yet." : "No users match these filters."}
+      />
+      <Pagination page={page.page} pageCount={page.pageCount} total={page.total} hrefFor={(n) => hrefWith("/admin/users", sp, { page: n })} noun={["user", "users"]} />
+      {load.partial && <PartialData>{load.partial}</PartialData>}
+    </div>
+  );
+}
 
-  const q = search.trim().toLowerCase();
-  const filtered = MOCK_USERS.filter(u => {
-    if (roleFilter !== "all" && u.role !== roleFilter) return false;
-    if (q && !u.full_name.toLowerCase().includes(q) && !u.email.toLowerCase().includes(q) && !u.agency_name.toLowerCase().includes(q)) return false;
-    return true;
-  });
+type InviteRow = { id: string; code: string; email: string | null; role: string; max_keywords: number; note: string | null; is_active: boolean; used_by: string | null; used_at: string | null; created_at: string };
 
-  const counts = {
-    total: MOCK_USERS.length,
-    active: MOCK_USERS.filter(u => !u.is_disabled).length,
-    disabled: MOCK_USERS.filter(u => u.is_disabled).length,
-    admins: MOCK_USERS.filter(u => u.role === "admin" || u.role === "super_admin").length,
-  };
+async function InvitesTab() {
+  await requireSuperAdmin();
+  let rows: InviteRow[] = [];
+  let failed: string | null = null;
+  if (isDummySupabase()) failed = "VSI isn't connected to its database in this environment.";
+  else {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("invites")
+      .select("id, code, email, role, max_keywords, note, is_active, used_by, used_at, created_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) failed = "Invites couldn't be loaded right now.";
+    rows = (data ?? []) as InviteRow[];
+  }
 
   return (
     <div className="space-y-6">
-
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-panel bg-blue-50 border border-blue-200 flex items-center justify-center">
-          <Users className="w-5 h-5 text-blue-600" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Users</h1>
-          <p className="text-sm text-slate-500 mt-0.5">All registered accounts. Disable to revoke access without deleting.</p>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
-        {[
-          { label: "Total", value: counts.total, Icon: Users, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200" },
-          { label: "Active", value: counts.active, Icon: UserCheck, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200" },
-          { label: "Disabled", value: counts.disabled, Icon: UserX, color: "text-rose-600", bg: "bg-rose-50", border: "border-rose-200" },
-          { label: "Admins", value: counts.admins, Icon: Shield, color: "text-attention", bg: "bg-attention-soft", border: "border-line" },
-        ].map(({ label, value, Icon, color, bg, border }) => (
-          <div key={label} className={`bg-white border ${border} rounded-panel p-5 flex items-center gap-3   transition-shadow`}>
-            <div className={`w-10 h-10 rounded-panel ${bg} flex items-center justify-center shrink-0`}>
-              <Icon className={`w-5 h-5 ${color}`} />
-            </div>
-            <div>
-              <p className="text-2xl font-semibold text-slate-900">{value}</p>
-              <p className="text-caption text-slate-500 tracking-wide font-bold">{label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <div className="flex items-center justify-between gap-3">
-        {/* Role pills */}
-        <div className="flex items-center gap-1.5 bg-slate-100 rounded-full p-1 border border-slate-200/80">
-          {ROLE_FILTERS.map(role => (
-            <button
-              key={role}
-              onClick={() => setRoleFilter(role)}
-              className={`px-3.5 py-1.5 text-[12px] font-bold rounded-full transition-all capitalize ${
-                roleFilter === role
-                  ? "bg-ink text-white "
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              {role === "all" ? "All" : role.replace("_", " ")}
-            </button>
-          ))}
-        </div>
-
-        {/* Search */}
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search users…"
-            className="bg-white border border-slate-200/80 rounded-panel pl-10 pr-4 py-2 text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-line-strong w-64 transition-colors"
-          />
-        </div>
-      </div>
-
-      {/* Users table */}
-      <div className="bg-white border border-slate-200/80 rounded-panel overflow-hidden">
-        {/* Table header */}
-        <div className="grid grid-cols-12 gap-2 px-6 py-3 border-b border-slate-100 text-caption text-slate-400 font-bold bg-slate-50/60">
-          <div className="col-span-3">Name</div>
-          <div className="col-span-3">Email</div>
-          <div className="col-span-2">Agency</div>
-          <div className="col-span-1 text-center">Role</div>
-          <div className="col-span-1 text-center">Status</div>
-          <div className="col-span-2 text-right">Joined</div>
-        </div>
-
-        {filtered.length === 0 ? (
-          <div className="px-6 py-10 text-center text-sm text-slate-400">No users match your filters.</div>
+      <Section title="Create an invite" description="Each code works once. Members get their own organization when they accept.">
+        <InviteCreator />
+      </Section>
+      <Section title="Invites">
+        {failed ? (
+          <LoadFailed message={failed} />
         ) : (
-          filtered.map((user) => (
-            <div
-              key={user.id}
-              className={`grid grid-cols-12 gap-2 px-6 py-3.5 items-center border-t border-slate-100 hover:bg-slate-50/60 transition-colors ${user.is_disabled ? "opacity-50" : ""}`}
-            >
-              {/* Name + avatar */}
-              <div className="col-span-3 flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
-                  <span className="text-xs font-bold text-slate-600">{(user.full_name ?? "?").charAt(0)}</span>
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[13px] font-bold text-slate-800 truncate">{user.full_name ?? "-"}</p>
-                </div>
-              </div>
-
-              {/* Email */}
-              <div className="col-span-3 flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                <span className="text-[12px] text-slate-600 truncate">{user.email ?? "-"}</span>
-              </div>
-
-              {/* Agency */}
-              <div className="col-span-2">
-                <div className="flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span className="text-[12px] text-slate-600 truncate">{user.agency_name ?? "-"}</span>
-                </div>
-              </div>
-
-              {/* Role badge */}
-              <div className="col-span-1 flex justify-center">
-                <span className={`text-caption font-bold px-2.5 py-0.5 rounded-full border ${ROLE_BADGE[user.role ?? "member"] ?? ROLE_BADGE.member}`}>
-                  {(user.role ?? "member").replace("_", " ")}
-                </span>
-              </div>
-
-              {/* Status */}
-              <div className="col-span-1 flex justify-center">
-                {user.is_disabled ? (
-                  <span className="flex items-center gap-1 text-caption font-bold text-rose-600">
-                    <UserX className="w-3.5 h-3.5" />
-                    Off
+          <DataTable
+            caption="Invites"
+            columns={[{ label: "Code" }, { label: "For" }, { label: "Access" }, { label: "Max searches", className: "tabular" }, { label: "Status" }, { label: "Created", hideOnMobile: true }]}
+            rows={rows.map((i) => ({
+              key: i.id,
+              cells: [
+                <span key="c" className="font-mono">{i.code}</span>,
+                <span key="f" className="block min-w-0">
+                  <span className="block truncate">{i.email ?? "Any email"}</span>
+                  {i.note && <span className="block truncate text-caption text-ink-3">{i.note}</span>}
+                </span>,
+                roleLabel(i.role),
+                i.role === "super_admin" ? "No limit" : i.max_keywords,
+                i.used_by ? (
+                  <span key="s" className="text-ink-3">
+                    Used <When iso={i.used_at} />
                   </span>
+                ) : i.is_active ? (
+                  <StatusLabel key="s" tone="info">Open</StatusLabel>
                 ) : (
-                  <span className="flex items-center gap-1 text-caption font-bold text-emerald-600">
-                    <UserCheck className="w-3.5 h-3.5" />
-                    On
-                  </span>
-                )}
-              </div>
-
-              {/* Joined */}
-              <div className="col-span-2 flex justify-end">
-                <div className="flex items-center gap-1 text-caption text-slate-400 font-medium">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {user.created_at}
-                </div>
-              </div>
-            </div>
-          ))
+                  <StatusLabel key="s" tone="neutral">Closed</StatusLabel>
+                ),
+                <When key="d" iso={i.created_at} />,
+              ],
+            }))}
+            empty="No invites yet."
+          />
         )}
-      </div>
+      </Section>
     </div>
   );
 }

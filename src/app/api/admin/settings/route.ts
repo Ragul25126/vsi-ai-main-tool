@@ -1,3 +1,4 @@
+import { recordAdminAction } from "@/lib/admin/audit";
 import { adminApiSession, adminDbError, adminUnexpected } from "@/lib/admin/api";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
  if (error) {
  return adminDbError("settings", error);
  }
+ await recordAdminAction(session, { action: "settings.updated", targetType: "setting", targetId: body.key, summary: `changed setting ${body.key} to ${String(body.value)}`, meta: { key: body.key, value: body.value } });
  return NextResponse.json({ ok: true });
  } catch (err) {
  return adminUnexpected("settings", err);

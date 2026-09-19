@@ -1,3 +1,4 @@
+import { recordAdminAction } from "@/lib/admin/audit";
 import { adminApiSession, adminDbError, adminUnexpected } from "@/lib/admin/api";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
@@ -36,6 +37,13 @@ export async function POST(req: NextRequest) {
  .single();
 
  if (!error && data) {
+ await recordAdminAction(session, {
+ action: "invite.created",
+ targetType: "invite",
+ targetId: String(data.code),
+ summary: role === "super_admin" ? `created a platform admin invite${body.email ? ` for ${body.email}` : ""}` : `created a member invite${body.email ? ` for ${body.email}` : ""}`,
+ meta: { role },
+ });
  return NextResponse.json({ code: data.code });
  }
  // Unique-violation → retry; anything else → bail

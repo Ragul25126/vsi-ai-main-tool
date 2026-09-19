@@ -1,3 +1,4 @@
+import { recordAdminAction } from "@/lib/admin/audit";
 import { adminApiSession, adminDbError, adminUnexpected } from "@/lib/admin/api";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
@@ -7,8 +8,8 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
  try {
- const guard = await adminApiSession();
- if (guard instanceof NextResponse) return guard;
+ const session = await adminApiSession();
+ if (session instanceof NextResponse) return session;
  const { id } = await ctx.params;
  const supabase = await createClient();
  const body = (await req.json()) as { website?: string; brand_name?: string };
@@ -52,6 +53,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
  await supabase.from("tracked_keywords").update(kwUpdate).eq("client_id", id);
  }
 
+ await recordAdminAction(session, { action: "project.identity_updated", targetType: "project", targetId: id, summary: "changed a project's website or brand name" });
  return NextResponse.json({ ok: true });
  } catch (e) {
  return adminUnexpected("clients/[id]/identity", e);
