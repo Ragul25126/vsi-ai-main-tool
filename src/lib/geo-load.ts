@@ -96,18 +96,24 @@ async function loadEvidence(project: ProjectSummary, summary: GeoSummary): Promi
 
   const supabase = await createClient();
   const tokens = buildBrandTokens({ brand: project.brandName || project.name, domain: project.website ?? "" });
-  const out: AnswerEvidence[] = [];
+  // The picks are independent, so both answers are fetched at once rather than one after the other.
+  const found = await Promise.all(
+    picks.map(async (pick) => {
+      let q = supabase
+        .from("search_results")
+        .select("keyword, tracked_keyword_id, created_at, aio_full_text, aio_snippet, citations_json, mentioned_in_text, client_cited")
+        .eq("client_id", project.id)
+        .eq("aio_present", true)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      q = pick.keywordId ? q.eq("tracked_keyword_id", pick.keywordId) : q.eq("keyword", pick.keyword);
+      const { data } = await q.maybeSingle();
+      return { pick, data };
+    }),
+  );
 
-  for (const pick of picks) {
-    let q = supabase
-      .from("search_results")
-      .select("keyword, tracked_keyword_id, created_at, aio_full_text, aio_snippet, citations_json, mentioned_in_text, client_cited")
-      .eq("client_id", project.id)
-      .eq("aio_present", true)
-      .order("created_at", { ascending: false })
-      .limit(1);
-    q = pick.keywordId ? q.eq("tracked_keyword_id", pick.keywordId) : q.eq("keyword", pick.keyword);
-    const { data } = await q.maybeSingle();
+  const out: AnswerEvidence[] = [];
+  for (const { pick, data } of found) {
     if (!data) continue;
     const text = (data.aio_full_text as string | null) || (data.aio_snippet as string | null) || "";
     if (!text) continue;

@@ -6,10 +6,12 @@ type Row = Record<string, unknown>;
 const tables: Record<string, Row[]> = {};
 const queries: { table: string; columns: string }[] = [];
 const failing = new Set<string>();
+const inFlight = { now: 0, max: 0 };
 
 function query(table: string) {
   let rows = [...(tables[table] ?? [])];
   let columns = "*";
+  let max = Infinity;
   const b = {
     select(c: string) {
       columns = c;
@@ -33,10 +35,14 @@ function query(table: string) {
       return b;
     },
     limit(n: number) {
-      rows = rows.slice(0, n);
+      max = n; // PostgREST applies filters before the limit, whatever the call order.
       return b;
     },
     async maybeSingle() {
+      inFlight.now++;
+      inFlight.max = Math.max(inFlight.max, inFlight.now);
+      await new Promise((r) => setTimeout(r, 5));
+      inFlight.now--;
       if (failing.has(table)) return { data: null, error: { code: "57014" } };
       return { data: project(rows)[0] ?? null, error: null };
     },
@@ -46,6 +52,7 @@ function query(table: string) {
     },
   };
   function project(rs: Row[]) {
+    rs = rs.slice(0, max);
     if (columns === "*") return rs;
     const cols = columns.split(",").map((c) => c.trim());
     return rs.map((r) => Object.fromEntries(cols.map((c) => [c, r[c] ?? null])));
@@ -73,11 +80,13 @@ const day = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString();
 beforeEach(() => {
   queries.length = 0;
   failing.clear();
+  inFlight.now = inFlight.max = 0;
   tables.clients = [{ id: "p1", rank_tracking_enabled: true, ai_mode_enabled: true, ai_overview_enabled: true, chatgpt_enabled: null }];
   tables.tracked_keywords = [
     { id: "k1", client_id: "p1", is_active: true, track_type: "both" },
     { id: "k2", client_id: "p1", is_active: true, track_type: "seo" },
     { id: "k3", client_id: "p1", is_active: false, track_type: "geo" },
+    { id: "k4", client_id: "p1", is_active: true, track_type: "geo" },
   ];
   const base = {
     client_id: "p1",
@@ -92,10 +101,11 @@ beforeEach(() => {
     chatgpt_cited_urls: [],
   };
   tables.search_results = [
-    { ...base, id: "r1", tracked_keyword_id: "k1", keyword: "best widgets", created_at: day(1), aio_present: true, mentioned_in_text: true, client_cited: true, cited_domains: ["acme.com", "rival.com"], rank_position: 3, rank_url: "https://acme.com/w" },
+    { ...base, id: "r1", tracked_keyword_id: "k1", keyword: "best widgets", created_at: day(1), aio_present: true, mentioned_in_text: true, client_cited: true, cited_domains: ["acme.com", "rival.com"], rank_position: 3, rank_url: "https://acme.com/w", aio_full_text: "Acme makes the best widgets.", citations_json: [{ position: 1, domain: "acme.com", url: "https://acme.com/w", sourceName: "Acme", isClient: true }] },
     { ...base, id: "r2", tracked_keyword_id: "k1", keyword: "best widgets", created_at: day(8), aio_present: true, mentioned_in_text: false, client_cited: false, cited_domains: ["rival.com"], rank_position: 5, rank_url: "https://acme.com/w" },
     { ...base, id: "r3", tracked_keyword_id: "k2", keyword: "widget price", created_at: day(2), aio_present: false, mentioned_in_text: null, client_cited: null, cited_domains: null, rank_position: 12, rank_url: "https://acme.com/p" },
     { ...base, id: "r4", tracked_keyword_id: "k1", keyword: "best widgets", created_at: day(200), aio_present: true, mentioned_in_text: true, client_cited: true, cited_domains: [], rank_position: 1, rank_url: "https://acme.com/w" },
+    { ...base, id: "r5", tracked_keyword_id: "k4", keyword: "widget repair", created_at: day(3), aio_present: true, mentioned_in_text: false, client_cited: false, cited_domains: ["rival.com"], rank_position: null, rank_url: null, aio_full_text: "Rival fixes widgets fast.", citations_json: [{ position: 1, domain: "rival.com", url: "https://rival.com", sourceName: "Rival" }] },
     { ...base, id: "x1", client_id: "other", tracked_keyword_id: "k9", keyword: "not mine", created_at: day(1), aio_present: true, mentioned_in_text: true, client_cited: true, cited_domains: [], rank_position: 1, rank_url: null },
   ];
 });
@@ -134,6 +144,21 @@ describe("loadVisibility", () => {
     expect(geo.state).toBe("error");
     expect(search.state).toBe("error");
     expect(combined).toEqual({ geo, search });
+  });
+});
+
+describe("AI answer evidence", () => {
+  it("returns the answer where you appear and the one where you don't, fetched at the same time", async () => {
+    const { loadGeo } = await import("./geo-load");
+    const geo = await loadGeo(PROJECT);
+    expect(geo.state).toBe("ok");
+    if (geo.state !== "ok") return;
+    expect(geo.evidence.map((e) => [e.keyword, e.appears])).toEqual([
+      ["best widgets", true],
+      ["widget repair", false],
+    ]);
+    expect(geo.evidence[0].sources[0]).toMatchObject({ domain: "acme.com", you: true });
+    expect(inFlight.max).toBe(2);
   });
 });
 
