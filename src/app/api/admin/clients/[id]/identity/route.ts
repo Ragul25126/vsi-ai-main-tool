@@ -1,13 +1,14 @@
+import { adminApiSession, adminDbError, adminUnexpected } from "@/lib/admin/api";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { requireSuperAdmin } from "@/lib/auth";
 import { normaliseDomain } from "@/lib/url-input";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
  try {
- await requireSuperAdmin();
+ const guard = await adminApiSession();
+ if (guard instanceof NextResponse) return guard;
  const { id } = await ctx.params;
  const supabase = await createClient();
  const body = (await req.json()) as { website?: string; brand_name?: string };
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
 
  // Update the client.
  const { error } = await supabase.from("clients").update(update).eq("id", id);
- if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+ if (error) return adminDbError("clients/[id]/identity", error);
 
  // Keep tracked_keywords in sync — they cache domain + brand so the
  // pipeline doesn't have to re-join on every run.
@@ -53,6 +54,6 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
 
  return NextResponse.json({ ok: true });
  } catch (e) {
- return NextResponse.json({ error: e instanceof Error ? e.message : "Failed" }, { status: 500 });
+ return adminUnexpected("clients/[id]/identity", e);
  }
 }

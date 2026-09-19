@@ -1,6 +1,6 @@
+import { adminApiSession, adminDbError, adminUnexpected } from "@/lib/admin/api";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { requireSuperAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,8 @@ interface Payload {
 
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
  try {
- const session = await requireSuperAdmin();
+ const session = await adminApiSession();
+ if (session instanceof NextResponse) return session;
  const { id } = await ctx.params;
  const supabase = await createClient();
  const body = (await req.json()) as Payload;
@@ -47,16 +48,17 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
  }
 
  const { error } = await supabase.from("agencies").update(patch).eq("id", id);
- if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+ if (error) return adminDbError("agencies/[id]", error);
  return NextResponse.json({ ok: true });
  } catch (e) {
- return NextResponse.json({ error: e instanceof Error ? e.message : "Failed" }, { status: 500 });
+ return adminUnexpected("agencies/[id]", e);
  }
 }
 
 export async function DELETE(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
  try {
- const session = await requireSuperAdmin();
+ const session = await adminApiSession();
+ if (session instanceof NextResponse) return session;
  const { id } = await ctx.params;
  if (id === session.agencyId) {
  return NextResponse.json({ error: "You can't delete your own agency." }, { status: 400 });
@@ -65,9 +67,9 @@ export async function DELETE(_req: NextRequest, ctx: { params: Promise<{ id: str
  // Cascade FKs already remove clients / keywords / search_results /
  // reports / tasks tied to this agency. We don't touch auth.users.
  const { error } = await supabase.from("agencies").delete().eq("id", id);
- if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+ if (error) return adminDbError("agencies/[id]", error);
  return NextResponse.json({ ok: true });
  } catch (e) {
- return NextResponse.json({ error: e instanceof Error ? e.message : "Failed" }, { status: 500 });
+ return adminUnexpected("agencies/[id]", e);
  }
 }

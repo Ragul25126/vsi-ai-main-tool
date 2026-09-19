@@ -1,6 +1,9 @@
+import { requireSuperAdmin } from "@/lib/auth";
 import TestSerpApiClient from "@/components/admin/TestSerpApiClient";
 
 export default async function TestSerpApiPage() {
+  // Checked here, not only in the layout: layouts don't re-run on client navigation.
+  await requireSuperAdmin();
  return (
  <div className="p-4 sm:p-8 max-w-5xl text-white">
  <div className="mb-6">

@@ -1,6 +1,5 @@
 import { requireSuperAdmin } from "@/lib/auth";
 import AdminNav from "@/components/AdminNav";
-import ChatFloating from "@/components/ChatFloating";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   await requireSuperAdmin();
@@ -11,7 +10,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <AdminNav />
         <main>{children}</main>
       </div>
-      <ChatFloating />
     </div>
   );
 }

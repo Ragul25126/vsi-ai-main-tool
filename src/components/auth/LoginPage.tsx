@@ -32,6 +32,8 @@ export const LoginPage: React.FC = () => {
     if (errorParam === "unauthorized_account") {
       setAuthError("Invalid email or password.");
       showToast("error", "Access denied. Only authorized ValGrow Labs accounts can access this platform.");
+    } else if (errorParam === "google_unavailable") {
+      setAuthError("Google sign-in isn't available. Sign in with your email and password.");
     } else if (errorParam === "auth_callback_error") {
       setAuthError("Authentication failed. Please try again.");
     }

@@ -1,7 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { currentCookieSessionAllowed } from "@/lib/auth-rules";
 
 export async function GET(request: NextRequest) {
   const origin = request.nextUrl.origin;
+
+  // This flow creates only cookies, not a Supabase session, so it can't sign
+  // anyone in outside local development. Email sign-in (Supabase) is used instead.
+  if (!currentCookieSessionAllowed()) {
+    return NextResponse.redirect(new URL("/login?error=google_unavailable", origin));
+  }
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const customCallbackUrl = process.env.GOOGLE_CALLBACK_URL;

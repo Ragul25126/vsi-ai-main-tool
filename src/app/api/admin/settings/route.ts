@@ -1,6 +1,6 @@
+import { adminApiSession, adminDbError, adminUnexpected } from "@/lib/admin/api";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { requireSuperAdmin } from "@/lib/auth";
 
 // Boolean toggles
 const BOOL_KEYS = new Set([
@@ -23,7 +23,8 @@ const ALLOWED_KEYS = new Set<string>([...BOOL_KEYS, ...Object.keys(ENUM_KEYS)]);
 
 export async function POST(req: NextRequest) {
  try {
- const session = await requireSuperAdmin();
+ const session = await adminApiSession();
+ if (session instanceof NextResponse) return session;
  const body = await req.json() as { key?: string; value?: unknown };
 
  if (!body.key || !ALLOWED_KEYS.has(body.key)) {
@@ -53,13 +54,10 @@ export async function POST(req: NextRequest) {
  );
 
  if (error) {
- return NextResponse.json({ error: error.message }, { status: 500 });
+ return adminDbError("settings", error);
  }
  return NextResponse.json({ ok: true });
  } catch (err) {
- return NextResponse.json(
- { error: err instanceof Error ? err.message : "Failed" },
- { status: 500 }
- );
+ return adminUnexpected("settings", err);
  }
 }

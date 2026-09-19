@@ -1,5 +1,5 @@
+import { adminApiSession } from "@/lib/admin/api";
 import { NextRequest, NextResponse } from "next/server";
-import { requireSuperAdmin } from "@/lib/auth";
 
 export const maxDuration = 120;
 export const dynamic = "force-dynamic";
@@ -63,7 +63,8 @@ async function runAIMode(keyword: string, gl: string, hl: string, apiKey: string
 }
 
 export async function POST(req: NextRequest) {
- await requireSuperAdmin();
+ const guard = await adminApiSession();
+ if (guard instanceof NextResponse) return guard;
  const apiKey = process.env.SERPAPI_KEY || process.env.SERPAPI_API_KEY;
  if (!apiKey) return NextResponse.json({ error: "SERPAPI_KEY missing" }, { status: 503 });
 

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { currentCookieSessionAllowed, isAccountBlocked, isDummySupabaseUrl } from "@/lib/auth-rules";
 
 export type UserRole = "super_admin" | "pilot";
 
@@ -30,8 +31,7 @@ export interface SessionContext {
  * credentials (local dev without a real backend).
  */
 export function isDummySupabase(): boolean {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  return url.includes("dummy") || url.includes("your-project.supabase.co") || url.includes("localhost:54321") || url === "";
+  return isDummySupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
 }
 
 function cleanVal(val?: string | null): string | null {
@@ -77,7 +77,10 @@ async function getCookieUser(): Promise<{
   }
 }
 
-/** Construct session context dynamically from authenticated cookie data or backend state. */
+/**
+ * Local-development session built from cookies. Only used when
+ * currentCookieSessionAllowed() is true (placeholder Supabase, not production).
+ */
 async function dynamicSession(): Promise<SessionContext> {
   const { email, fullName, agencyDisplayName, agencyEmail, agencyLogoMarker } = await getCookieUser();
   const activeEmail = email || "user@example.com";
@@ -111,7 +114,9 @@ import { isAuthorizedEmail } from "@/lib/auth-config";
 export const getSession = cache(async (): Promise<SessionContext | null> => {
   try {
     const cookieStore = await cookies();
-    const hasSession = cookieStore.has("vsi_session") || cookieStore.has("sb-access-token");
+    // Only a hint to skip work when nobody is signed in; it never grants access.
+    const hasSession =
+      cookieStore.has("vsi_session") || cookieStore.getAll().some((c) => /^sb-.+-auth-token(\.\d+)?$/.test(c.name));
     if (!hasSession) {
       return null;
     }
@@ -119,14 +124,16 @@ export const getSession = cache(async (): Promise<SessionContext | null> => {
     // If cookies API fails, proceed
   }
 
-  // When running with dummy credentials, return dynamic session ONLY if email is authorized
-  if (isDummySupabase()) {
+  // Local development without a database: cookie session for the authorized email only.
+  if (currentCookieSessionAllowed()) {
     const cookieUserData = await getCookieUser();
     if (!isAuthorizedEmail(cookieUserData.email)) {
       return null;
     }
     return dynamicSession();
   }
+  // Placeholder credentials in production: there is no backend to sign in against.
+  if (isDummySupabase()) return null;
 
   try {
     const supabase = await createClient();
@@ -134,7 +141,7 @@ export const getSession = cache(async (): Promise<SessionContext | null> => {
     if (user && isAuthorizedEmail(user.email)) {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("agency_id, role, full_name, agencies(name, is_pilot, max_keywords, display_name, logo_url, primary_color, support_email, report_footer)")
+        .select("agency_id, role, full_name, is_disabled, agencies(name, is_pilot, max_keywords, display_name, logo_url, primary_color, support_email, report_footer, is_disabled)")
         .eq("id", user.id)
         .single();
 
@@ -142,8 +149,13 @@ export const getSession = cache(async (): Promise<SessionContext | null> => {
         name: string; is_pilot: boolean; max_keywords: number;
         display_name: string | null; logo_url: string | null;
         primary_color: string | null; support_email: string | null;
-        report_footer: string | null;
+        report_footer: string | null; is_disabled: boolean | null;
       } | null;
+
+      // Disabled accounts (or accounts in a disabled organization) are signed out.
+      if (isAccountBlocked({ role: profile?.role as string | undefined, userDisabled: profile?.is_disabled as boolean | undefined, orgDisabled: agency?.is_disabled })) {
+        return null;
+      }
 
       const cookieUserData = await getCookieUser();
       const resolvedEmail = user.email ?? cookieUserData.email ?? "";
@@ -169,13 +181,7 @@ export const getSession = cache(async (): Promise<SessionContext | null> => {
       };
     }
   } catch {
-    // ignore and fall through
-  }
-
-  // Fallback to cookie-based session check
-  const cookieUserData = await getCookieUser();
-  if (isAuthorizedEmail(cookieUserData.email)) {
-    return dynamicSession();
+    // Supabase unreachable: no session. Cookies alone are never trusted here.
   }
 
   return null;

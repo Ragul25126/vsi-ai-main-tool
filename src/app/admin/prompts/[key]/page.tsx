@@ -1,3 +1,4 @@
+import { requireSuperAdmin } from "@/lib/auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DEFAULT_PROMPTS, getSavedPrompt, type PromptKey } from "@/lib/prompts";
@@ -6,6 +7,8 @@ import PromptEditor from "@/components/admin/PromptEditor";
 export const dynamic = "force-dynamic";
 
 export default async function PromptEditPage({ params }: { params: Promise<{ key: string }> }) {
+  // Checked here, not only in the layout: layouts don't re-run on client navigation.
+  await requireSuperAdmin();
   const { key } = await params;
   const promptKey = key as PromptKey;
   const def = DEFAULT_PROMPTS[promptKey];

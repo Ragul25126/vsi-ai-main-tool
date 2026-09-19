@@ -1,6 +1,6 @@
+import { adminApiSession, adminDbError, adminUnexpected } from "@/lib/admin/api";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { requireSuperAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,8 @@ const ENGINE_KEYS = [
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
  try {
- await requireSuperAdmin();
+ const guard = await adminApiSession();
+ if (guard instanceof NextResponse) return guard;
  const { id } = await ctx.params;
  const supabase = await createClient();
  const body = (await req.json()) as Record<string, unknown>;
@@ -30,9 +31,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
  return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
  }
  const { error } = await supabase.from("clients").update(update).eq("id", id);
- if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+ if (error) return adminDbError("clients/[id]/engines", error);
  return NextResponse.json({ ok: true });
  } catch (e) {
- return NextResponse.json({ error: e instanceof Error ? e.message : "Failed" }, { status: 500 });
+ return adminUnexpected("clients/[id]/engines", e);
  }
 }

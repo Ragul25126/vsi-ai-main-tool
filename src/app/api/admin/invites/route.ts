@@ -1,10 +1,12 @@
+import { adminApiSession, adminDbError, adminUnexpected } from "@/lib/admin/api";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { requireSuperAdmin, generateInviteCode } from "@/lib/auth";
+import { generateInviteCode } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
  try {
- const session = await requireSuperAdmin();
+ const session = await adminApiSession();
+ if (session instanceof NextResponse) return session;
  const body = await req.json() as {
  email?: string | null;
  note?: string | null;
@@ -38,15 +40,12 @@ export async function POST(req: NextRequest) {
  }
  // Unique-violation → retry; anything else → bail
  if (error && error.code !== "23505") {
- return NextResponse.json({ error: error.message }, { status: 500 });
+ return adminDbError("invites", error);
  }
  }
 
  return NextResponse.json({ error: "Could not generate a unique code, try again" }, { status: 500 });
  } catch (err) {
- return NextResponse.json(
- { error: err instanceof Error ? err.message : "Failed" },
- { status: 500 }
- );
+ return adminUnexpected("invites", err);
  }
 }

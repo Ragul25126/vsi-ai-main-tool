@@ -1,3 +1,4 @@
+import { requireSuperAdmin } from "@/lib/auth";
 import Link from "next/link";
 import { DEFAULT_PROMPTS, type PromptKey } from "@/lib/prompts";
 import { createClient } from "@/lib/supabase/server";
@@ -5,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 export default async function PromptsListPage() {
+  // Checked here, not only in the layout: layouts don't re-run on client navigation.
+  await requireSuperAdmin();
   const supabase = await createClient();
   const { data: savedRows } = await supabase
     .from("prompts")

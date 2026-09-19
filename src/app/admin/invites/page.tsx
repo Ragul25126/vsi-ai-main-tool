@@ -1,7 +1,10 @@
+import { requireSuperAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import InviteCreator from "@/components/admin/InviteCreator";
 
 export default async function InvitesPage() {
+  // Checked here, not only in the layout: layouts don't re-run on client navigation.
+  await requireSuperAdmin();
   const supabase = await createClient();
 
   const { data: invites } = await supabase

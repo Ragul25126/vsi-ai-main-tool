@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { isAuthorizedEmail } from "@/lib/auth-config";
+import { currentCookieSessionAllowed } from "@/lib/auth-rules";
 import { PROJECT_COOKIE, UUID_PATTERN } from "@/lib/project-types";
 
 // Routes that do not require authentication
@@ -67,8 +68,10 @@ export async function middleware(request: NextRequest) {
     cookieEmail = cookieEmail.trim();
   }
 
-  const resolvedEmail = user?.email || cookieEmail;
-  const hasAuthToken = !!user || request.cookies.has("vsi_session") || request.cookies.has("sb-access-token");
+  // Cookies alone are only trusted in local development without a database.
+  const cookieSessions = currentCookieSessionAllowed();
+  const resolvedEmail = user?.email || (cookieSessions ? cookieEmail : null);
+  const hasAuthToken = !!user || (cookieSessions && request.cookies.has("vsi_session"));
   const isAuthorized = hasAuthToken && isAuthorizedEmail(resolvedEmail);
 
   // If user is logged in with ANY other email (unauthorized user), sign out & redirect to login
@@ -96,7 +99,16 @@ export async function middleware(request: NextRequest) {
   if (!isPublicPath && !isAuthorized) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(loginUrl);
+    const res = NextResponse.redirect(loginUrl);
+    // Clear leftover client-side session markers so the login page doesn't
+    // bounce the user back to a page they can no longer open.
+    if (!cookieSessions && request.cookies.has("vsi_session")) {
+      const expired = "path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+      res.headers.append("Set-Cookie", `vsi_session=; ${expired}`);
+      res.headers.append("Set-Cookie", `vsi_user_email=; ${expired}`);
+      res.headers.append("Set-Cookie", `vsi_user_name=; ${expired}`);
+    }
+    return res;
   }
 
   // Deep links into a project make it the active project app-wide. Access is

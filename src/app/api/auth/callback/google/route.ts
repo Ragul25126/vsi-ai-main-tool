@@ -1,8 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isAuthorizedEmail } from "@/lib/auth-config";
+import { currentCookieSessionAllowed } from "@/lib/auth-rules";
 
 export async function GET(request: NextRequest) {
   const origin = request.nextUrl.origin;
+  if (!currentCookieSessionAllowed()) {
+    return NextResponse.redirect(new URL("/login?error=google_unavailable", origin));
+  }
   const searchParams = request.nextUrl.searchParams;
 
   const code = searchParams.get("code");
@@ -24,7 +28,7 @@ export async function GET(request: NextRequest) {
 
   // Validate state parameter against HTTP-only state cookie
   const savedState = request.cookies.get("vsi_oauth_state")?.value;
-  if (state && savedState && state !== savedState) {
+  if (!state || !savedState || state !== savedState) {
     const loginUrl = new URL("/login", origin);
     loginUrl.searchParams.set("error", "google_csrf_mismatch");
     return NextResponse.redirect(loginUrl);

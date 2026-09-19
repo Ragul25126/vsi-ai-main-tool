@@ -1,8 +1,11 @@
+import { requireSuperAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function CronRunsPage() {
+  // Checked here, not only in the layout: layouts don't re-run on client navigation.
+  await requireSuperAdmin();
   const supabase = await createClient();
   const { data: runs } = await supabase
     .from("cron_runs")

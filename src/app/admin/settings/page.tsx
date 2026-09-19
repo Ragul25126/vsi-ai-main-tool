@@ -1,7 +1,10 @@
+import { requireSuperAdmin } from "@/lib/auth";
 import { getAllSettings } from "@/lib/settings";
 import SettingsToggles from "@/components/admin/SettingsToggles";
 
 export default async function AdminSettingsPage() {
+  // Checked here, not only in the layout: layouts don't re-run on client navigation.
+  await requireSuperAdmin();
   const settings = await getAllSettings();
 
   return (

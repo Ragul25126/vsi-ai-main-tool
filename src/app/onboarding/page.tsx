@@ -45,13 +45,11 @@ export default function OnboardingPage() {
  return;
  }
 
- const { data: invite } = await supabase
- .from("invites")
- .select("role, max_keywords, is_active, used_by")
- .eq("code", code)
- .maybeSingle();
+ // Checks one code server-side; the invites table itself isn't readable.
+ const { data: validation } = await supabase.rpc("validate_invite", { p_code: code });
+ const invite = (Array.isArray(validation) ? validation[0] : validation) as { role: string; max_keywords: number } | null;
 
- if (!invite || !invite.is_active || invite.used_by) {
+ if (!invite) {
  setError("Your invite code is invalid or already used. Contact your admin.");
  return;
  }
@@ -81,51 +79,24 @@ export default function OnboardingPage() {
  return;
  }
 
- // SECURITY: atomically claim the invite BEFORE creating the agency.
- // The DB function locks the invite row + rejects if already consumed,
- // preventing two concurrent registrations from both succeeding on
- // the same code.
- const { data: claim, error: claimErr } = await supabase
- .rpc("claim_invite", { p_code: code, p_user: user.id });
- if (claimErr) {
- setError("Could not validate invite. Please contact support.");
- setLoading(false);
- return;
- }
- const claimRow = Array.isArray(claim) ? claim[0] : claim;
- if (!claimRow) {
- setError("This invite code has already been used. Each invite is single-use — request a new one from your admin.");
- setLoading(false);
- return;
- }
+ // One server-side step: claims the invite (single use, locked), creates the
+ // organization and links this account to it with the invite's role. The
+ // browser can't set its own role or organization.
+ const { error: setupErr } = await supabase.rpc("complete_onboarding", {
+ p_code: code,
+ p_agency_name: agencyName.trim(),
+ p_slug: slugify(agencyName),
+ });
 
- const slug = slugify(agencyName);
- const isPilot = claimRow.role === "pilot";
-
- const { data: agency, error: agencyErr } = await supabase
- .from("agencies")
- .insert({
- name: agencyName.trim(),
- slug,
- max_keywords: claimRow.max_keywords,
- is_pilot: isPilot,
- })
- .select("id")
- .single();
-
- if (agencyErr) {
- setError("Could not create agency. Try a different name.");
- setLoading(false);
- return;
- }
-
- const { error: profileErr } = await supabase
- .from("profiles")
- .update({ agency_id: agency.id, role: claimRow.role })
- .eq("id", user.id);
-
- if (profileErr) {
- setError("Account setup failed. Please contact support.");
+ if (setupErr) {
+ const msg = setupErr.message ?? "";
+ setError(
+ /invite/i.test(msg)
+ ? "This invite code has already been used. Each invite is single-use. Request a new one from your admin."
+ : /duplicate|unique|slug/i.test(msg)
+ ? "Could not create agency. Try a different name."
+ : "Account setup failed. Please contact support.",
+ );
  setLoading(false);
  return;
  }

@@ -1,6 +1,6 @@
+import { adminApiSession, adminDbError } from "@/lib/admin/api";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { requireSuperAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -9,7 +9,8 @@ export const maxDuration = 60;
 // for jq / pandas / fine-tuning corpora. CSV variant available with ?format=csv.
 
 export async function GET(req: NextRequest) {
- await requireSuperAdmin();
+ const guard = await adminApiSession();
+ if (guard instanceof NextResponse) return guard;
  const url = new URL(req.url);
  const format = url.searchParams.get("format") ?? "jsonl";
  const sinceDays = Math.max(1, Math.min(395, Number(url.searchParams.get("since_days") ?? 30)));
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
  .range(cursor, cursor + PAGE - 1);
  if (type) q = q.eq("event_type", type);
  const { data, error } = await q;
- if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+ if (error) return adminDbError("analytics/export", error);
  const rows = data ?? [];
  all.push(...(rows as Record<string, unknown>[]));
  if (rows.length < PAGE) break;
