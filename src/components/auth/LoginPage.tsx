@@ -41,12 +41,10 @@ export const LoginPage: React.FC = () => {
 
   const completeAuthentication = (user: UserProfile) => {
     setClientSession(user);
+    // Go straight to the next page. The toast shows only while that page loads; there is no fixed wait.
     showToast('success', `Welcome back to VSI AI Suite!`);
-    setTimeout(() => {
-      const params = new URLSearchParams(window.location.search);
-      const redirectPath = params.get("redirect") || "/dashboard";
-      window.location.href = redirectPath;
-    }, 700);
+    const params = new URLSearchParams(window.location.search);
+    window.location.href = params.get("redirect") || "/dashboard";
   };
 
   const handleLoginSubmit = async (email: string, password: string) => {

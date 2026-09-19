@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   Sparkles,
   ExternalLink,
-  RefreshCw,
   Sliders,
   ChevronDown,
   ChevronUp,
@@ -116,7 +115,6 @@ export default function PromptsPage() {
   const [clientDomain, setClientDomain] = useState("valgrowlabs.com");
   const [competitors, setCompetitors] = useState("competitor1.com, competitor2.com");
   const [copied, setCopied] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [customPrompt, setCustomPrompt] = useState(ENGINES[0].defaultPrompt);
 
@@ -166,7 +164,7 @@ export default function PromptsPage() {
     setKeyword(preset.keyword);
     setClientDomain(preset.domain);
     setCompetitors(preset.competitors);
-    triggerSimulation(preset.keyword, preset.domain);
+    triggerSimulation();
   };
 
   const handleOpenAddModalWithCurrent = () => {
@@ -206,13 +204,8 @@ export default function PromptsPage() {
     saveCustomSamplesToStorage(updated);
   };
 
-  const triggerSimulation = (kw = keyword, dom = clientDomain) => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setHasTested(true);
-    }, 120);
-  };
+  // The preview is built from the fields above as you type, so showing it needs no waiting.
+  const triggerSimulation = () => setHasTested(true);
 
   const handleCopyPrompt = () => {
     navigator.clipboard.writeText(evaluatedPrompt);
@@ -459,16 +452,11 @@ export default function PromptsPage() {
 
             <button
               type="button"
-              onClick={() => triggerSimulation()}
-              disabled={isLoading}
+              onClick={triggerSimulation}
               className="flex items-center gap-2 px-6 py-3 rounded-panel bg-ink hover:bg-ink-2 text-white text-xs font-semibold transition-all cursor-pointer disabled:opacity-60"
             >
-              {isLoading ? (
-                <RefreshCw size={15} className="animate-spin" />
-              ) : (
-                <Zap size={15} className="fill-white" />
-              )}
-              <span>{isLoading ? "Simulating AI Answer..." : "Check AI Answer"}</span>
+              <Zap size={15} className="fill-white" />
+              <span>Check AI Answer</span>
             </button>
           </div>
 
