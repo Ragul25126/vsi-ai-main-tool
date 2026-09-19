@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from "react";
 import { Message, MessageFolder, ComposeDraft, ToastPayload } from "@/lib/types/messages";
+import { coalesce } from "@/lib/coalesce";
 
 interface MessagesContextProps {
   messages: Message[];
@@ -42,7 +43,7 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
   const [editingDraft, setEditingDraft] = useState<Message | null>(null);
 
   // Fetch messages from backend API
-  const refreshMessages = useCallback(async () => {
+  const loadMessages = useCallback(async () => {
     try {
       const res = await fetch("/api/messages", { cache: "no-store" });
       if (res.ok) {
@@ -58,13 +59,35 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Overlapping refreshes (the timer, focus, a save) share one request.
+  const refreshMessages = useMemo(() => coalesce(loadMessages), [loadMessages]);
+
   useEffect(() => {
     refreshMessages();
-    // Auto sync every 15 seconds for realtime multi-device sync
-    const interval = setInterval(() => {
-      refreshMessages();
-    }, 15000);
-    return () => clearInterval(interval);
+    // Auto sync every 15 seconds for realtime multi-device sync, while the tab is visible.
+    // A hidden tab stops polling and catches up as soon as it's shown again.
+    let interval: ReturnType<typeof setInterval> | null = null;
+    const start = () => {
+      if (!interval) interval = setInterval(refreshMessages, 15000);
+    };
+    const stop = () => {
+      if (interval) clearInterval(interval);
+      interval = null;
+    };
+    const onVisibility = () => {
+      if (document.hidden) {
+        stop();
+      } else {
+        refreshMessages();
+        start();
+      }
+    };
+    if (!document.hidden) start();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [refreshMessages]);
 
   const unreadCount = messages.filter(m => m.status === "unread" && m.folder === "inbox").length;

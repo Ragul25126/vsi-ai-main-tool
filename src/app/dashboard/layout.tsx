@@ -37,7 +37,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const projectKey = projectContext.active?.id ?? "none";
 
   return (
-    <NotificationsProvider>
+    <NotificationsProvider userId={session.userId}>
       <MessagesProvider>
         <FeedbackProvider>
           <ProjectProvider project={projectContext.active}>

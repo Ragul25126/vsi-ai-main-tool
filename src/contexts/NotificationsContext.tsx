@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { coalesce } from "@/lib/coalesce";
 
 export type NotificationType = 'alert' | 'system' | 'report' | 'user';
 export type NotificationSeverity = 'high' | 'medium' | 'low' | 'info';
@@ -40,7 +41,7 @@ const NotificationsContext = createContext<NotificationsContextType | undefined>
 const STORAGE_KEY = "enterprise_user_notifications";
 const CLEARED_KEY = "enterprise_notifications_cleared";
 
-export function NotificationsProvider({ children }: { children: ReactNode }) {
+export function NotificationsProvider({ children, userId }: { children: ReactNode; userId?: string | null }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -61,7 +62,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Fetch notifications from database API
-  const fetchNotifications = useCallback(async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       const isClearedLocally = typeof window !== "undefined" && localStorage.getItem(CLEARED_KEY) === "true";
       
@@ -118,6 +119,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
   }, [syncState]);
 
+  // One change can arrive as many Realtime events (mark all read updates every row). Overlapping
+  // refreshes share one request plus one follow-up, so the list still ends up current.
+  const fetchNotifications = useMemo(() => coalesce(loadNotifications), [loadNotifications]);
+
   // Initial Load & Realtime setup
   useEffect(() => {
     fetchNotifications();
@@ -125,22 +130,25 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     // Set up Realtime listener using Supabase JS client
     try {
       const supabase = createClient();
-      const channel = supabase
-        .channel("realtime:notifications")
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "notifications" },
-          () => {
-            fetchNotifications();
-          }
-        )
-        .subscribe();
+      const channel = supabase.channel("realtime:notifications");
+      if (userId) {
+        // The list only shows this user's rows, so only their inserts and updates need a refresh.
+        // Postgres can't filter DELETE events, so deletes stay unfiltered as before.
+        const own = `user_id=eq.${userId}`;
+        channel
+          .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: own }, () => { fetchNotifications(); })
+          .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notifications", filter: own }, () => { fetchNotifications(); })
+          .on("postgres_changes", { event: "DELETE", schema: "public", table: "notifications" }, () => { fetchNotifications(); });
+      } else {
+        channel.on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => { fetchNotifications(); });
+      }
+      channel.subscribe();
 
       return () => {
         supabase.removeChannel(channel);
       };
     } catch {}
-  }, [fetchNotifications]);
+  }, [fetchNotifications, userId]);
 
   // Custom event listener for instant local cross-component dispatch
   useEffect(() => {
