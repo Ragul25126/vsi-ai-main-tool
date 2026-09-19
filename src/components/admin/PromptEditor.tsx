@@ -60,7 +60,7 @@ export default function PromptEditor({
     setSaving(false);
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Failed to save");
+      setError(data.error ?? "That didn't save. Please try again.");
       return;
     }
     setSaved(true);
@@ -106,16 +106,16 @@ export default function PromptEditor({
   return (
     <div className="space-y-6">
       {/* Variables reference */}
-      <div className="rounded-panel border border-slate-200/80 bg-white p-6 text-slate-900">
-        <p className="text-xs font-bold text-slate-400 mb-3">Available template variables</p>
+      <div className="rounded-panel border border-line bg-surface p-6 text-ink">
+        <p className="text-support font-medium text-ink-3 mb-3">Available template variables</p>
         <div className="flex flex-wrap gap-2">
           {variables.map((v) => {
             const used = placeholdersUsed.has(v);
             return (
               <code
                 key={v}
-                className={`rounded-lg px-2.5 py-1 text-xs font-mono font-bold ${
-                  used ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-slate-100 text-slate-600 border border-slate-200"
+                className={`rounded-lg px-2.5 py-1 text-support font-mono font-medium ${
+                  used ? "bg-positive-soft text-positive border border-line" : "bg-surface-2 text-ink-2 border border-line"
                 }`}
                 title={used ? "In use" : "Not yet referenced in template"}
               >
@@ -124,16 +124,16 @@ export default function PromptEditor({
             );
           })}
         </div>
-        <p className="text-xs text-slate-500 font-medium mt-4">
-          <span className="font-bold text-slate-800">Expected output:</span> {outputFormat}
+        <p className="text-support text-ink-3 font-medium mt-4">
+          <span className="font-medium text-ink">Expected output:</span> {outputFormat}
         </p>
       </div>
 
       {/* Editor */}
-      <div className="rounded-panel border border-slate-200/80 bg-white p-6 space-y-4">
+      <div className="rounded-panel border border-line bg-surface p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <p className="text-base font-bold text-slate-900">Template</p>
-          <span className={`text-xs font-bold px-3 py-1 rounded-full ${isOverride ? "bg-orange-50 text-brand-strong border border-orange-200" : "bg-slate-100 text-slate-500 border border-slate-200"}`}>
+          <p className="text-body font-medium text-ink">Template</p>
+          <span className={`text-support font-medium px-3 py-1 rounded-control ${isOverride ? "bg-surface-2 text-brand-strong border border-line" : "bg-surface-2 text-ink-3 border border-line"}`}>
             {isOverride ? "Editing override" : "Editing default copy"}
           </span>
         </div>
@@ -142,17 +142,17 @@ export default function PromptEditor({
           onChange={(e) => setDraft(e.target.value)}
           rows={22}
           spellCheck={false}
-          className="w-full rounded-panel border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-900 font-mono leading-relaxed focus:border-line-strong focus:bg-white focus:outline-none transition-colors"
+          className="w-full rounded-panel border border-line bg-surface-2 px-4 py-3 text-support text-ink font-mono leading-relaxed focus:border-line-strong focus:bg-surface focus:outline-none transition-colors"
         />
 
         {unknownPlaceholders.length > 0 && (
-          <div className="rounded-panel border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700">
+          <div className="rounded-panel border border-line bg-critical-soft px-4 py-3 text-support font-semibold text-critical">
             <strong>Unknown placeholders:</strong>{" "}
             {unknownPlaceholders.map((p) => `{{${p}}}`).join(", ")} - these will render as empty strings. Remove or fix them.
           </div>
         )}
         {missingPlaceholders.length > 0 && (
-          <div className="rounded-panel border border-orange-200 bg-orange-50 px-4 py-3 text-xs font-semibold text-brand-strong">
+          <div className="rounded-panel border border-line bg-surface-2 px-4 py-3 text-support font-semibold text-brand-strong">
             <strong>Not referenced:</strong>{" "}
             {missingPlaceholders.map((p) => `{{${p}}}`).join(", ")} - these variables won&rsquo;t appear in the prompt. That&rsquo;s fine if intentional.
           </div>
@@ -160,39 +160,39 @@ export default function PromptEditor({
       </div>
 
       {/* Preview */}
-      <div className="rounded-panel border border-slate-200/80 bg-white p-6">
+      <div className="rounded-panel border border-line bg-surface p-6">
         <button
           onClick={() => setPreviewOpen((v) => !v)}
-          className="flex items-center gap-2 text-sm font-bold text-slate-900 hover:text-brand-strong transition-colors"
+          className="flex items-center gap-2 text-body font-medium text-ink hover:text-brand-strong transition-colors"
         >
           <span>{previewOpen ? "▼" : "▶"}</span>
           Preview rendered prompt (with sample values)
         </button>
         {previewOpen && (
-          <pre className="mt-4 text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-panel p-4 overflow-x-auto max-h-96 overflow-y-auto whitespace-pre-wrap leading-relaxed font-mono">
+          <pre className="mt-4 text-support text-ink bg-surface-2 border border-line rounded-panel p-4 overflow-x-auto max-h-96 overflow-y-auto whitespace-pre-wrap leading-relaxed font-mono">
             {samplePreview}
           </pre>
         )}
       </div>
 
       {error && (
-        <div className="rounded-panel border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{error}</div>
+        <div className="rounded-panel border border-line bg-critical-soft px-4 py-3 text-body font-medium text-critical">{error}</div>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <button
           onClick={resetToDefault}
           disabled={saving || !isOverride}
-          className="rounded-panel border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors"
+          className="rounded-panel border border-line bg-surface px-4 py-2.5 text-support font-medium text-ink-2 hover:bg-surface-2 disabled:opacity-40 transition-colors"
         >
           Reset to default
         </button>
         <div className="flex items-center gap-3">
-          {saved && <span className="text-xs text-emerald-600 font-bold">✓ Saved</span>}
+          {saved && <span className="text-support text-positive font-medium">✓ Saved</span>}
           <button
             onClick={save}
             disabled={saving || !dirty}
-            className="rounded-panel bg-ink px-5 py-2.5 text-sm font-bold text-white hover:bg-[#e04800] disabled:opacity-40 transition-colors /20"
+            className="rounded-panel bg-ink px-5 py-2.5 text-body font-medium text-white hover:bg-ink-2 disabled:opacity-40 transition-colors /20"
           >
             {saving ? "Saving..." : dirty ? "Save override" : "No changes"}
           </button>

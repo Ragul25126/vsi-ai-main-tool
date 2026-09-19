@@ -46,6 +46,16 @@ const nextConfig: NextConfig = {
 
   // Old navigation URLs keep working after the navigation simplification.
   redirects: async () => [
+    // Platform admin: old URLs keep working after the admin redesign.
+    { source: "/admin/agencies", destination: "/admin/organizations", permanent: false },
+    { source: "/admin/invites", destination: "/admin/users?tab=invites", permanent: false },
+    { source: "/admin/analytics", destination: "/admin/usage", permanent: false },
+    { source: "/admin/cron-runs", destination: "/admin/jobs?type=scheduled", permanent: false },
+    { source: "/admin/test-serpapi", destination: "/admin/health", permanent: false },
+    { source: "/admin/prompts", destination: "/admin/settings/prompts", permanent: false },
+    { source: "/admin/prompts/:key", destination: "/admin/settings/prompts/:key", permanent: false },
+    { source: "/admin/qa", destination: "/admin/settings/qa", permanent: false },
+    { source: "/admin/clients/:id", destination: "/admin/projects/:id", permanent: false },
     { source: "/dashboard/services/geo", destination: "/dashboard/geo", permanent: false },
     { source: "/dashboard/services/geo-tracked", destination: "/dashboard/geo", permanent: false },
     { source: "/dashboard/services/all", destination: "/dashboard/services/seo", permanent: false },

@@ -1,20 +1,22 @@
+import type { Metadata } from "next";
 import { requireSuperAdmin } from "@/lib/auth";
 import { getAllSettings } from "@/lib/settings";
+import { PageContainer, PageHeader } from "@/components/ui/Page";
+import { SettingsTabs } from "@/components/admin/SettingsTabs";
 import SettingsToggles from "@/components/admin/SettingsToggles";
 
+export const metadata: Metadata = { title: "Settings" };
+export const dynamic = "force-dynamic";
+
 export default async function AdminSettingsPage() {
-  // Checked here, not only in the layout: layouts don't re-run on client navigation.
   await requireSuperAdmin();
   const settings = await getAllSettings();
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">System Settings</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Pipeline-wide toggles. Changes apply to all agencies on the next run.</p>
-      </div>
-
+    <PageContainer>
+      <PageHeader title="Settings" description="Platform-wide switches. Changes apply to every organization from the next check, and are recorded in Activity." />
+      <SettingsTabs current="pipeline" />
       <SettingsToggles initial={settings as Record<string, boolean>} />
-    </div>
+    </PageContainer>
   );
 }

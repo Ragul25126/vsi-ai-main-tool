@@ -118,76 +118,80 @@ export default function SettingsToggles({ initial }: { initial: Record<string, u
     if (!res.ok) {
       setState((s) => ({ ...s, [key]: prev }));
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Failed to save");
+      setError(data.error ?? "That didn't save. Please try again.");
     }
   }
 
   return (
     <div className="space-y-4">
       {error && (
-        <div className="rounded-panel border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+        <div role="alert" className="rounded-panel border border-line bg-critical-soft px-4 py-3 text-body text-critical">
           {error}
         </div>
       )}
 
+      <ul className="divide-y divide-line rounded-panel border border-line bg-surface">
       {TOGGLES.map((t) => {
         const value = !!state[t.key];
         return (
-          <div key={t.key} className="flex items-start justify-between gap-4 rounded-panel border border-slate-200/80 bg-white p-5 text-slate-900">
+          <li key={t.key} className="flex items-start justify-between gap-4 px-4 py-3.5">
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <p className="text-base font-bold text-slate-900">{t.title}</p>
-                {t.experimental && (
-                  <span className="rounded-full bg-orange-50 border border-orange-200 px-2.5 py-0.5 text-caption font-semibold text-brand-strong">
-                    Experimental
-                  </span>
-                )}
+                <p id={`setting-${t.key}`} className="text-body font-medium text-ink">{t.title}</p>
+                {t.experimental && <span className="text-caption text-ink-3">Experimental</span>}
               </div>
-              <p className="mt-1 text-xs text-slate-500 font-medium leading-relaxed">{t.description}</p>
+              <p className="mt-0.5 text-support text-ink-3">{t.description}</p>
             </div>
             <button
+              type="button"
+              role="switch"
+              aria-checked={value}
+              aria-labelledby={`setting-${t.key}`}
               onClick={() => setKey(t.key, !value)}
               disabled={saving === t.key}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
-                value ? "bg-ink" : "bg-slate-200"
+                value ? "bg-ink" : "bg-line"
               } disabled:opacity-50`}
-              aria-pressed={value}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform  ${
+                className={`inline-block h-4 w-4 transform rounded-full bg-surface transition-transform  ${
                   value ? "translate-x-6" : "translate-x-1"
                 }`}
               />
             </button>
-          </div>
+          </li>
         );
       })}
+      </ul>
 
+      <ul className="divide-y divide-line rounded-panel border border-line bg-surface">
       {SELECTS.map((s) => {
         const current = typeof state[s.key] === "string" ? (state[s.key] as string) : "";
         return (
-          <div key={s.key} className="rounded-panel border border-slate-200/80 bg-white p-5 text-slate-900">
-            <p className="text-base font-bold text-slate-900">{s.title}</p>
-            <p className="mt-1 text-xs text-slate-500 font-medium leading-relaxed">{s.description}</p>
-            <div className="mt-4 flex flex-wrap gap-2">
+          <li key={s.key} className="px-4 py-3.5">
+            <p className="text-body font-medium text-ink">{s.title}</p>
+            <p className="mt-0.5 text-support text-ink-3">{s.description}</p>
+            <div role="radiogroup" aria-label={s.title} className="mt-3 flex flex-wrap gap-2">
               {s.options.map((opt) => (
                 <button
                   key={opt.value}
                   onClick={() => setKey(s.key, opt.value)}
                   disabled={saving === s.key}
-                  className={`rounded-panel px-3.5 py-2 text-xs font-bold transition-all ${
-                    current === opt.value
-                      ? "bg-ink text-white "
-                      : "border border-slate-200 bg-slate-50/80 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
-                  } disabled:opacity-50 cursor-pointer`}
+                  type="button"
+                  role="radio"
+                  aria-checked={current === opt.value}
+                  className={`h-8 rounded-control px-3 text-support transition-colors ${
+                    current === opt.value ? "bg-ink font-medium text-white" : "border border-line bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink"
+                  } disabled:opacity-50`}
                 >
                   {opt.label}
                 </button>
               ))}
             </div>
-          </div>
+          </li>
         );
       })}
+      </ul>
     </div>
   );
 }

@@ -406,7 +406,7 @@ export async function getPromptTemplate(key: PromptKey): Promise<string> {
 
 /**
  * Fetch the full prompt definition + the currently-saved DB override if any.
- * Used by the /admin/prompts UI.
+ * Used by the /admin/settings/prompts UI.
  */
 export interface SavedPromptRow {
   key: PromptKey;
