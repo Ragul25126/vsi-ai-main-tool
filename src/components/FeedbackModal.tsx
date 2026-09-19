@@ -8,7 +8,6 @@ import {
   CheckCircle2, AlertCircle,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
-import { createClient } from "@/lib/supabase/client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -275,6 +274,8 @@ export default function FeedbackModal({ open, onClose }: FeedbackModalProps) {
       }
 
       checkSupabaseConfig();
+      // Loaded when feedback is sent, so the Supabase client stays out of the JavaScript every page loads.
+      const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
 

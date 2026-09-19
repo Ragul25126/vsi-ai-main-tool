@@ -1,8 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { coalesce } from "@/lib/coalesce";
+import { isDummySupabaseUrl } from "@/lib/auth-rules";
 
 export type NotificationType = 'alert' | 'system' | 'report' | 'user';
 export type NotificationSeverity = 'high' | 'medium' | 'low' | 'info';
@@ -127,27 +127,40 @@ export function NotificationsProvider({ children, userId }: { children: ReactNod
   useEffect(() => {
     fetchNotifications();
 
-    // Set up Realtime listener using Supabase JS client
-    try {
-      const supabase = createClient();
-      const channel = supabase.channel("realtime:notifications");
-      if (userId) {
-        // The list only shows this user's rows, so only their inserts and updates need a refresh.
-        // Postgres can't filter DELETE events, so deletes stay unfiltered as before.
-        const own = `user_id=eq.${userId}`;
-        channel
-          .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: own }, () => { fetchNotifications(); })
-          .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notifications", filter: own }, () => { fetchNotifications(); })
-          .on("postgres_changes", { event: "DELETE", schema: "public", table: "notifications" }, () => { fetchNotifications(); });
-      } else {
-        channel.on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => { fetchNotifications(); });
-      }
-      channel.subscribe();
+    // A placeholder project has no Realtime server to connect to.
+    if (isDummySupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL)) return;
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    } catch {}
+    // Set up Realtime listener using Supabase JS client. The client is loaded after the page is
+    // up, so it stays out of the JavaScript every page loads first.
+    let cancelled = false;
+    let unsubscribe: (() => void) | undefined;
+    import("@/lib/supabase/client")
+      .then(({ createClient }) => {
+        if (cancelled) return;
+        try {
+          const supabase = createClient();
+          const channel = supabase.channel("realtime:notifications");
+          if (userId) {
+            // The list only shows this user's rows, so only their inserts and updates need a refresh.
+            // Postgres can't filter DELETE events, so deletes stay unfiltered as before.
+            const own = `user_id=eq.${userId}`;
+            channel
+              .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: own }, () => { fetchNotifications(); })
+              .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notifications", filter: own }, () => { fetchNotifications(); })
+              .on("postgres_changes", { event: "DELETE", schema: "public", table: "notifications" }, () => { fetchNotifications(); });
+          } else {
+            channel.on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => { fetchNotifications(); });
+          }
+          channel.subscribe();
+          unsubscribe = () => { supabase.removeChannel(channel); };
+        } catch {}
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
   }, [fetchNotifications, userId]);
 
   // Custom event listener for instant local cross-component dispatch

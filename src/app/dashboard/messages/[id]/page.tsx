@@ -67,20 +67,18 @@ export default function MessageDetailsPage() {
   };
 
   const handleDownloadPDF = () => {
-    setToastMessage("Generating PDF document...");
-    setTimeout(() => {
-      const element = document.createElement("a");
-      const plainBody = message.body.replace(/<[^>]+>/g, '\n');
-      const content = `========================================================\nMESSAGE DETAILS\n========================================================\n\nSubject: ${message.subject}\nFrom: ${message.sender.name} (${message.sender.email})\nTo: ${message.recipient.name} (${message.recipient.email})\nDate: ${new Date(message.timestamp).toLocaleString()}\nFolder: ${message.folder.toUpperCase()}\nStatus: ${message.status.toUpperCase()}\n\n--------------------------------------------------------\nCONTENT:\n--------------------------------------------------------\n\n${plainBody}\n`;
-      const file = new Blob([content], { type: 'text/plain' });
-      element.href = URL.createObjectURL(file);
-      element.download = `${message.subject.replace(/[^a-zA-Z0-9]/gi, '_')}_message.txt`;
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-      setToastMessage("Message file downloaded successfully.");
-      setTimeout(() => setToastMessage(null), 3000);
-    }, 400);
+    // The file is built in memory, so there is nothing to wait for.
+    const element = document.createElement("a");
+    const plainBody = message.body.replace(/<[^>]+>/g, '\n');
+    const content = `========================================================\nMESSAGE DETAILS\n========================================================\n\nSubject: ${message.subject}\nFrom: ${message.sender.name} (${message.sender.email})\nTo: ${message.recipient.name} (${message.recipient.email})\nDate: ${new Date(message.timestamp).toLocaleString()}\nFolder: ${message.folder.toUpperCase()}\nStatus: ${message.status.toUpperCase()}\n\n--------------------------------------------------------\nCONTENT:\n--------------------------------------------------------\n\n${plainBody}\n`;
+    const file = new Blob([content], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = `${message.subject.replace(/[^a-zA-Z0-9]/gi, '_')}_message.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    setToastMessage("Message file downloaded successfully.");
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   const formattedDate = new Date(message.timestamp).toLocaleString(undefined, {

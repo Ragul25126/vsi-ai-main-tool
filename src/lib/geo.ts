@@ -20,11 +20,9 @@ export const ENGINES: { id: EngineId; label: string; description: string }[] = [
 export const COMING_SOON_ENGINES = ["Gemini", "Perplexity"];
 
 export interface GeoRow {
-  id: string;
   tracked_keyword_id: string | null;
   keyword: string;
   created_at: string;
-  gap_label: string | null;
   aio_present: boolean | null;
   mentioned_in_text: boolean | null;
   client_cited: boolean | null;

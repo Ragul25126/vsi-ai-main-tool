@@ -21,7 +21,7 @@ describe("competitors", () => {
     const geo = computeGeo(
       [
         {
-          id: "1", tracked_keyword_id: "a", keyword: "a", created_at: "2026-09-10", gap_label: null,
+          tracked_keyword_id: "a", keyword: "a", created_at: "2026-09-10",
           aio_present: true, mentioned_in_text: false, client_cited: false, cited_domains: ["other.com"],
           ai_overview_present: null, ai_overview_client_cited: null, ai_overview_cited_domains: null,
           chatgpt_checked: false, chatgpt_brand_mentioned: null, chatgpt_brand_cited: null, chatgpt_competitors: null, chatgpt_cited_urls: null,

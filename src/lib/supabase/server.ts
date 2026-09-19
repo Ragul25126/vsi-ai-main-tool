@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { isDummySupabaseUrl } from "@/lib/auth-rules";
 
 export async function createClient() {
   const cookieStore = await cookies();
@@ -18,6 +19,9 @@ export async function createClient() {
     url,
     key,
     {
+      // A placeholder host can never answer. Without this, every read waits out the library's
+      // retry backoff (1 s + 2 s + 4 s) before failing. Real projects keep the default retries.
+      db: { retry: !isDummySupabaseUrl(url) },
       cookies: {
         getAll() {
           return cookieStore.getAll();

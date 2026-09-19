@@ -65,11 +65,11 @@ export function clearClientSession() {
   document.cookie = `vsi_user_name=; ${expired}`;
 }
 
-import { createClient } from "@/lib/supabase/client";
-
 export async function logoutAndRedirect() {
   if (typeof window !== "undefined") {
     try {
+      // Loaded on sign-out only, so the Supabase client stays out of the JavaScript every page loads.
+      const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       await supabase.auth.signOut();
     } catch (e) {

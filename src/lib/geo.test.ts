@@ -6,11 +6,9 @@ const ALL_ON = { google_ai_mode: true, chatgpt: true, ai_overviews: false };
 
 function row(overrides: Partial<GeoRow>): GeoRow {
   return {
-    id: Math.random().toString(36),
     tracked_keyword_id: "k1",
     keyword: "plumber dubai",
     created_at: "2026-09-10T08:00:00Z",
-    gap_label: null,
     aio_present: null,
     mentioned_in_text: null,
     client_cited: null,

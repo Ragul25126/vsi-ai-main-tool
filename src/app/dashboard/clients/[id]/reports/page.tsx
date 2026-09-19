@@ -41,19 +41,20 @@ export default async function ClientReportsPage({ params }: { params: Promise<{ 
 
   const isSuperAdmin = session.role === "super_admin";
   const clientQ = supabase.from("clients").select("id, name, website").eq("id", id);
-  const { data: client } = await (isSuperAdmin ? clientQ : clientQ.eq("agency_id", session.agencyId)).maybeSingle();
-  if (!client) notFound();
-
   const reportsQ = supabase
     .from("reports")
     .select("id, type, share_token, generated_at, expires_at, tracked_keywords(keyword)")
     .eq("client_id", id)
     .order("generated_at", { ascending: false })
     .limit(50);
-  const [{ data: reports, error }, status] = await Promise.all([
+  // None of these reads needs another's result, so they run together. The reports read carries
+  // its own organization filter, and nothing renders unless the project is found.
+  const [{ data: client }, { data: reports, error }, status] = await Promise.all([
+    (isSuperAdmin ? clientQ : clientQ.eq("agency_id", session.agencyId)).maybeSingle(),
     isSuperAdmin ? reportsQ : reportsQ.eq("agency_id", session.agencyId),
     loadSetupStatus(id),
   ]);
+  if (!client) notFound();
 
   const domain = displayDomain(client.website as string | null);
   const rows = ((reports ?? []) as unknown as ReportRow[]).map((r) => {

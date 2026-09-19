@@ -8,8 +8,9 @@ import { computeGeo, highlightBrand, type EngineId, type EvidenceSegment, type G
 import type { ProjectSummary } from "@/lib/project-types";
 import type { AIOCitation } from "@/types/search";
 
+// Only columns the AI visibility summary reads. This list is fetched for up to 3000 rows per page.
 export const GEO_COLUMNS =
-  "id, tracked_keyword_id, keyword, created_at, gap_label, aio_present, mentioned_in_text, client_cited, cited_domains, " +
+  "tracked_keyword_id, keyword, created_at, aio_present, mentioned_in_text, client_cited, cited_domains, " +
   "ai_overview_present, ai_overview_client_cited, ai_overview_cited_domains, chatgpt_checked, chatgpt_brand_mentioned, " +
   "chatgpt_brand_cited, chatgpt_competitors, chatgpt_cited_urls";
 
