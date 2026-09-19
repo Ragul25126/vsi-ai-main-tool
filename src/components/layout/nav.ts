@@ -94,7 +94,9 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       {
         label: "Reports",
-        href: () => "/dashboard/reports",
+        // With a project, go straight to its reports: /dashboard/reports would only redirect there.
+        // Without one, /dashboard/reports shows the Reports introduction.
+        href: (id) => (id ? `/dashboard/clients/${id}/reports` : "/dashboard/reports"),
         Icon: FileText,
         isActive: (p) => p.startsWith("/dashboard/reports") || clientSub(p, "reports"),
       },

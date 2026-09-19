@@ -74,9 +74,9 @@ describe("navigation", () => {
   const items = NAV_GROUPS.flatMap((g) => g.items);
   const reports = items.find((i) => i.label === "Reports")!;
 
-  it("has Reports on its own route, active on the project reports page too", () => {
+  it("links Reports to the intro without a project and straight to the project's reports with one", () => {
     expect(reports.href(null)).toBe("/dashboard/reports");
-    expect(reports.href("abc")).toBe("/dashboard/reports");
+    expect(reports.href("abc")).toBe("/dashboard/clients/abc/reports");
     expect(reports.isActive("/dashboard/reports", null)).toBe(true);
     expect(reports.isActive("/dashboard/clients/abc/reports", null)).toBe(true);
   });
