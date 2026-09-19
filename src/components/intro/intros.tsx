@@ -1,18 +1,20 @@
 import type { ReactNode } from "react";
 import {
   ArrowUpDown,
-  Bot,
   CheckCircle2,
   FileText,
+  Globe,
   HeartPulse,
   Kanban,
   LineChart,
   Lightbulb,
   Link2,
+  ListChecks,
   ListOrdered,
   MessageSquareText,
   Plus,
   RefreshCw,
+  ScanSearch,
   Search,
   Target,
   TrendingUp,
@@ -24,14 +26,16 @@ import { COMING_SOON_ENGINES, ENGINES } from "@/lib/geo";
 import {
   ActionsScene,
   AnswerScene,
+  AuditAreaArt,
+  AuditFlowScene,
   BoardScene,
   ChatScene,
   CompareScene,
   ReportScene,
   SearchScene,
-  SiteAuditScene,
 } from "@/components/illustrations";
-import { FeatureIntro, type Capability } from "./FeatureIntro";
+import { FeatureIntro, SectionHeading, type Capability, type FlowStep } from "./FeatureIntro";
+import { ExampleAudit } from "./SiteAuditIntro";
 import { CHAT_QUESTIONS, type StoryKey } from "./story";
 
 export type IntroKey = Exclude<StoryKey, never>;
@@ -41,8 +45,10 @@ export interface IntroContent {
   category?: string;
   headline: string;
   description: string;
-  capabilities?: { title: string; items: Capability[]; example?: boolean };
-  steps: string[];
+  capabilities?: { title: string; eyebrow?: string; text?: string; items: Capability[]; example?: boolean };
+  /** Headline and one line above the steps. */
+  flow: { eyebrow?: string; title: string; text: string };
+  steps: (string | FlowStep)[];
   stepsTitle?: string;
   /** One true, page-specific line under the steps, next to the CTA. */
   stepsNote: string;
@@ -65,15 +71,27 @@ export const INTROS: Record<IntroKey, IntroContent> = {
     headline: "Find problems that could be hurting your website.",
     description: "VSI checks your website and shows you what needs attention, in plain language, with what to do about each problem.",
     capabilities: {
-      title: "What we check",
+      eyebrow: "What we check",
+      title: "A complete look at what matters",
+      text: "VSI checks the areas that decide whether people, search engines and AI systems can use your website.",
       items: [
         { Icon: HeartPulse, title: "Website health", text: "Make sure visitors can use your website easily.", detail: "Secure connection, pages that fail to load, broken links, mobile layout" },
         { Icon: Search, title: "Search readiness", text: "Help search engines understand your pages.", detail: "Pages search engines may show, sitemap, page titles, page descriptions" },
-        { Icon: Bot, title: "AI readiness", text: "Help AI systems understand and use your content.", detail: "AI crawlers allowed, business details, answer-style content" },
+        { Icon: MessageSquareText, title: "AI readiness", text: "Help AI systems understand and use your content.", detail: "AI crawlers allowed, business details, answer-style content" },
         { Icon: FileText, title: "Content", text: "Find pages that could explain things more clearly.", detail: "Page headings and image descriptions" },
       ],
     },
-    steps: ["Add your website", "VSI checks your pages", "We find important issues", "You get simple recommendations"],
+    flow: {
+      eyebrow: "What you'll get",
+      title: "From your website to clear actions",
+      text: "VSI checks your website in a few simple steps and shows you exactly what to fix.",
+    },
+    steps: [
+      { Icon: Globe, title: "Your website", text: "You add it once." },
+      { Icon: ScanSearch, title: "VSI checks it", text: "Your homepage and up to 9 more pages." },
+      { Icon: MessageSquareText, title: "Problems explained", text: "In plain language, without jargon." },
+      { Icon: ListChecks, title: "Clear actions", text: "What to do about each problem." },
+    ],
     stepsNote: "The site audit is free. It runs as soon as you add your website.",
   },
   search: {
@@ -88,6 +106,7 @@ export const INTROS: Record<IntroKey, IntroContent> = {
         { Icon: Target, title: "Important searches", text: "Focus on the searches that matter to your business." },
       ],
     },
+    flow: { title: "From a list of searches to clear priorities", text: "Tell VSI which searches matter. It checks where you appear and shows what changed." },
     steps: ["Add searches", "VSI checks", "See changes", "Act on what matters"],
     stepsNote: "One list of searches powers both Search Visibility and AI Visibility.",
   },
@@ -105,6 +124,7 @@ export const INTROS: Record<IntroKey, IntroContent> = {
         { Icon: Lightbulb, title: "Opportunities", text: "Find searches where your business could be more visible." },
       ],
     },
+    flow: { title: "From your searches to real AI answers", text: "VSI asks AI systems the questions your customers ask, and shows you who they mention." },
     steps: ["Choose important searches", "VSI checks AI answers", "Compare your visibility", "Find ways to improve"],
     stepsNote: "Search and AI checks run together, and only when you start them.",
   },
@@ -120,6 +140,7 @@ export const INTROS: Record<IntroKey, IntroContent> = {
         { Icon: Lightbulb, title: "Content opportunities", text: "Searches where a competitor appears and you don't." },
       ],
     },
+    flow: { title: "From competitor names to clear gaps", text: "Add the competitors you care about. VSI shows where they appear and you do not." },
     steps: ["Add competitors", "VSI compares visibility", "Find the gaps", "Turn gaps into actions"],
     stepsNote: "Add competitors while setting up your website, or here any time later.",
   },
@@ -137,6 +158,7 @@ export const INTROS: Record<IntroKey, IntroContent> = {
         { Icon: TrendingUp, title: "Improve search visibility", text: "A search is close to Google's first page." },
       ],
     },
+    flow: { title: "From a finding to finished work", text: "Every action starts with something VSI found on your website, in search or in AI answers." },
     stepsTitle: "How an action is made",
     steps: ["VSI finds something", "Explains why it matters", "Recommends what to do", "You create a task", "Track progress"],
     stepsNote: "Every action can become a task for your team in one step.",
@@ -155,6 +177,7 @@ export const INTROS: Record<IntroKey, IntroContent> = {
         { Icon: RefreshCw, title: "Verify improvements", text: "VSI checks again and tells you whether it worked." },
       ],
     },
+    flow: { title: "From a recommendation to a checked result", text: "Work moves from a finding to a task, and VSI checks again when it is done." },
     steps: ["Open a finding", "Create a task", "Do the work", "VSI checks the result"],
     stepsNote: "When a task is done, VSI checks again and shows whether it worked.",
   },
@@ -173,6 +196,7 @@ export const INTROS: Record<IntroKey, IntroContent> = {
         { Icon: LineChart, title: "Progress over time", text: "Each report compares this period with the one before." },
       ],
     },
+    flow: { title: "From your checks to a report you can share", text: "Reports are built from the checks you have already run. Nothing is estimated." },
     steps: ["Add your website", "Run your checks", "Create a report", "Share the link"],
     stepsNote: "Each report has its own link you can share.",
   },
@@ -181,13 +205,14 @@ export const INTROS: Record<IntroKey, IntroContent> = {
     headline: "Ask questions about your website and visibility.",
     description: "Ask VSI about your website, search visibility, AI visibility, competitors and recommended actions.",
     questions: CHAT_QUESTIONS,
+    flow: { title: "From a question to an answer with evidence", text: "VSI answers from your own checks and shows what each answer is based on." },
     steps: ["Add your website", "Run your first checks", "Ask a question", "Get answers from your own data"],
     stepsNote: "Answers come only from your own website's data.",
   },
 };
 
 const ILLUSTRATIONS: Record<IntroKey, () => ReactNode> = {
-  audit: () => <SiteAuditScene />,
+  audit: () => <AuditFlowScene />,
   search: () => <SearchScene />,
   ai: () => <AnswerScene />,
   competitors: () => <CompareScene />,
@@ -212,7 +237,7 @@ function EngineNote() {
 function ExampleQuestions({ questions }: { questions: string[] }) {
   return (
     <section className="space-y-6">
-      <h2 className="text-section font-semibold text-ink">Questions you can ask</h2>
+      <SectionHeading eyebrow="Examples" title="Questions you can ask" />
       <ul className="grid gap-x-10 gap-y-4 sm:grid-cols-2">
         {questions.map((q) => (
           <li key={q} className="border-l-2 border-line-strong pl-4 text-body text-ink-2">
@@ -228,6 +253,13 @@ function ExampleQuestions({ questions }: { questions: string[] }) {
 /** The complete first-use page for one feature. */
 export function Intro({ name }: { name: IntroKey }) {
   const c = INTROS[name];
+  const audit = name === "audit";
+  const areas = ["health", "search", "ai", "content"] as const;
+  const capabilities = c.capabilities && {
+    ...c.capabilities,
+    items: audit ? c.capabilities.items.map((item, i) => ({ ...item, art: <AuditAreaArt area={areas[i]} /> })) : c.capabilities.items,
+    note: name === "ai" ? <EngineNote /> : undefined,
+  };
   return (
     <FeatureIntro
       page={c.page}
@@ -235,8 +267,16 @@ export function Intro({ name }: { name: IntroKey }) {
       headline={c.headline}
       description={c.description}
       illustration={introIllustration(name)}
-      capabilities={c.capabilities && { ...c.capabilities, note: name === "ai" ? <EngineNote /> : undefined }}
-      middle={c.questions ? <ExampleQuestions questions={c.questions} /> : undefined}
+      capabilities={capabilities}
+      middle={c.questions ? <ExampleQuestions questions={c.questions} /> : audit ? <ExampleAudit /> : undefined}
+      flow={c.flow}
+      closing={audit ? { title: "Ready to see what VSI finds?", text: "Add your website and start with a Site Audit." } : undefined}
+      storyTitle={audit ? "Why Site Audit comes first" : undefined}
+      storyText={
+        audit
+          ? "Before tracking rankings or AI visibility, VSI needs to understand whether your website is technically healthy and easy for search engines and AI systems to understand."
+          : undefined
+      }
       steps={c.steps}
       stepsTitle={c.stepsTitle}
       stepsNote={c.stepsNote}

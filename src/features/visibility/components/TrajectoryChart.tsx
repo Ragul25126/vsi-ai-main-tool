@@ -45,12 +45,16 @@ export function TrendLine({ points, max = 100, invert = false, format = (v) => S
   const path = coords.map((c, i) => `${i === 0 ? "M" : "L"}${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(" ");
   const color = tone === "you" ? "var(--brand)" : "var(--ink-3)";
   const last = coords[coords.length - 1];
+  const base = H - PAD_Y;
+  const area = `${path} L${last.x.toFixed(1)} ${base} L${coords[0].x.toFixed(1)} ${base} Z`;
 
   return (
     <figure className={className}>
       <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full overflow-visible" role="img" aria-label={ariaLabel}>
-        <line x1={PAD_X} x2={W - PAD_X} y1={H - PAD_Y} y2={H - PAD_Y} stroke="var(--line)" strokeWidth={1} />
-        <path d={path} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        <line x1={PAD_X} x2={W - PAD_X} y1={H / 2} y2={H / 2} stroke="var(--line)" strokeWidth={1} strokeDasharray="2 4" />
+        <line x1={PAD_X} x2={W - PAD_X} y1={base} y2={base} stroke="var(--line)" strokeWidth={1} />
+        <path d={area} fill={color} fillOpacity={0.08} className="animate-fade-in [animation-delay:500ms] [animation-duration:600ms] [animation-fill-mode:both]" />
+        <path d={path} pathLength={1} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" className="trend-draw" />
         {coords.map((c, i) => (
           <circle key={i} cx={c.x} cy={c.y} r={i === coords.length - 1 ? 3.5 : 2.5} fill="var(--surface)" stroke={color} strokeWidth={1.75}>
             <title>{`${c.label}: ${format(c.value)}`}</title>

@@ -142,7 +142,7 @@ export default function PromptEditor({
           onChange={(e) => setDraft(e.target.value)}
           rows={22}
           spellCheck={false}
-          className="w-full rounded-panel border border-line bg-surface-2 px-4 py-3 text-support text-ink font-mono leading-relaxed focus:border-line-strong focus:bg-surface focus:outline-none transition-colors"
+          className="w-full rounded-panel border border-line bg-surface-2 px-4 py-3 text-support text-ink leading-relaxed focus:border-line-strong focus:bg-surface focus:outline-none transition-colors"
         />
 
         {unknownPlaceholders.length > 0 && (
@@ -169,7 +169,7 @@ export default function PromptEditor({
           Preview rendered prompt (with sample values)
         </button>
         {previewOpen && (
-          <pre className="mt-4 text-support text-ink bg-surface-2 border border-line rounded-panel p-4 overflow-x-auto max-h-96 overflow-y-auto whitespace-pre-wrap leading-relaxed font-mono">
+          <pre className="mt-4 text-support text-ink bg-surface-2 border border-line rounded-panel p-4 overflow-x-auto max-h-96 overflow-y-auto whitespace-pre-wrap leading-relaxed">
             {samplePreview}
           </pre>
         )}
@@ -188,11 +188,11 @@ export default function PromptEditor({
           Reset to default
         </button>
         <div className="flex items-center gap-3">
-          {saved && <span className="text-support text-positive font-medium">✓ Saved</span>}
+          {saved && <span className="text-support text-positive font-medium">Saved</span>}
           <button
             onClick={save}
             disabled={saving || !dirty}
-            className="rounded-panel bg-ink px-5 py-2.5 text-body font-medium text-white hover:bg-ink-2 disabled:opacity-40 transition-colors /20"
+            className="rounded-panel bg-ink px-5 py-2.5 text-body font-medium text-white hover:bg-ink-2 disabled:opacity-40 transition-colors"
           >
             {saving ? "Saving..." : dirty ? "Save override" : "No changes"}
           </button>

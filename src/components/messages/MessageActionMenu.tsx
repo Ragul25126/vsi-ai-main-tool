@@ -482,7 +482,7 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
         className={`p-2 rounded-full transition-all duration-200 ${
           isOpen
             ? "bg-brand-soft text-brand-strong ring-2 ring-ink/10"
-            : "hover:bg-card text-muted-foreground hover:text-foreground"
+            : "hover:bg-surface text-ink-3 hover:text-ink"
         }`}
       >
         <MoreVertical size={18} />
@@ -505,12 +505,12 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
                 transformOrigin: menuPosition.transformOrigin,
                 zIndex: 9999
               }}
-              className="w-[220px] rounded-panel bg-white dark:bg-[#1E1E23] text-slate-900 dark:text-foreground border border-slate-200 dark:border-border/80 shadow-overlay backdrop-blur-xl overflow-hidden py-1.5 focus:outline-none"
+              className="w-[220px] rounded-panel bg-surface dark:bg-surface text-ink dark:text-ink border border-line dark:border-line/80 shadow-overlay overflow-hidden py-1.5 focus:outline-none"
               role="menu"
             >
               {menuSections.map((section, sIndex) => (
                 <React.Fragment key={section.id}>
-                  {sIndex > 0 && <div className="my-1 border-t border-slate-100 dark:border-border/50" />}
+                  {sIndex > 0 && <div className="my-1 border-t border-line dark:border-line/50" />}
                   {section.items.map(item => {
                     if (!item) return null;
                     const itemIndex = globalIndexCounter++;
@@ -528,13 +528,13 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
                           item.onClick();
                         }}
                         onMouseEnter={() => setFocusedIndex(itemIndex)}
-                        className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold transition-colors outline-none cursor-pointer ${
+                        className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-caption font-semibold transition-colors outline-none cursor-pointer ${
                           isDanger
-                            ? "text-rose-500 hover:bg-rose-500/10 focus:bg-rose-500/10"
-                            : "text-slate-700 dark:text-foreground/90 hover:bg-slate-100 dark:hover:bg-card focus:bg-slate-100 dark:focus:bg-card hover:text-brand-strong"
+                            ? "text-critical hover:bg-critical/10 focus:bg-critical/10"
+                            : "text-ink-2 dark:text-ink/90 hover:bg-surface-2 dark:hover:bg-surface focus:bg-surface-2 dark:focus:bg-surface hover:text-brand-strong"
                         }`}
                       >
-                        <Icon size={15} className={isDanger ? "text-rose-500 shrink-0" : "text-muted-foreground shrink-0 group-hover:text-brand-strong"} />
+                        <Icon size={15} className={isDanger ? "text-critical shrink-0" : "text-ink-3 shrink-0 group-hover:text-brand-strong"} />
                         <span className="truncate flex-1 text-left">{item.label}</span>
                       </button>
                     );
@@ -550,20 +550,20 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
       {/* CONFIRMATION DIALOG (Delete Permanently) */}
       <AnimatePresence>
         {showDeleteConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 ">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="w-full max-w-sm bg-white dark:bg-[#1E1E23] rounded-panel border border-slate-200 dark:border-border shadow-overlay p-6 text-slate-900 dark:text-foreground relative"
+              className="w-full max-w-sm bg-surface dark:bg-surface rounded-panel border border-line dark:border-line shadow-overlay p-6 text-ink dark:text-ink relative"
             >
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-full bg-critical/10 text-critical flex items-center justify-center shrink-0">
                   <Trash size={20} />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold">Delete Message?</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">This action cannot be undone.</p>
+                  <h3 className="text-base font-semibold">Delete Message?</h3>
+                  <p className="text-caption text-ink-3 mt-0.5">This action cannot be undone.</p>
                 </div>
               </div>
 
@@ -571,14 +571,14 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
                 <button
                   type="button"
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="px-4 py-2 text-xs font-semibold rounded-full border border-slate-200 dark:border-border text-slate-700 dark:text-foreground hover:bg-slate-100 dark:hover:bg-card transition-colors"
+                  className="px-4 py-2 text-caption font-semibold rounded-control border border-line dark:border-line text-ink-2 dark:text-ink hover:bg-surface-2 dark:hover:bg-surface transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={confirmDeletePermanently}
-                  className="px-5 py-2 text-xs font-bold rounded-full bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20 transition-all"
+                  className="px-5 py-2 text-caption font-semibold rounded-control bg-critical hover:bg-critical text-white shadow-rose-600/20 transition-all"
                 >
                   Delete
                 </button>
@@ -591,79 +591,79 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
       {/* VIEW MESSAGE DETAILS MODAL */}
       <AnimatePresence>
         {showDetailsModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 ">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-white dark:bg-[#1E1E23] rounded-panel border border-slate-200 dark:border-border shadow-overlay p-6 text-slate-900 dark:text-foreground relative overflow-hidden"
+              className="w-full max-w-md bg-surface dark:bg-surface rounded-panel border border-line dark:border-line shadow-overlay p-6 text-ink dark:text-ink relative overflow-hidden"
             >
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-border/50 mb-4">
+              <div className="flex items-center justify-between pb-4 border-b border-line dark:border-line/50 mb-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-brand-soft text-brand-strong flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-control bg-brand-soft text-brand-strong flex items-center justify-center">
                     <Info size={18} />
                   </div>
-                  <h3 className="text-base font-bold">Message Details</h3>
+                  <h3 className="text-base font-semibold">Message Details</h3>
                 </div>
                 <button
                   onClick={() => setShowDetailsModal(false)}
-                  className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-card"
+                  className="p-1 rounded-full text-ink-3 hover:text-ink hover:bg-surface-2 dark:hover:bg-surface"
                 >
                   <X size={18} />
                 </button>
               </div>
 
-              <div className="space-y-3 text-xs">
-                <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-border/30">
-                  <span className="text-muted-foreground font-medium">Message ID</span>
-                  <span className="font-mono text-foreground font-semibold">{message.id}</span>
+              <div className="space-y-3 text-caption">
+                <div className="flex justify-between py-1.5 border-b border-line dark:border-line/30">
+                  <span className="text-ink-3 font-medium">Message ID</span>
+                  <span className=" text-ink font-semibold">{message.id}</span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-border/30">
-                  <span className="text-muted-foreground font-medium">Sender</span>
-                  <span className="text-foreground font-semibold text-right">{message.sender.name} &lt;{message.sender.email}&gt;</span>
+                <div className="flex justify-between py-1.5 border-b border-line dark:border-line/30">
+                  <span className="text-ink-3 font-medium">Sender</span>
+                  <span className="text-ink font-semibold text-right">{message.sender.name} &lt;{message.sender.email}&gt;</span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-border/30">
-                  <span className="text-muted-foreground font-medium">Receiver</span>
-                  <span className="text-foreground font-semibold text-right">{message.recipient.name} &lt;{message.recipient.email}&gt;</span>
+                <div className="flex justify-between py-1.5 border-b border-line dark:border-line/30">
+                  <span className="text-ink-3 font-medium">Receiver</span>
+                  <span className="text-ink font-semibold text-right">{message.recipient.name} &lt;{message.recipient.email}&gt;</span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-border/30">
-                  <span className="text-muted-foreground font-medium">Subject</span>
-                  <span className="text-foreground font-semibold text-right max-w-[200px] truncate">{message.subject}</span>
+                <div className="flex justify-between py-1.5 border-b border-line dark:border-line/30">
+                  <span className="text-ink-3 font-medium">Subject</span>
+                  <span className="text-ink font-semibold text-right max-w-[200px] truncate">{message.subject}</span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-border/30">
-                  <span className="text-muted-foreground font-medium">Created Time</span>
-                  <span className="text-foreground font-semibold">{new Date(message.timestamp).toLocaleString()}</span>
+                <div className="flex justify-between py-1.5 border-b border-line dark:border-line/30">
+                  <span className="text-ink-3 font-medium">Created Time</span>
+                  <span className="text-ink font-semibold">{new Date(message.timestamp).toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-border/30">
-                  <span className="text-muted-foreground font-medium">Updated Time</span>
-                  <span className="text-foreground font-semibold">{new Date(message.updatedAt || message.timestamp).toLocaleString()}</span>
+                <div className="flex justify-between py-1.5 border-b border-line dark:border-line/30">
+                  <span className="text-ink-3 font-medium">Updated Time</span>
+                  <span className="text-ink font-semibold">{new Date(message.updatedAt || message.timestamp).toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-border/30">
-                  <span className="text-muted-foreground font-medium">Status</span>
-                  <span className="px-2 py-0.5 rounded bg-brand-soft text-brand-strong font-bold text-caption">
+                <div className="flex justify-between py-1.5 border-b border-line dark:border-line/30">
+                  <span className="text-ink-3 font-medium">Status</span>
+                  <span className="px-2 py-0.5 rounded bg-brand-soft text-brand-strong font-semibold text-caption">
                     {message.status}
                   </span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-border/30">
-                  <span className="text-muted-foreground font-medium">Labels</span>
-                  <span className="text-foreground font-semibold">
+                <div className="flex justify-between py-1.5 border-b border-line dark:border-line/30">
+                  <span className="text-ink-3 font-medium">Labels</span>
+                  <span className="text-ink font-semibold">
                     {message.labels && message.labels.length > 0 ? message.labels.join(", ") : "None"}
                   </span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-border/30">
-                  <span className="text-muted-foreground font-medium">Priority</span>
-                  <span className="text-foreground font-semibold capitalize">{message.priority}</span>
+                <div className="flex justify-between py-1.5 border-b border-line dark:border-line/30">
+                  <span className="text-ink-3 font-medium">Priority</span>
+                  <span className="text-ink font-semibold capitalize">{message.priority}</span>
                 </div>
                 <div className="flex justify-between py-1.5">
-                  <span className="text-muted-foreground font-medium">Attachments</span>
-                  <span className="text-foreground font-semibold">{message.attachments?.length || 0} file(s)</span>
+                  <span className="text-ink-3 font-medium">Attachments</span>
+                  <span className="text-ink font-semibold">{message.attachments?.length || 0} file(s)</span>
                 </div>
               </div>
 
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => setShowDetailsModal(false)}
-                  className="px-5 py-2 text-xs font-bold rounded-full bg-ink text-white hover:bg-brand-soft transition-colors"
+                  className="px-5 py-2 text-caption font-semibold rounded-control bg-ink text-white hover:bg-ink-2 transition-colors"
                 >
                   Close
                 </button>
@@ -676,23 +676,23 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
       {/* SHARE MESSAGE MODAL */}
       <AnimatePresence>
         {showShareModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 ">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-white dark:bg-[#1E1E23] rounded-panel border border-slate-200 dark:border-border shadow-overlay p-6 text-slate-900 dark:text-foreground relative"
+              className="w-full max-w-md bg-surface dark:bg-surface rounded-panel border border-line dark:border-line shadow-overlay p-6 text-ink dark:text-ink relative"
             >
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-border/50 mb-4">
+              <div className="flex items-center justify-between pb-4 border-b border-line dark:border-line/50 mb-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-brand-soft text-brand-strong flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-control bg-brand-soft text-brand-strong flex items-center justify-center">
                     <Share2 size={18} />
                   </div>
-                  <h3 className="text-base font-bold">Share Message</h3>
+                  <h3 className="text-base font-semibold">Share Message</h3>
                 </div>
                 <button
                   onClick={() => setShowShareModal(false)}
-                  className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-card"
+                  className="p-1 rounded-full text-ink-3 hover:text-ink hover:bg-surface-2 dark:hover:bg-surface"
                 >
                   <X size={18} />
                 </button>
@@ -700,7 +700,7 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-bold text-muted-foreground block mb-1">
+                  <label className="text-caption font-semibold text-ink-3 block mb-1">
                     Shareable Link
                   </label>
                   <div className="flex gap-2">
@@ -708,11 +708,11 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
                       type="text"
                       readOnly
                       value={typeof window !== "undefined" ? window.location.href : ""}
-                      className="flex-1 bg-slate-100 dark:bg-card border border-slate-200 dark:border-border rounded-panel px-3 py-2 text-xs text-foreground outline-none font-mono"
+                      className="flex-1 bg-surface-2 dark:bg-surface border border-line dark:border-line rounded-panel px-3 py-2 text-caption text-ink outline-none"
                     />
                     <button
                       onClick={handleCopyLink}
-                      className="px-4 py-2 bg-ink text-white text-xs font-bold rounded-panel hover:bg-brand-soft transition-colors flex items-center gap-1"
+                      className="px-4 py-2 bg-ink text-white text-caption font-semibold rounded-panel hover:bg-ink-2 transition-colors flex items-center gap-1"
                     >
                       <Copy size={14} /> Copy
                     </button>
@@ -720,7 +720,7 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
                 </div>
 
                 <div className="pt-2">
-                  <span className="text-xs font-bold text-muted-foreground block mb-2">
+                  <span className="text-caption font-semibold text-ink-3 block mb-2">
                     Quick Options
                   </span>
                   <div className="grid grid-cols-2 gap-2">
@@ -729,13 +729,13 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
                         window.location.href = `mailto:?subject=${encodeURIComponent(message.subject)}&body=${encodeURIComponent(window.location.href)}`;
                         setToastMessage("Opening email app...");
                       }}
-                      className="flex items-center justify-center gap-2 p-3 rounded-panel border border-slate-200 dark:border-border/60 hover:bg-slate-100 dark:hover:bg-card text-xs font-semibold transition-colors"
+                      className="flex items-center justify-center gap-2 p-3 rounded-panel border border-line dark:border-line/60 hover:bg-surface-2 dark:hover:bg-surface text-caption font-semibold transition-colors"
                     >
                       <Mail size={16} className="text-brand-strong" /> Email Client
                     </button>
                     <button
                       onClick={handleCopyMessage}
-                      className="flex items-center justify-center gap-2 p-3 rounded-panel border border-slate-200 dark:border-border/60 hover:bg-slate-100 dark:hover:bg-card text-xs font-semibold transition-colors"
+                      className="flex items-center justify-center gap-2 p-3 rounded-panel border border-line dark:border-line/60 hover:bg-surface-2 dark:hover:bg-surface text-caption font-semibold transition-colors"
                     >
                       <ExternalLink size={16} className="text-brand-strong" /> Copy Content
                     </button>
@@ -746,7 +746,7 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => setShowShareModal(false)}
-                  className="px-5 py-2 text-xs font-bold rounded-full border border-slate-200 dark:border-border text-foreground hover:bg-slate-100 dark:hover:bg-card transition-colors"
+                  className="px-5 py-2 text-caption font-semibold rounded-control border border-line dark:border-line text-ink hover:bg-surface-2 dark:hover:bg-surface transition-colors"
                 >
                   Done
                 </button>
@@ -759,23 +759,23 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
       {/* ADD LABEL MODAL */}
       <AnimatePresence>
         {showLabelModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 ">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-sm bg-white dark:bg-[#1E1E23] rounded-panel border border-slate-200 dark:border-border shadow-overlay p-6 text-slate-900 dark:text-foreground relative"
+              className="w-full max-w-sm bg-surface dark:bg-surface rounded-panel border border-line dark:border-line shadow-overlay p-6 text-ink dark:text-ink relative"
             >
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-border/50 mb-4">
+              <div className="flex items-center justify-between pb-4 border-b border-line dark:border-line/50 mb-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-brand-soft text-brand-strong flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-control bg-brand-soft text-brand-strong flex items-center justify-center">
                     <Tag size={18} />
                   </div>
-                  <h3 className="text-base font-bold">Manage Labels</h3>
+                  <h3 className="text-base font-semibold">Manage Labels</h3>
                 </div>
                 <button
                   onClick={() => setShowLabelModal(false)}
-                  className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-card"
+                  className="p-1 rounded-full text-ink-3 hover:text-ink hover:bg-surface-2 dark:hover:bg-surface"
                 >
                   <X size={18} />
                 </button>
@@ -788,10 +788,10 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
                     <button
                       key={label}
                       onClick={() => toggleLabel(label)}
-                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-panel text-xs font-semibold transition-all ${
+                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-panel text-caption font-semibold transition-all ${
                         isSelected
                           ? "bg-brand-soft border border-line-strong text-brand-strong"
-                          : "bg-slate-50 dark:bg-card border border-slate-200 dark:border-border/50 text-foreground hover:bg-slate-100 dark:hover:bg-card/80"
+                          : "bg-surface-2 dark:bg-surface border border-line dark:border-line/50 text-ink hover:bg-surface-2 dark:hover:bg-surface/80"
                       }`}
                     >
                       <span className="flex items-center gap-2">
@@ -806,7 +806,7 @@ export default function MessageActionMenu({ message }: MessageActionMenuProps) {
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => setShowLabelModal(false)}
-                  className="px-5 py-2 text-xs font-bold rounded-full bg-ink text-white hover:bg-brand-soft transition-colors"
+                  className="px-5 py-2 text-caption font-semibold rounded-control bg-ink text-white hover:bg-ink-2 transition-colors"
                 >
                   Done
                 </button>

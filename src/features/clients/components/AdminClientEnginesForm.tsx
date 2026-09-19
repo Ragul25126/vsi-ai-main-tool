@@ -48,7 +48,7 @@ function TriToggle({
  role="radio"
  aria-checked={value === o.v}
  onClick={() => onChange(o.v)}
- className={`rounded px-3 py-1 text-support transition-colors ${value === o.v ? "bg-surface font-medium text-ink shadow-sm" : "text-ink-3 hover:text-ink"}`}
+ className={`rounded px-3 py-1 text-support transition-colors ${value === o.v ? "bg-surface font-medium text-ink " : "text-ink-3 hover:text-ink"}`}
  >
  {o.text}
  </button>

@@ -203,7 +203,7 @@ export default function NewProjectPage() {
   return (
     <PageContainer className="max-w-[880px]">
       <header className="space-y-2">
-        <h1 className="text-title font-semibold text-ink">Add your website</h1>
+        <h1 className="text-display font-semibold text-ink">Add your website</h1>
         <p className="max-w-[60ch] text-body text-ink-2">
           One website powers every part of VSI: Site Audit, Search Visibility, AI Visibility, Competitors, Next Actions, Tasks, Reports and AI
           Chat. You set it up once.

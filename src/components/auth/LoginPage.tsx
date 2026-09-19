@@ -114,7 +114,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-white text-slate-900 overflow-hidden">
+    <div className="relative min-h-screen w-full bg-surface text-ink overflow-hidden">
       {/* Toast Feedback */}
       <Toast toast={toast} onClose={() => setToast(null)} />
 

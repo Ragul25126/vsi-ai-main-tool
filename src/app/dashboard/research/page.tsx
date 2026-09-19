@@ -13,7 +13,7 @@ function ResearchContent() {
   }, [searchParams, router]);
 
   return (
-    <div className="p-8 text-center text-sm font-semibold text-muted-foreground flex items-center justify-center min-h-[400px]">
+    <div className="p-8 text-center text-body font-semibold text-muted-foreground flex items-center justify-center min-h-[400px]">
       Redirecting to Overview...
     </div>
   );
@@ -22,7 +22,7 @@ function ResearchContent() {
 export default function ResearchPage() {
   return (
     <Suspense fallback={
-      <div className="p-8 text-center text-sm font-semibold text-muted-foreground flex items-center justify-center min-h-[400px]">
+      <div className="p-8 text-center text-body font-semibold text-muted-foreground flex items-center justify-center min-h-[400px]">
         Loading...
       </div>
     }>

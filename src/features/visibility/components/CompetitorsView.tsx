@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { PageContainer, PageHeader, Section } from "@/components/ui/Page";
+import { Eyebrow, PageContainer, PageHeader, Section } from "@/components/ui/Page";
 import { Notice } from "@/components/ui/Status";
 import { Button } from "@/components/ui/Button";
 import { Disclosure } from "@/components/ui/Disclosure";
@@ -108,14 +108,18 @@ export default function CompetitorsView({ data }: { data: CompetitorsViewData })
     <PageContainer>
       {header}
 
-      <p className="max-w-[60ch] text-title font-medium text-ink">
-        {top.domain} shows up most often: linked in {top.aiAnswers} AI {top.aiAnswers === 1 ? "answer" : "answers"}
-        {top.googleTop10 > 0 ? ` and on Google's first page for ${top.googleTop10} of your searches` : ""}.
-      </p>
+      <section aria-label="In short" className="relative overflow-hidden rounded-panel border border-line bg-surface p-6 md:p-8">
+        <span className="absolute inset-y-0 left-0 w-[3px] bg-brand" aria-hidden />
+        <Eyebrow rule>In short</Eyebrow>
+        <p className="mt-4 max-w-[52ch] text-balance text-[1.375rem] font-semibold leading-8 tracking-[-0.015em] text-ink md:text-[1.5rem]">
+          {top.domain} shows up most often: linked in {top.aiAnswers} AI {top.aiAnswers === 1 ? "answer" : "answers"}
+          {top.googleTop10 > 0 ? ` and on Google's first page for ${top.googleTop10} of your searches` : ""}.
+        </p>
+      </section>
 
       <Section title="Who shows up for your searches" description="Counted the same way for you and every competitor.">
         <div className="rounded-panel border border-line bg-surface">
-          <div className="hidden grid-cols-[minmax(0,1.3fr)_minmax(0,1.6fr)_9rem_9rem] gap-4 border-b border-line px-4 py-2.5 text-caption font-medium text-ink-3 md:grid">
+          <div className="hidden grid-cols-[minmax(0,1.3fr)_minmax(0,1.6fr)_9rem_9rem] gap-4 rounded-t-panel border-b border-line bg-surface-2 px-4 py-2.5 text-caption font-medium text-ink-3 md:grid">
             <span>Website</span>
             <span>AI answers linking to them</span>
             <span>Google first page</span>

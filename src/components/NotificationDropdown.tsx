@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Bell, 
   TrendingUp, 
-  Sparkles, 
+  MessageSquareText,
   CheckCircle2, 
   FileText, 
   TrendingDown, 
@@ -18,7 +18,6 @@ import {
   X,
   Trash2,
 } from "lucide-react";
-import { useTheme } from "@/components/ThemeProvider";
 import { useNotifications, Notification } from "@/contexts/NotificationsContext";
 
 export default function NotificationDropdown() {
@@ -33,8 +32,6 @@ export default function NotificationDropdown() {
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const router = useRouter();
 
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
 
   const { 
     notifications, 
@@ -123,7 +120,7 @@ export default function NotificationDropdown() {
     const t = title.toLowerCase();
     if (t.includes("rank") || t.includes("upgrade") || t.includes("jumped")) {
       return (
-        <div className="w-7 h-7 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0">
+        <div className="w-7 h-7 rounded-full bg-positive/10 border border-positive/30 text-positive flex items-center justify-center shrink-0">
           <TrendingUp size={18} />
         </div>
       );
@@ -131,27 +128,27 @@ export default function NotificationDropdown() {
     if (t.includes("ai") || t.includes("citation") || t.includes("sge") || t.includes("gemini")) {
       return (
         <div className="w-7 h-7 rounded-full bg-brand-soft border border-line text-brand-strong flex items-center justify-center shrink-0">
-          <Sparkles size={18} />
+          <MessageSquareText size={16} />
         </div>
       );
     }
     if (t.includes("task") || t.includes("audit") || t.includes("completed")) {
       return (
-        <div className="w-7 h-7 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 flex items-center justify-center shrink-0">
+        <div className="w-7 h-7 rounded-full bg-info/10 border border-info/30 text-info flex items-center justify-center shrink-0">
           <CheckCircle2 size={18} />
         </div>
       );
     }
     if (t.includes("report") || t.includes("ready")) {
       return (
-        <div className="w-7 h-7 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 flex items-center justify-center shrink-0">
+        <div className="w-7 h-7 rounded-full bg-info/10 border border-info/30 text-info flex items-center justify-center shrink-0">
           <FileText size={18} />
         </div>
       );
     }
     if (t.includes("competitor") || t.includes("visibility") || t.includes("dropped")) {
       return (
-        <div className="w-7 h-7 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center shrink-0">
+        <div className="w-7 h-7 rounded-full bg-critical/10 border border-critical/30 text-critical flex items-center justify-center shrink-0">
           <TrendingDown size={18} />
         </div>
       );
@@ -169,8 +166,8 @@ export default function NotificationDropdown() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         type="button"
-        className={`relative p-2 rounded-panel text-muted-foreground hover:text-foreground hover:bg-muted-bg transition-all duration-200 cursor-pointer outline-none ${
-          isOpen ? "bg-muted-bg text-foreground ring-2 ring-line" : ""
+        className={`relative p-2 rounded-panel text-ink-3 hover:bg-surface-2 hover:text-ink transition-all duration-200 cursor-pointer outline-none ${
+          isOpen ? "bg-surface-2 text-ink ring-2 ring-line" : ""
         }`}
         title="Notifications"
         aria-expanded={isOpen}
@@ -180,7 +177,7 @@ export default function NotificationDropdown() {
         <Bell size={18} />
         {/* Red Unread Badge (Hides automatically when count is zero) */}
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-caption font-semibold text-white ring-2 ring-card animate-in zoom-in-50 duration-200">
+          <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-critical text-caption font-semibold text-white ring-2 ring-surface animate-in zoom-in-50 duration-200">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -194,15 +191,15 @@ export default function NotificationDropdown() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-5 right-5 z-[100] flex items-center gap-2 px-4 py-2.5 rounded-panel font-sans text-xs font-semibold shadow-overlay border"
+            className="fixed bottom-5 right-5 z-[100] flex items-center gap-2 px-4 py-2.5 rounded-panel font-sans text-caption font-semibold shadow-overlay border"
             style={{
-              background: isDark ? "#18181B" : "#FFFFFF",
-              color: isDark ? "#FFFFFF" : "#111827",
-              borderColor: isDark ? "rgba(255,255,255,0.15)" : "#E5E7EB",
+              background: "var(--surface)",
+              color: "var(--ink)",
+              borderColor: "var(--line)",
               boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
             }}
           >
-            <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0">
+            <div className="w-5 h-5 rounded-full bg-positive/20 text-positive flex items-center justify-center shrink-0">
               <Check size={12} strokeWidth={3} />
             </div>
             <span>{toastMessage}</span>
@@ -225,10 +222,10 @@ export default function NotificationDropdown() {
               maxHeight: "360px",
               borderRadius: "14px",
               padding: "10px",
-              background: isDark ? "#1E1E23" : "#FFFFFF",
-              color: isDark ? "#FFFFFF" : "#1F2937",
-              border: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid #E5E7EB",
-              boxShadow: isDark ? "0 20px 60px rgba(0,0,0,.45)" : "0 10px 30px rgba(0,0,0,.12)",
+              background: "var(--surface)",
+              color: "var(--ink)",
+              border: "1px solid var(--line)",
+              boxShadow: "var(--shadow-panel)",
             }}
             role="dialog"
             aria-label="Notifications panel"
@@ -238,14 +235,14 @@ export default function NotificationDropdown() {
               className="flex items-center justify-between border-b shrink-0 px-[14px] py-[12px] mb-1.5"
               style={{
                 height: "44px",
-                borderColor: isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB",
+                borderColor: "var(--line)",
               }}
             >
               <div className="flex items-center gap-[6px]">
                 <Bell size={16} className="text-brand-strong" />
                 <h3 
                   className="text-[16px] font-semibold tracking-normal normal-case leading-[20px]"
-                  style={{ color: isDark ? "#FFFFFF" : "#1F2937" }}
+                  style={{ color: "var(--ink)" }}
                 >
                   Notification
                 </h3>
@@ -255,7 +252,7 @@ export default function NotificationDropdown() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmDialog(true)}
-                  className="text-[12px] font-semibold transition-all hover:opacity-80 cursor-pointer"
+                  className="text-caption font-semibold transition-all hover:opacity-80 cursor-pointer"
                   style={{ color: "var(--brand)" }}
                 >
                   Clear All
@@ -275,40 +272,40 @@ export default function NotificationDropdown() {
                     transition={{ duration: 0.15 }}
                     className="absolute inset-0 z-30 flex flex-col justify-between p-3.5 rounded-control"
                     style={{
-                      background: isDark ? "#18181B" : "#FFFFFF",
-                      border: isDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid #E5E7EB",
+                      background: "var(--surface)",
+                      border: "1px solid var(--line)",
                     }}
                   >
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-[13px] font-bold text-foreground">
+                        <h4 className="text-support font-semibold text-ink">
                           Clear all notifications?
                         </h4>
                         <button
                           type="button"
                           onClick={() => setShowConfirmDialog(false)}
-                          className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted-bg cursor-pointer"
+                          className="p-1 rounded-control text-ink-3 hover:bg-surface-2 hover:text-ink cursor-pointer"
                         >
                           <X size={14} />
                         </button>
                       </div>
-                      <p className="text-caption font-normal leading-relaxed text-muted-foreground">
+                      <p className="text-caption font-normal leading-relaxed text-ink-3">
                         This action will remove all notifications from your notification list.
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/60">
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-line/60">
                       <button
                         type="button"
                         onClick={() => setShowConfirmDialog(false)}
-                        className="px-2.5 py-1 rounded-md text-caption font-semibold text-muted-foreground hover:text-foreground hover:bg-muted-bg transition-colors cursor-pointer"
+                        className="px-2.5 py-1 rounded-control text-caption font-semibold text-ink-3 hover:bg-surface-2 hover:text-ink transition-colors cursor-pointer"
                       >
                         Cancel
                       </button>
                       <button
                         type="button"
                         onClick={handleConfirmClearAll}
-                        className="px-3 py-1 rounded-md text-caption font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors cursor-pointer flex items-center gap-1"
+                        className="px-3 py-1 rounded-control text-caption font-semibold text-white bg-critical hover:bg-critical transition-colors cursor-pointer flex items-center gap-1"
                       >
                         <Trash2 size={12} />
                         Clear All
@@ -324,25 +321,25 @@ export default function NotificationDropdown() {
                   <div 
                     className="w-12 h-12 rounded-full flex items-center justify-center mb-2"
                     style={{
-                      background: isDark ? "rgba(255,255,255,0.05)" : "#F3F4F6",
-                      color: isDark ? "rgba(255,255,255,0.4)" : "#9CA3AF"
+                      background: "var(--surface-2)",
+                      color: "var(--ink-3)"
                     }}
                   >
                     <Bell size={24} />
                   </div>
                   
                   <h4 
-                    className="text-[14px] font-bold mb-1"
-                    style={{ color: isDark ? "#FFFFFF" : "#111827" }}
+                    className="text-body font-semibold mb-1"
+                    style={{ color: "var(--ink)" }}
                   >
                     No Notifications
                   </h4>
                   
                   <p 
                     className="text-caption font-normal leading-snug mb-3 max-w-[200px]"
-                    style={{ color: isDark ? "rgba(255,255,255,0.6)" : "#6B7280" }}
+                    style={{ color: "var(--ink-3)" }}
                   >
-                    You're all caught up.<br />New notifications will appear here.
+                    You&apos;re all caught up.<br />New notifications will appear here.
                   </p>
                 </div>
               ) : (
@@ -370,35 +367,20 @@ export default function NotificationDropdown() {
                             handleCardClick(notification);
                           }
                         }}
-                        className="group flex items-center gap-[8px] cursor-pointer outline-none transition-all duration-150 shrink-0"
-                        style={{
-                          height: "58px",
-                          padding: "8px",
-                          borderRadius: "10px",
-                          background: isDark
-                            ? (notification.isRead ? "rgba(255, 255, 255, 0.03)" : "rgba(255, 255, 255, 0.07)")
-                            : (notification.isRead ? "#F9FAFB" : "#F3F4F6"),
-                          border: isFocused ? "1px solid var(--line-strong)" : (isDark ? "1px solid rgba(255,255,255,0.04)" : "1px solid rgba(0,0,0,0.04)"),
-                          boxSizing: "border-box",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = "translateY(-1px)";
-                          e.currentTarget.style.backgroundColor = isDark ? "rgba(255,255,255,0.12)" : "#E5E7EB";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = "translateY(0px)";
-                          e.currentTarget.style.backgroundColor = isDark
-                            ? (notification.isRead ? "rgba(255, 255, 255, 0.03)" : "rgba(255, 255, 255, 0.07)")
-                            : (notification.isRead ? "#F9FAFB" : "#F3F4F6");
-                        }}
+                        className={
+                          "group flex shrink-0 cursor-pointer items-center gap-[8px] rounded-panel border outline-none transition-colors duration-150 hover:bg-line " +
+                          (notification.isRead ? "bg-surface " : "bg-surface-2 ") +
+                          (isFocused ? "border-line-strong" : "border-line")
+                        }
+                        style={{ height: "58px", padding: "8px", boxSizing: "border-box" }}
                       >
                         {getNotificationIcon(notification.title)}
 
                         <div className="flex-1 min-w-0 flex flex-col justify-center">
                           <div className="flex items-center justify-between gap-1">
                             <p 
-                              className="text-[13px] font-semibold leading-tight truncate"
-                              style={{ color: isDark ? "#FFFFFF" : "#1F2937" }}
+                              className="text-support font-semibold leading-tight truncate"
+                              style={{ color: "var(--ink)" }}
                             >
                               {notification.title}
                             </p>
@@ -409,14 +391,14 @@ export default function NotificationDropdown() {
 
                           <p 
                             className="text-caption font-normal leading-snug truncate mt-0.5"
-                            style={{ color: isDark ? "rgba(255, 255, 255, 0.7)" : "#4B5563" }}
+                            style={{ color: "var(--ink-2)" }}
                           >
                             {notification.message}
                           </p>
 
                           <span 
                             className="text-caption font-medium leading-none block mt-0.5"
-                            style={{ color: isDark ? "rgba(255, 255, 255, 0.45)" : "#9CA3AF" }}
+                            style={{ color: "var(--ink-3)" }}
                           >
                             {notification.timestamp}
                           </span>
@@ -434,13 +416,13 @@ export default function NotificationDropdown() {
                 className="flex items-center justify-center border-t shrink-0 mt-1.5"
                 style={{
                   height: "40px",
-                  borderColor: isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB",
+                  borderColor: "var(--line)",
                 }}
               >
                 <Link
                   href="/dashboard/tasks-audits"
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center justify-center gap-1 text-[12px] font-semibold transition-all hover:gap-1.5 cursor-pointer py-1 px-2.5 rounded-full hover:bg-brand-soft"
+                  className="flex items-center justify-center gap-1 text-caption font-semibold transition-all hover:gap-1.5 cursor-pointer py-1 px-2.5 rounded-control hover:bg-brand-soft"
                   style={{ color: "var(--brand)" }}
                 >
                   <span>View All Audit Tasks</span>

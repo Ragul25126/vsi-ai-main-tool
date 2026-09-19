@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { GUIDE_LABEL, type GuideStep } from "@/lib/onboarding";
 import { useGuideStep } from "./OnboardingProvider";
 
-const stroke = { stroke: "var(--brand)", strokeWidth: 1.75, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, fill: "none" };
+const stroke = { stroke: "var(--brand)", strokeWidth: 1.5, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, fill: "none" };
 
 /**
  * Wraps the button for one setup step. When that step is the user's current
@@ -33,7 +33,7 @@ export function GuideTarget({ step, children }: { step: GuideStep; children: Rea
           <path d="M4.5 18.5L9 24l4.6-5.3" {...stroke} />
         </svg>
         <span className="mb-4 flex items-baseline gap-2.5">
-          <span className="whitespace-nowrap text-caption font-semibold uppercase tracking-wide text-brand-strong">{label}</span>
+          <span className="whitespace-nowrap text-[0.6875rem] font-semibold uppercase leading-4 tracking-[0.14em] text-brand-strong">{label}</span>
           {notNow}
         </span>
       </span>
@@ -46,12 +46,12 @@ export function GuideTarget({ step, children }: { step: GuideStep; children: Rea
         aria-label={`${label} Suggested next step`}
         className="pointer-events-none absolute left-full top-1/2 ml-1.5 hidden -translate-y-[62%] animate-guide-in items-start sm:flex"
       >
-        <svg viewBox="0 0 56 28" className="h-7 w-14 shrink-0" aria-hidden>
-          <path d="M52 7C40 3 27 5 18 12C13 16 9 19 4.5 21" {...stroke} />
-          <path d="M12 23.8L4.5 21l4.4-6.4" {...stroke} />
+        <svg viewBox="0 0 64 30" className="h-[30px] w-16 shrink-0" aria-hidden>
+          <path d="M61 6.5C47 1.5 31 4 20.5 13C15 17.7 10.5 21 5 23" {...stroke} />
+          <path d="M13 26.4L5 23l4.8-7" {...stroke} />
         </svg>
         <span className="-mt-1 flex flex-col items-start gap-0.5">
-          <span className="-rotate-2 whitespace-nowrap text-caption font-semibold uppercase tracking-wide text-brand-strong">{label}</span>
+          <span className="-rotate-2 whitespace-nowrap text-[0.6875rem] font-semibold uppercase leading-4 tracking-[0.14em] text-brand-strong">{label}</span>
           {notNow}
         </span>
       </span>

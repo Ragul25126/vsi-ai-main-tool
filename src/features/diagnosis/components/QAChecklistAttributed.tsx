@@ -15,10 +15,10 @@ interface Props {
 }
 
 const STATUS_META: Record<Status, { label: string; cls: string }> = {
- todo: { label: "-", cls: "bg-gray-100 text-gray-500" },
- pass: { label: "Pass", cls: "bg-green-500 text-white" },
- fail: { label: "Fail", cls: "bg-red-500 text-white" },
- skipped: { label: "Skipped", cls: "bg-gray-400 text-white" },
+ todo: { label: "-", cls: "bg-surface-2 text-ink-3" },
+ pass: { label: "Pass", cls: "bg-positive text-white" },
+ fail: { label: "Fail", cls: "bg-critical text-white" },
+ skipped: { label: "Skipped", cls: "bg-ink-3 text-white" },
 };
 
 export default function QAChecklistAttributed({ sections, tester, initialChecks }: Props) {
@@ -68,50 +68,50 @@ export default function QAChecklistAttributed({ sections, tester, initialChecks 
  return (
  <div className="space-y-5">
  {/* Header / signed-in strip */}
- <div className="rounded-panel border border-gray-200 bg-card p-4 flex flex-wrap items-center justify-between gap-3">
+ <div className="rounded-panel border border-line bg-surface p-4 flex flex-wrap items-center justify-between gap-3">
  <div className="flex items-center gap-3">
- <span className="inline-flex h-9 w-9 rounded-full bg-attention-soft text-attention font-bold items-center justify-center text-sm">
+ <span className="inline-flex h-9 w-9 rounded-full bg-attention-soft text-attention font-semibold items-center justify-center text-body">
  {tester.name.charAt(0).toUpperCase()}
  </span>
  <div>
- <p className="text-sm font-semibold text-gray-900">Signed in as {tester.name}</p>
- <p className="text-caption text-gray-500">Your checks save to the server automatically and attribute to you.</p>
+ <p className="text-body font-semibold text-ink">Signed in as {tester.name}</p>
+ <p className="text-caption text-ink-3">Your checks save to the server automatically and attribute to you.</p>
  </div>
  </div>
- <div className="flex items-center gap-3 text-xs">
+ <div className="flex items-center gap-3 text-caption">
  <div className="text-right">
- <p className="text-gray-700"><span className="font-bold text-green-700">{totals.pass}</span> pass · <span className="font-bold text-red-700">{totals.fail}</span> fail · {totals.skipped} skipped · {totals.todo} pending</p>
- <p className="text-caption text-gray-500">{totals.total} total</p>
+ <p className="text-ink-2"><span className="font-semibold text-positive">{totals.pass}</span> pass · <span className="font-semibold text-critical">{totals.fail}</span> fail · {totals.skipped} skipped · {totals.todo} pending</p>
+ <p className="text-caption text-ink-3">{totals.total} total</p>
  </div>
  <button
  onClick={signOut}
- className="rounded-md border border-gray-300 bg-card px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+ className="rounded-control border border-line-strong bg-surface px-3 py-1.5 text-caption font-semibold text-ink-2 hover:bg-surface-2 transition-colors"
  >Sign out</button>
  </div>
  </div>
 
  {/* Sections */}
  {sections.map((s) => (
- <details key={s.id} open className="group rounded-panel border border-gray-200 bg-card [&_summary::-webkit-details-marker]:hidden">
+ <details key={s.id} open className="group rounded-panel border border-line bg-surface [&_summary::-webkit-details-marker]:hidden">
  <summary className="px-5 py-3 cursor-pointer list-none flex items-center justify-between gap-3">
  <div>
- <p className="text-sm font-bold text-gray-900">{s.title}</p>
- {s.description && <p className="text-caption text-gray-500 mt-0.5">{s.description}</p>}
+ <p className="text-body font-semibold text-ink">{s.title}</p>
+ {s.description && <p className="text-caption text-ink-3 mt-0.5">{s.description}</p>}
  </div>
- <span className="text-caption text-gray-500">{s.tests.length} tests</span>
+ <span className="text-caption text-ink-3">{s.tests.length} tests</span>
  </summary>
- <div className="border-t border-gray-200 divide-y divide-gray-100">
+ <div className="border-t border-line divide-y divide-line">
  {s.tests.map((t) => {
  const current = (checks[t.id]?.status as Status) ?? "todo";
  return (
  <div key={t.id} className="px-5 py-3">
  <div className="flex items-start gap-3">
- <span className="shrink-0 text-caption font-mono text-gray-400 w-12">{t.id}</span>
+ <span className="shrink-0 text-caption text-ink-3 w-12">{t.id}</span>
  <div className="flex-1 min-w-0">
- <p className="text-sm text-gray-900">{t.label}</p>
- {t.hint && <p className="text-caption text-gray-500 mt-0.5">{t.hint}</p>}
+ <p className="text-body text-ink">{t.label}</p>
+ {t.hint && <p className="text-caption text-ink-3 mt-0.5">{t.hint}</p>}
  {checks[t.id]?.notes && (
- <p className="mt-1.5 rounded-md bg-attention-soft border border-line px-2 py-1 text-caption text-attention leading-relaxed">
+ <p className="mt-1.5 rounded-control bg-attention-soft border border-line px-2 py-1 text-caption text-attention leading-relaxed">
  {checks[t.id].notes}
  </p>
  )}
@@ -122,8 +122,8 @@ export default function QAChecklistAttributed({ sections, tester, initialChecks 
  key={s}
  onClick={() => setStatus(t.id, s)}
  disabled={savingKey === t.id}
- className={`rounded-md px-2 py-1 text-caption font-bold transition-colors ${
- current === s ? STATUS_META[s].cls : "border border-gray-200 text-gray-500 hover:bg-gray-50"
+ className={`rounded-md px-2 py-1 text-caption font-semibold transition-colors ${
+ current === s ? STATUS_META[s].cls : "border border-line text-ink-3 hover:bg-surface-2"
  }`}
  >
  {STATUS_META[s].label}
@@ -134,7 +134,7 @@ export default function QAChecklistAttributed({ sections, tester, initialChecks 
  const note = window.prompt("Add a note (optional):", checks[t.id]?.notes ?? "");
  if (note !== null) setNotes(t.id, note);
  }}
- className="rounded-md border border-gray-200 bg-card px-2 py-1 text-caption text-gray-500 hover:bg-gray-50 transition-colors"
+ className="rounded-control border border-line bg-surface px-2 py-1 text-caption text-ink-3 hover:bg-surface-2 transition-colors"
  title="Add a note"
  >+ Note</button>
  </div>

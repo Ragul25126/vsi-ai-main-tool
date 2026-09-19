@@ -49,23 +49,23 @@ export interface TaskRow {
 }
 
 export const STATUS_META: Record<TaskStatus, { label: string; chip: string; dot: string }> = {
-  todo:         { label: "To do",        chip: "bg-gray-100 text-gray-700",   dot: "bg-gray-400"   },
-  in_progress:  { label: "In progress",  chip: "bg-blue-100 text-blue-700",   dot: "bg-blue-500"   },
-  done:         { label: "Done",         chip: "bg-green-100 text-green-700", dot: "bg-green-500"  },
-  skipped:      { label: "Skipped",      chip: "bg-gray-100 text-gray-500",   dot: "bg-gray-300"   },
+  todo:         { label: "To do",        chip: "bg-surface-2 text-ink-2",   dot: "bg-ink-3"   },
+  in_progress:  { label: "In progress",  chip: "bg-brand-soft text-brand-strong",   dot: "bg-brand"   },
+  done:         { label: "Done",         chip: "bg-positive-soft text-positive", dot: "bg-positive"  },
+  skipped:      { label: "Skipped",      chip: "bg-surface-2 text-ink-3",   dot: "bg-line-strong"   },
 };
 
 export const GROUP_META: Record<TaskGroup, { chip: string }> = {
-  Content:     { chip: "bg-blue-50 text-blue-700 border-blue-200" },
-  Technical:   { chip: "bg-purple-50 text-purple-700 border-purple-200" },
-  "Off-page":  { chip: "bg-green-50 text-green-700 border-green-200" },
+  Content:     { chip: "bg-surface-2 text-ink-2 border-line" },
+  Technical:   { chip: "bg-surface-2 text-ink-2 border-line" },
+  "Off-page":  { chip: "bg-surface-2 text-ink-2 border-line" },
 };
 
 export const OWNER_META: Record<TaskOwner, { chip: string }> = {
-  Writer:     { chip: "bg-indigo-100 text-indigo-700" },
-  Developer:  { chip: "bg-purple-100 text-purple-700" },
-  SEO:        { chip: "bg-amber-100 text-amber-700" },
-  Outreach:   { chip: "bg-green-100 text-green-700" },
+  Writer:     { chip: "bg-surface-2 text-ink-2" },
+  Developer:  { chip: "bg-surface-2 text-ink-2" },
+  SEO:        { chip: "bg-surface-2 text-ink-2" },
+  Outreach:   { chip: "bg-surface-2 text-ink-2" },
 };
 
 export const EFFORT_LABEL: Record<TaskEffort, string> = {

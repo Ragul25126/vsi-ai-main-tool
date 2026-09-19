@@ -1,23 +1,23 @@
 type StatusColor = "green" | "yellow" | "red" | "blue" | "gray" | "amber" | "orange";
 
 const DOT_COLORS: Record<StatusColor, string> = {
- green: "bg-green-500",
- yellow: "bg-yellow-500",
- red: "bg-red-500",
- blue: "bg-blue-500",
- gray: "bg-gray-400",
- amber: "bg-amber-500",
- orange: "bg-orange-500",
+ green: "bg-positive",
+ yellow: "bg-attention",
+ red: "bg-critical",
+ blue: "bg-info",
+ gray: "bg-ink-3",
+ amber: "bg-ink",
+ orange: "bg-ink",
 };
 
 const RING_COLORS: Record<StatusColor, string> = {
- green: "ring-green-200",
- yellow: "ring-yellow-200",
- red: "ring-red-200",
- blue: "ring-blue-200",
- gray: "ring-gray-200",
- amber: "ring-amber-200",
- orange: "ring-orange-200",
+ green: "ring-positive/30",
+ yellow: "ring-attention/30",
+ red: "ring-critical/30",
+ blue: "ring-info/30",
+ gray: "ring-line",
+ amber: "ring-brand/40",
+ orange: "ring-brand/40",
 };
 
 interface Props {

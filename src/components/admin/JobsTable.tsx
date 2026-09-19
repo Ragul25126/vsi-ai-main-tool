@@ -93,7 +93,7 @@ export function JobsTable({ jobs, empty, showOrg = true }: { jobs: AdminJob[]; e
                 {open.technical.map((t) => (
                   <div key={t.label}>
                     <dt className="text-caption text-ink-3">{t.label}</dt>
-                    <dd className="break-words font-mono text-caption text-ink-2">{t.value}</dd>
+                    <dd className="break-words text-caption text-ink-2">{t.value}</dd>
                   </div>
                 ))}
               </dl>

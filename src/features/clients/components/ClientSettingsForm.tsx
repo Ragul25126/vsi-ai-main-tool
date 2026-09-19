@@ -41,26 +41,26 @@ function TriToggle({
  { v: false, text: "Off" },
  ];
  return (
- <div className="rounded-panel border border-white/[0.08] bg-[#121215] p-5 shadow-overlay">
+ <div className="rounded-panel border border-line bg-surface p-5 shadow-overlay">
  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
  <div className="flex-1 min-w-0">
- <p className="text-sm font-heading font-bold text-white">{label}</p>
- <p className="text-xs font-mono text-gray-400 mt-0.5 leading-relaxed">{description}</p>
+ <p className="text-body font-heading font-semibold text-ink">{label}</p>
+ <p className="text-caption text-ink-3 mt-0.5 leading-relaxed">{description}</p>
  </div>
- <div className="shrink-0 flex rounded-panel border border-white/10 bg-black/40 p-1">
+ <div className="shrink-0 flex rounded-panel border border-line bg-ink/40 p-1">
  {options.map((o) => (
  <button
  key={String(o.v)}
  type="button"
  onClick={() => onChange(o.v)}
- className={`rounded-lg px-3 py-1.5 text-xs font-mono font-bold transition-all ${
+ className={`rounded-lg px-3 py-1.5 text-caption font-mono font-semibold transition-all ${
  value === o.v
  ? o.v === true
- ? "bg-emerald-500 text-black "
+ ? "bg-positive text-ink "
  : o.v === false
- ? "bg-rose-500 text-black "
- : "bg-ink text-black "
- : "text-gray-400 hover:text-white"
+ ? "bg-critical text-ink "
+ : "bg-ink text-ink "
+ : "text-ink-3 hover:text-ink"
  }`}
  >
  {o.text}
@@ -121,8 +121,8 @@ export default function ClientSettingsForm({ clientId, initial }: { clientId: st
  return "Inherit Default";
  }
  function statusColor(v: Tri): string {
- if (v === true) return "text-emerald-400 bg-emerald-500/10 border-emerald-500/30";
- if (v === false) return "text-gray-400 bg-card/5 border-white/10";
+ if (v === true) return "text-positive bg-positive/10 border-positive/30";
+ if (v === false) return "text-ink-3 bg-surface/5 border-line";
  return "text-brand-strong bg-brand-soft border-line";
  }
 
@@ -131,17 +131,17 @@ export default function ClientSettingsForm({ clientId, initial }: { clientId: st
  {/* Engines Summary */}
  <div className="space-y-3">
  <div className="flex items-baseline justify-between gap-2">
- <p className="text-xs font-heading font-semibold text-white flex items-center gap-2">
+ <p className="text-caption font-heading font-semibold text-ink flex items-center gap-2">
  <Sliders size={14} className="text-brand-strong" />
  <span>Tracking Engines Summary</span>
  </p>
- <p className="text-caption font-mono text-gray-500">Managed centrally by VSI Super Administration</p>
+ <p className="text-caption text-ink-3">Managed centrally by VSI Super Administration</p>
  </div>
- <div className="rounded-panel border border-white/[0.08] bg-[#121215] divide-y divide-white/[0.05] shadow-overlay overflow-hidden">
+ <div className="rounded-panel border border-line bg-surface divide-y divide-white/[0.05] shadow-overlay overflow-hidden">
  {engineRows.map((row) => (
  <div key={row.label} className="flex items-center justify-between gap-3 px-5 py-3.5">
- <p className="text-sm font-heading font-bold text-gray-200">{row.label}</p>
- <span className={`rounded-lg border px-3 py-1 text-caption font-mono font-bold   ${statusColor(row.value)}`}>
+ <p className="text-body font-heading font-semibold text-ink-3">{row.label}</p>
+ <span className={`rounded-control border px-3 py-1 text-caption font-mono font-semibold ${statusColor(row.value)}`}>
  {statusOf(row.value)}
  </span>
  </div>
@@ -151,13 +151,13 @@ export default function ClientSettingsForm({ clientId, initial }: { clientId: st
 
  {/* Automation Frequency */}
  <div className="space-y-3">
- <p className="text-xs font-heading font-semibold text-white flex items-center gap-2">
+ <p className="text-caption font-heading font-semibold text-ink flex items-center gap-2">
  <Clock size={14} className="text-brand-strong" />
  <span>Automation Schedule</span>
  </p>
- <div className="rounded-panel border border-white/[0.08] bg-[#121215] p-6 shadow-overlay">
- <p className="text-sm font-heading font-bold text-white mb-1">Check Frequency & Cron Schedule</p>
- <p className="text-xs font-mono text-gray-400 mb-4">Select how frequently our AI agents audit keywords and citations automatically for this client.</p>
+ <div className="rounded-panel border border-line bg-surface p-6 shadow-overlay">
+ <p className="text-body font-heading font-semibold text-ink mb-1">Check Frequency & Cron Schedule</p>
+ <p className="text-caption text-ink-3 mb-4">Select how frequently our AI agents audit keywords and citations automatically for this client.</p>
  <div className="flex flex-wrap gap-2.5">
  {FREQUENCIES.map((f) => {
  const active = state.check_frequency === f.value;
@@ -166,10 +166,10 @@ export default function ClientSettingsForm({ clientId, initial }: { clientId: st
  key={f.value}
  type="button"
  onClick={() => setState((s) => ({ ...s, check_frequency: f.value }))}
- className={`rounded-panel px-4 py-2 text-xs font-mono font-bold transition-all ${
+ className={`rounded-panel px-4 py-2 text-caption font-mono font-semibold transition-all ${
  active
- ? "bg-surface-2 text-black  scale-105"
- : "border border-white/10 bg-card/[0.03] text-gray-300 hover:text-white hover:bg-card/[0.08]"
+ ? "bg-surface-2 text-ink scale-105"
+ : "border border-line bg-surface/[0.03] text-ink-3 hover:text-ink hover:bg-surface/[0.08]"
  }`}
  >
  {f.label}
@@ -182,43 +182,43 @@ export default function ClientSettingsForm({ clientId, initial }: { clientId: st
 
  {/* Advanced Overrides */}
  <div className="space-y-3">
- <p className="text-xs font-heading font-semibold text-white flex items-center gap-2">
+ <p className="text-caption font-heading font-semibold text-ink flex items-center gap-2">
  <Cpu size={14} className="text-brand-strong" />
  <span>Advanced Diagnostic Overrides</span>
  </p>
- <div className="rounded-panel border border-white/[0.08] bg-[#121215] p-6 space-y-5 shadow-overlay">
+ <div className="rounded-panel border border-line bg-surface p-6 space-y-5 shadow-overlay">
  <div>
- <label className="block text-xs font-mono font-bold text-gray-300 mb-2">AI Brief Model Override</label>
+ <label className="block text-caption font-semibold text-ink-3 mb-2">AI Brief Model Override</label>
  <input
  type="text"
  value={state.brief_model_override}
  onChange={(e) => setState((s) => ({ ...s, brief_model_override: e.target.value }))}
  placeholder="e.g. openrouter/auto · z-ai/glm-4.5-air:free · empty to inherit default"
- className="w-full rounded-panel border border-white/10 bg-black/40 px-4 py-3 text-sm font-mono text-white placeholder-gray-600 focus:border-line-strong focus:outline-none focus:ring-1 focus:ring-ink/10"
+ className="w-full rounded-panel border border-line bg-ink/40 px-4 py-3 text-body text-white placeholder:text-ink-3 focus:border-line-strong focus:outline-none focus:ring-0 focus:ring-ink/10"
  />
- <p className="mt-1.5 text-xs font-mono text-gray-500">Override which LLM generates AI Briefs for this specific client. Leave blank to use the agency default.</p>
+ <p className="mt-1.5 text-caption text-ink-3">Override which LLM generates AI Briefs for this specific client. Leave blank to use the agency default.</p>
  </div>
  <div>
- <label className="block text-xs font-mono font-bold text-gray-300 mb-2">Target Country Code Override (GL)</label>
+ <label className="block text-caption font-semibold text-ink-3 mb-2">Target Country Code Override (GL)</label>
  <input
  type="text"
  value={state.location_override}
  onChange={(e) => setState((s) => ({ ...s, location_override: e.target.value }))}
  placeholder="e.g. ae · us · uk · empty to use per-keyword location"
  maxLength={4}
- className="w-full rounded-panel border border-white/10 bg-black/40 px-4 py-3 text-sm font-mono text-white placeholder-gray-600 focus:border-line-strong focus:outline-none focus:ring-1 focus:ring-ink/10"
+ className="w-full rounded-panel border border-line bg-ink/40 px-4 py-3 text-body text-white placeholder:text-ink-3 focus:border-line-strong focus:outline-none focus:ring-0 focus:ring-ink/10"
  />
- <p className="mt-1.5 text-xs font-mono text-gray-500">Force a specific location code for all checks belonging to this client.</p>
+ <p className="mt-1.5 text-caption text-ink-3">Force a specific location code for all checks belonging to this client.</p>
  </div>
  </div>
  </div>
 
  {error && (
- <div className="rounded-panel border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs font-mono text-rose-300">{error}</div>
+ <div className="rounded-panel border border-critical/30 bg-critical/10 px-4 py-3 text-caption font-mono text-critical">{error}</div>
  )}
 
  <div className="flex items-center justify-end gap-4 pt-2">
- {saved && <span className="text-xs font-mono font-bold text-emerald-400">✓ Settings Successfully Updated</span>}
+ {saved && <span className="text-caption font-mono font-semibold text-positive">Settings Successfully Updated</span>}
  <button
  onClick={save}
  disabled={saving}

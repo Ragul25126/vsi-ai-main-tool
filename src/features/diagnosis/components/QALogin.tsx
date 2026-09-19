@@ -33,9 +33,9 @@ export default function QALogin() {
  }
 
  return (
- <div className="max-w-sm mx-auto rounded-panel border border-gray-200 bg-card p-6">
- <h2 className="text-base font-semibold text-gray-900">Sign in as tester</h2>
- <p className="text-xs text-gray-500 mt-1">Enter the code your admin gave you.</p>
+ <div className="max-w-sm mx-auto rounded-panel border border-line bg-surface p-6">
+ <h2 className="text-base font-semibold text-ink">Sign in as tester</h2>
+ <p className="text-caption text-ink-3 mt-1">Enter the code your admin gave you.</p>
  <form onSubmit={submit} className="mt-5 space-y-3">
  <input
  type="text"
@@ -44,13 +44,13 @@ export default function QALogin() {
  placeholder="e.g. 1122"
  autoComplete="off"
  autoFocus
- className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-base font-mono text-center focus:outline-none focus:ring-2 focus:ring-ink/10 focus:border-transparent"
+ className="w-full rounded-control border border-line-strong bg-surface-2 px-3 py-2 text-base font-mono text-center focus:outline-none focus:ring-2 focus:ring-ink/10 focus:border-transparent"
  />
- {err && <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{err}</p>}
+ {err && <p className="text-caption text-critical bg-critical-soft border border-critical/30 rounded-control px-3 py-2">{err}</p>}
  <button
  type="submit"
  disabled={loading || !code.trim()}
- className="w-full rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-ink-2 disabled:opacity-50 transition-colors"
+ className="w-full rounded-control bg-ink px-4 py-2 text-body font-semibold text-white hover:bg-ink-2 disabled:opacity-50 transition-colors"
  >
  {loading ? "Checking…" : "Continue"}
  </button>

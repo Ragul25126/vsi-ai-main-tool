@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Search } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronRight, Search } from "lucide-react";
 import { PageContainer, PageHeader, Section } from "@/components/ui/Page";
 import { Notice, StatusIcon } from "@/components/ui/Status";
 import { ButtonLink } from "@/components/ui/Button";
+import { MetricHero } from "@/components/ui/MetricHero";
 import { SearchScene } from "@/components/illustrations";
 import { CapabilityList } from "@/components/intro/FeatureIntro";
 import { SetupPanel } from "@/components/intro/SetupPanel";
@@ -142,31 +143,53 @@ export default function SearchVisibilityView({ data }: { data: SearchViewData })
     <PageContainer>
       {header}
 
-      <section aria-label="Your Google visibility" className="grid gap-8 md:grid-cols-[auto_1fr_minmax(0,260px)] md:items-center">
-        <div>
-          <p className="text-caption font-medium text-ink-3">On Google&apos;s first page</p>
-          <p className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-metric font-semibold tabular text-ink">{s.top10}</span>
-            <span className="text-body text-ink-3">of {s.tracked}</span>
-          </p>
-          {s.averagePosition !== null && <p className="mt-1 text-support text-ink-3">Average position {s.averagePosition}</p>}
-        </div>
-        <p className="max-w-[52ch] text-section font-medium text-ink">{searchConclusion(s)}</p>
-        {data.trend.length >= 2 ? (
-          <TrendLine points={data.trend} format={(v) => `${v}%`} ariaLabel="Share of searches on Google's first page over time" />
-        ) : (
-          <p className="text-support text-ink-3">A trend appears here after your next check.</p>
-        )}
-      </section>
+      <MetricHero
+        ariaLabel="Your Google visibility"
+        label="On Google's first page"
+        value={s.top10}
+        suffix={`of ${s.tracked}`}
+        meter={s.tracked > 0 ? Math.round((s.top10 / s.tracked) * 100) : null}
+        note={s.averagePosition !== null ? `Average position ${s.averagePosition}` : undefined}
+        conclusion={searchConclusion(s)}
+        chart={
+          data.trend.length >= 2 ? (
+            <TrendLine points={data.trend} format={(v) => `${v}%`} ariaLabel="Share of searches on Google's first page over time" />
+          ) : null
+        }
+        chartEmpty="A trend appears here after your next check."
+      />
 
-      <dl className="grid grid-cols-2 gap-y-4 border-y border-line py-4 sm:grid-cols-5 sm:divide-x sm:divide-line">
-        {buckets.map((b) => (
-          <div key={b.label} className="sm:px-4 sm:first:pl-0">
-            <dt className="text-caption text-ink-3">{b.label}</dt>
-            <dd className="text-xl font-semibold tabular text-ink">{b.count}</dd>
-          </div>
-        ))}
-      </dl>
+      <section aria-label="Where your searches rank" className="space-y-3">
+        <div
+          className="flex h-2 w-full gap-0.5 overflow-hidden rounded-full"
+          role="img"
+          aria-label={buckets.map((b) => `${b.label}: ${b.count}`).join(", ")}
+        >
+          {buckets.map((b, i) =>
+            b.count > 0 ? (
+              <span
+                key={b.label}
+                className={cn("h-full origin-left animate-line-grow", i === 0 ? "bg-brand" : i === 1 ? "bg-brand/55" : i === 2 ? "bg-ink-3/60" : i === 3 ? "bg-ink-3/35" : "bg-line-strong")}
+                style={{ flexGrow: b.count, flexBasis: 0 }}
+              />
+            ) : null,
+          )}
+        </div>
+        <dl className="grid grid-cols-2 gap-y-4 border-b border-line pb-5 sm:grid-cols-5 sm:divide-x sm:divide-line">
+          {buckets.map((b, i) => (
+            <div key={b.label} className="sm:px-5 sm:first:pl-0">
+              <dt className="flex items-center gap-1.5 text-caption font-medium text-ink-3">
+                <span
+                  className={cn("h-2 w-2 shrink-0 rounded-full", i === 0 ? "bg-brand" : i === 1 ? "bg-brand/55" : i === 2 ? "bg-ink-3/60" : i === 3 ? "bg-ink-3/35" : "bg-line-strong")}
+                  aria-hidden
+                />
+                {b.label}
+              </dt>
+              <dd className="mt-1 text-[1.5rem] font-semibold leading-8 tabular text-ink">{b.count}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
 
       {data.findings.length > 0 && (
         <Section title="What you can improve">
@@ -192,7 +215,7 @@ export default function SearchVisibilityView({ data }: { data: SearchViewData })
 
       <Section title="Your searches" description="Best position first. Open a search to see who ranks around you.">
         <div className="rounded-panel border border-line bg-surface">
-          <div className="hidden grid-cols-[minmax(0,1.6fr)_6rem_8rem_minmax(0,1.4fr)] gap-4 border-b border-line px-4 py-2.5 text-caption font-medium text-ink-3 md:grid">
+          <div className="hidden grid-cols-[minmax(0,1.6fr)_6rem_8rem_minmax(0,1.4fr)] gap-4 rounded-t-panel border-b border-line bg-surface-2 px-4 py-2.5 text-caption font-medium text-ink-3 md:grid">
             <span>Search</span>
             <span>Position</span>
             <span>Change</span>
@@ -213,15 +236,30 @@ export default function SearchVisibilityView({ data }: { data: SearchViewData })
                     )}
                     <span className="text-caption text-ink-3 md:hidden">Checked {row.checkedAt}</span>
                   </div>
-                  <span className="text-support tabular text-ink">{row.position === null ? <span className="text-ink-3">Not found</span> : `#${row.position}`}</span>
+                  <span className="text-support tabular text-ink">
+                    {row.position === null ? (
+                      <span className="text-ink-3">Not found</span>
+                    ) : (
+                      <span
+                        className={cn(
+                          "inline-flex min-w-9 justify-center rounded-control px-1.5 py-0.5 font-medium",
+                          row.position <= 3 ? "bg-brand-soft text-brand-strong" : row.position <= 10 ? "bg-surface-2 text-ink" : "text-ink-2",
+                        )}
+                      >
+                        #{row.position}
+                      </span>
+                    )}
+                  </span>
                   <span
                     className={cn(
-                      "text-support",
+                      "inline-flex items-center gap-1 text-support",
                       change.tone === "up" && "text-positive",
                       change.tone === "down" && "text-attention",
                       (change.tone === "flat" || change.tone === "none") && "text-ink-3",
                     )}
                   >
+                    {change.tone === "up" && <ArrowUp size={13} strokeWidth={2} aria-hidden />}
+                    {change.tone === "down" && <ArrowDown size={13} strokeWidth={2} aria-hidden />}
                     {change.text}
                   </span>
                   <span className="truncate text-support text-ink-3">{row.url ? row.url.replace(/^https?:\/\//, "") : "None"}</span>

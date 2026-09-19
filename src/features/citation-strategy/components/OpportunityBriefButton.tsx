@@ -62,24 +62,24 @@ export default function OpportunityBriefButton(props: Props) {
  <div className="flex items-start justify-between gap-4">
  <div className="flex-1">
  <div className="flex items-center gap-2 mb-1">
- <span className={`text-sm font-bold   ${signal.priorityColor}`}>
+ <span className={`text-body font-semibold ${signal.priorityColor}`}>
  {signal.priorityLabel}
  </span>
  {brief && isStale && (
- <span className="rounded-full bg-attention-soft px-2 py-0.5 text-xs font-semibold text-attention">
+ <span className="rounded-full bg-attention-soft px-2 py-0.5 text-caption font-semibold text-attention">
  Outdated - signals changed
  </span>
  )}
  </div>
- <h2 className="text-lg font-bold text-gray-900">{signal.headline}</h2>
- <p className="text-sm text-gray-600 mt-1">{signal.explanation}</p>
+ <h2 className="text-lg font-semibold text-ink">{signal.headline}</h2>
+ <p className="text-body text-ink-2 mt-1">{signal.explanation}</p>
  </div>
 
  <div className="flex flex-wrap items-center gap-2 shrink-0">
  {brief && !loading && (
  <button
  onClick={() => setExpanded((v) => !v)}
- className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+ className="rounded-control border border-line-strong px-3 py-2 text-body text-ink-2 hover:bg-surface-2 transition-colors"
  >
  {expanded ? "Hide" : "Show"}
  </button>
@@ -87,13 +87,13 @@ export default function OpportunityBriefButton(props: Props) {
  <button
  onClick={regenerate}
  disabled={loading}
- className="rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-ink-2 disabled:opacity-50 transition-colors"
+ className="rounded-control bg-ink px-4 py-2 text-body font-semibold text-white hover:bg-ink-2 disabled:opacity-50 transition-colors"
  >
  {loading
  ? "Generating..."
  : brief
  ? (isStale ? "↻ Regenerate (outdated)" : "↻ Regenerate")
- : "⚡ Generate AI Brief"}
+ : "Generate brief"}
  </button>
  </div>
  </div>
@@ -101,15 +101,15 @@ export default function OpportunityBriefButton(props: Props) {
  {/* Quick rule-based actions (always visible) */}
  {!brief && signal.quickActions.length > 0 && (
  <div className="mt-4 space-y-2">
- <p className="text-xs font-semibold text-gray-500">Quick actions</p>
+ <p className="text-caption font-semibold text-ink-3">Quick actions</p>
  {signal.quickActions.map((qa, i) => (
- <div key={i} className="flex gap-3 rounded-lg bg-gray-50 border border-gray-200 px-3 py-2.5">
- <span className="shrink-0 flex h-5 w-5 mt-0.5 items-center justify-center rounded-full bg-gray-200 text-xs font-bold text-gray-700">
+ <div key={i} className="flex gap-3 rounded-control bg-surface-2 border border-line px-3 py-2.5">
+ <span className="shrink-0 flex h-5 w-5 mt-0.5 items-center justify-center rounded-full bg-line text-caption font-semibold text-ink-2">
  {i + 1}
  </span>
  <div>
- <p className="text-sm font-medium text-gray-900">{qa.action}</p>
- <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{qa.why}</p>
+ <p className="text-body font-medium text-ink">{qa.action}</p>
+ <p className="text-caption text-ink-3 mt-0.5 leading-relaxed">{qa.why}</p>
  </div>
  </div>
  ))}
@@ -118,9 +118,9 @@ export default function OpportunityBriefButton(props: Props) {
 
  {/* Error state */}
  {error && expanded && !brief && (
- <div className="mt-4 rounded-lg bg-red-50 border border-red-300 px-4 py-3">
- <p className="text-xs font-bold text-red-700 mb-1">Brief Generation Failed</p>
- <p className="text-sm text-red-700 leading-relaxed">{error}</p>
+ <div className="mt-4 rounded-control bg-critical-soft border border-critical/30 px-4 py-3">
+ <p className="text-caption font-semibold text-critical mb-1">Brief Generation Failed</p>
+ <p className="text-body text-critical leading-relaxed">{error}</p>
  </div>
  )}
 
@@ -128,34 +128,34 @@ export default function OpportunityBriefButton(props: Props) {
  {brief && expanded && (
  <div className="mt-5 space-y-3">
  {brief.confidence && (
- <div className={`rounded-lg border px-4 py-3 ${
- brief.confidence.level === "high" ? "bg-green-50 border-green-200"
+ <div className={`rounded-control border px-4 py-3 ${
+ brief.confidence.level === "high" ? "bg-positive-soft border-positive/30"
  : brief.confidence.level === "medium" ? "bg-attention-soft border-line"
- : "bg-orange-50 border-orange-200"
+ : "bg-brand-soft border-brand/40"
  }`}>
  <div className="flex items-center justify-between gap-2 mb-1.5">
- <p className="text-xs font-bold text-gray-700">
+ <p className="text-caption font-semibold text-ink-2">
  Confidence
  </p>
- <span className={`rounded-full px-2 py-0.5 text-caption font-bold   ${
- brief.confidence.level === "high" ? "bg-green-500 text-white"
+ <span className={`rounded-full px-2 py-0.5 text-caption font-semibold   ${
+ brief.confidence.level === "high" ? "bg-positive text-white"
  : brief.confidence.level === "medium" ? "bg-ink text-white"
- : "bg-orange-500 text-white"
+ : "bg-ink text-white"
  }`}>{brief.confidence.level}</span>
  </div>
  <ul className="space-y-0.5">
  {brief.confidence.reasons.map((r, i) => (
- <li key={i} className="text-xs text-gray-700 flex items-start gap-1.5">
- <span className="text-gray-400 mt-0.5">·</span><span>{r}</span>
+ <li key={i} className="text-caption text-ink-2 flex items-start gap-1.5">
+ <span className="text-ink-3 mt-0.5">·</span><span>{r}</span>
  </li>
  ))}
  </ul>
  </div>
  )}
  {brief.aioOffTopic && (
- <div className="rounded-lg bg-red-50 border border-red-300 px-4 py-3">
- <p className="text-xs font-bold text-red-700 mb-1">⚠️ AIO topic mismatch</p>
- <p className="text-sm text-gray-800 leading-relaxed">
+ <div className="rounded-control bg-critical-soft border border-critical/30 px-4 py-3">
+ <p className="text-caption font-semibold text-critical mb-1">AI answer topic mismatch</p>
+ <p className="text-body text-ink leading-relaxed">
  Google&apos;s AI answer for this query is actually about <strong>{brief.aioOffTopic.actualTopic}</strong> - not your industry. The actions below are a disambiguation strategy, not citation injection.
  </p>
  </div>
@@ -163,34 +163,34 @@ export default function OpportunityBriefButton(props: Props) {
 
  {/* Insight callout */}
  {brief.targetedInsight && (
- <div className="rounded-lg bg-attention-soft border border-line px-4 py-3">
- <p className="text-xs font-bold text-attention mb-1">Key Insight</p>
- <p className="text-sm text-gray-800 leading-relaxed">{brief.targetedInsight}</p>
+ <div className="rounded-control bg-attention-soft border border-line px-4 py-3">
+ <p className="text-caption font-semibold text-attention mb-1">Key Insight</p>
+ <p className="text-body text-ink leading-relaxed">{brief.targetedInsight}</p>
  </div>
  )}
 
  {/* Situation */}
- <div className="rounded-lg bg-card border border-gray-200 px-4 py-3">
- <p className="text-xs font-bold text-gray-500 mb-1">Situation</p>
- <p className="text-sm text-gray-800 leading-relaxed">{brief.situation}</p>
+ <div className="rounded-control bg-surface border border-line px-4 py-3">
+ <p className="text-caption font-semibold text-ink-3 mb-1">Situation</p>
+ <p className="text-body text-ink leading-relaxed">{brief.situation}</p>
  </div>
 
  {/* Content angle */}
  {brief.contentAngle && (
- <div className="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3">
- <p className="text-xs font-bold text-blue-700 mb-1">Content Angle</p>
- <p className="text-sm text-gray-800 leading-relaxed">{brief.contentAngle}</p>
+ <div className="rounded-control bg-info-soft border border-info/30 px-4 py-3">
+ <p className="text-caption font-semibold text-info mb-1">Content Angle</p>
+ <p className="text-body text-ink leading-relaxed">{brief.contentAngle}</p>
  </div>
  )}
 
  {/* CTA - fires the Task List report directly. KeywordReportButton
  listens for vsi:generate-task-list and runs the generator. */}
- <div className="rounded-lg bg-surface-2 text-white px-5 py-4">
+ <div className="rounded-control bg-surface-2 text-ink px-5 py-4">
  <div className="flex items-center justify-between gap-3 flex-wrap">
  <div className="min-w-0">
- <p className="text-sm font-bold leading-tight">Ready to execute?</p>
- <p className="text-xs text-gray-300 mt-0.5 leading-relaxed">
- Generate a <strong className="text-white">Task List report</strong> - concrete tickets with owner roles, effort, acceptance criteria. Import to the tracker in one click.
+ <p className="text-body font-semibold leading-tight">Ready to execute?</p>
+ <p className="text-caption text-ink-3 mt-0.5 leading-relaxed">
+ Generate a <strong className="text-ink">Task List report</strong> - concrete tickets with owner roles, effort, acceptance criteria. Import to the tracker in one click.
  </p>
  </div>
  <button
@@ -201,7 +201,7 @@ export default function OpportunityBriefButton(props: Props) {
  const el = document.getElementById("reports-section");
  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
  }}
- className="shrink-0 rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-ink-2 transition-colors"
+ className="shrink-0 rounded-control bg-ink px-4 py-2 text-body font-semibold text-white hover:bg-ink-2 transition-colors"
  >
  Generate Task List →
  </button>

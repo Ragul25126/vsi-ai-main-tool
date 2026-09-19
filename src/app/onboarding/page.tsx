@@ -106,53 +106,59 @@ export default function OnboardingPage() {
  }
 
  return (
- <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
- <div className="w-full max-w-sm space-y-6">
- <div className="flex flex-col items-center gap-3">
- <Image src="/logo.png" alt="ValGrow" width={56} height={56} />
- <div className="text-center">
- <h1 className="text-lg font-bold tracking-widest text-amber-700 uppercase">VSI</h1>
- <p className="text-xs text-gray-500">One last step — name your agency</p>
+ <div className="flex min-h-screen items-center justify-center bg-canvas px-4 py-10 font-sans text-ink">
+ <div className="w-full max-w-[420px] animate-rise-in space-y-7">
+ <div className="flex flex-col items-center gap-4 text-center">
+ <Image src="/logo.png" alt="" width={52} height={52} />
+ <div>
+ <p className="flex items-center justify-center gap-2.5 text-caption font-semibold uppercase tracking-[0.14em] text-brand-strong">
+ <span className="h-px w-6 bg-brand" aria-hidden />
+ VSI
+ <span className="h-px w-6 bg-brand" aria-hidden />
+ </p>
+ <h1 className="mt-3 text-display font-semibold text-ink">Name your organization</h1>
+ <p className="mt-2 text-body text-ink-2">One last step before your dashboard.</p>
  </div>
  </div>
 
- <form onSubmit={handleSubmit} className="space-y-4 rounded-[20px] border border-gray-200 bg-card p-6">
- <p className="text-sm font-medium text-gray-900">Set up your agency</p>
-
+ <form onSubmit={handleSubmit} className="space-y-5 rounded-panel border border-line bg-surface p-6">
  {inviteInfo && (
- <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+ <div className="rounded-control bg-brand-soft px-3 py-2.5 text-support text-ink-2">
  {inviteInfo.role === "super_admin"
- ? "Super admin access — unlimited keywords."
- : `Pilot access — up to ${inviteInfo.max_keywords} keywords.`}
+ ? "Platform admin access, with no limit on searches."
+ : `Pilot access, with up to ${inviteInfo.max_keywords} searches.`}
  </div>
  )}
 
  {error && (
- <div className="rounded-lg bg-red-50 border border-red-300 px-3 py-2 text-sm text-red-700">
+ <div role="alert" className="rounded-control bg-critical-soft px-3 py-2.5 text-support text-critical">
  {error}
  </div>
  )}
 
  <div>
- <label className="block text-xs text-gray-500 mb-1">Agency Name</label>
+ <label htmlFor="org-name" className="mb-1.5 block text-support font-medium text-ink">
+ Organization name
+ </label>
  <input
+ id="org-name"
  type="text"
  value={agencyName}
  onChange={(e) => setAgencyName(e.target.value)}
- placeholder="e.g. ValGrow Digital"
+ placeholder="For example: ValGrow Digital"
  required
  autoFocus
  disabled={!inviteInfo}
- className="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-amber-400 focus:outline-none disabled:opacity-50"
+ className="h-10 w-full rounded-control border border-line-strong bg-surface px-3 text-body text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none disabled:opacity-50"
  />
  </div>
 
  <button
  type="submit"
  disabled={loading || !inviteInfo}
- className="w-full rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+ className="flex h-11 w-full items-center justify-center rounded-control bg-ink text-[0.9375rem] font-medium text-white transition-colors hover:bg-ink-2 disabled:cursor-not-allowed disabled:opacity-50"
  >
- {loading ? "Setting up..." : "Launch my dashboard →"}
+ {loading ? "Setting up..." : "Open my dashboard"}
  </button>
  </form>
  </div>

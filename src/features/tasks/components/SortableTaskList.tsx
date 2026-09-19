@@ -36,7 +36,7 @@ function SortableRow({ row }: { row: DisplayRow }) {
  {...attributes}
  {...listeners}
  aria-label="Drag to reorder"
- className="shrink-0 self-stretch rounded-md px-1.5 text-gray-300 hover:text-gray-500 hover:bg-gray-50 cursor-grab active:cursor-grabbing transition-colors flex items-center"
+ className="shrink-0 self-stretch rounded-control px-1.5 text-ink-3 hover:text-ink-3 hover:bg-surface-2 cursor-grab active:cursor-grabbing transition-colors flex items-center"
  >
  <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
  <circle cx="7" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/>

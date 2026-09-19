@@ -134,7 +134,7 @@ export function FindingDrawer({
               {finding.technical.map((t, i) => (
                 <div key={i} className="grid grid-cols-[minmax(0,10rem)_1fr] gap-3">
                   <dt className="text-ink-3">{t.label}</dt>
-                  <dd className="break-words font-mono text-caption text-ink-2">{t.value}</dd>
+                  <dd className="break-words text-caption text-ink-2">{t.value}</dd>
                 </div>
               ))}
             </dl>

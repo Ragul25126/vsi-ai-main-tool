@@ -44,7 +44,7 @@ export function AdminSidebar({ email }: { email: string }) {
       <nav aria-label="Admin" className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
         {ADMIN_NAV.map((group, gi) => (
           <div key={group.title} className={cn(gi > 0 && "mt-5")}>
-            <p className="mb-1 px-2.5 text-caption font-medium text-ink-3">{group.title}</p>
+            <p className="mb-1.5 px-2.5 text-[0.6875rem] font-semibold uppercase leading-4 tracking-[0.08em] text-ink-3">{group.title}</p>
             <ul className="space-y-0.5">
               {group.items.map((item) => {
                 const active = isAdminNavActive(item, pathname);

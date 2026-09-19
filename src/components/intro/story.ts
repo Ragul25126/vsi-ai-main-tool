@@ -47,16 +47,19 @@ const node = (key: StoryKey): ChainNode => {
 };
 const CHECK_PAGES = [node("audit"), node("search"), node("ai"), node("competitors")];
 
+const CORE = [WEBSITE, ...CHECK_PAGES, node("actions")];
+
 /**
- * Each page's own chain. The four check pages share one chain; later pages
- * group those checks into one step so the chain stays short and readable.
+ * Each page's own chain. The four check pages and Next Actions share one
+ * chain, from the website to what to do about it; later pages group the
+ * checks into one step so the chain stays short and readable.
  */
 export const STORY_CHAINS: Record<StoryKey, ChainNode[]> = {
-  audit: [WEBSITE, ...CHECK_PAGES],
-  search: [WEBSITE, ...CHECK_PAGES],
-  ai: [WEBSITE, ...CHECK_PAGES],
-  competitors: [WEBSITE, ...CHECK_PAGES],
-  actions: [WEBSITE, ...CHECK_PAGES, node("actions")],
+  audit: CORE,
+  search: CORE,
+  ai: CORE,
+  competitors: CORE,
+  actions: CORE,
   tasks: [WEBSITE, CHECKS, node("actions"), node("tasks"), node("reports")],
   reports: [WEBSITE, CHECKS, node("actions"), node("tasks"), node("reports")],
   chat: [WEBSITE, CHECKS, node("actions"), node("reports"), node("chat")],

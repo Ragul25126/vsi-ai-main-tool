@@ -62,10 +62,10 @@ function Toast({
       aria-live="assertive"
       className={[
         "fixed bottom-6 right-6 z-[9999] flex items-center gap-3",
-        "rounded-panel px-4 py-3.5 shadow-overlay border text-sm font-semibold",
+        "rounded-panel px-4 py-3.5 shadow-overlay border text-body font-semibold",
         type === "success"
-          ? "bg-emerald-500 border-emerald-400 text-white"
-          : "bg-red-500   border-red-400   text-white",
+          ? "bg-positive border-positive/30 text-white"
+          : "bg-critical border-critical/30 text-white",
       ].join(" ")}
       style={{ animation: "toastIn 300ms cubic-bezier(.22,1,.36,1) both" }}
     >
@@ -95,7 +95,7 @@ function ToolbarBtn({
       title={title}
       onClick={onClick}
       tabIndex={0}
-      className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted-bg transition-all duration-150"
+      className="h-7 w-7 flex items-center justify-center rounded-control text-ink-3 hover:text-ink hover:bg-surface-2 transition-all duration-150"
     >
       {children}
     </button>
@@ -395,7 +395,7 @@ export default function FeedbackModal({ open, onClose }: FeedbackModalProps) {
         >
           <div
             id="vsi-feedback-modal"
-            className="w-full bg-card border border-border shadow-overlay flex flex-col overflow-hidden"
+            className="w-full bg-surface border border-line shadow-overlay flex flex-col overflow-hidden"
             style={{
               maxWidth: "520px",
               borderRadius: "20px",
@@ -404,14 +404,14 @@ export default function FeedbackModal({ open, onClose }: FeedbackModalProps) {
             onClick={(e) => e.stopPropagation()}
           >
             {/* ── Header ──────────────────────────────────────────────── */}
-            <div className="flex items-center justify-between px-7 pt-6 pb-5 border-b border-border">
-              <h2 className="text-base font-bold text-foreground tracking-tight">Feedback</h2>
+            <div className="flex items-center justify-between px-7 pt-6 pb-5 border-b border-line">
+              <h2 className="text-base font-semibold text-ink tracking-tight">Feedback</h2>
               <button
                 ref={closeBtnRef}
                 type="button"
                 onClick={onClose}
                 aria-label="Close feedback modal"
-                className="h-8 w-8 rounded-panel flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted-bg transition-all"
+                className="h-8 w-8 rounded-panel flex items-center justify-center text-ink-3 hover:text-ink hover:bg-surface-2 transition-all"
               >
                 <X size={18} />
               </button>
@@ -424,10 +424,10 @@ export default function FeedbackModal({ open, onClose }: FeedbackModalProps) {
             >
               {/* ─ Emoji Rating ──────────────────────────────────────── */}
               <div>
-                <p className="text-sm font-bold text-foreground leading-snug">
+                <p className="text-body font-semibold text-ink leading-snug">
                   How would you rate your experience with SearchIntel?
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-caption text-ink-3 mt-1">
                   Your feedback helps us improve SearchIntel for everyone.
                 </p>
 
@@ -487,12 +487,12 @@ export default function FeedbackModal({ open, onClose }: FeedbackModalProps) {
 
               {/* ─ Comment ───────────────────────────────────────────── */}
               <div>
-                <label htmlFor="vsi-feedback-comment" className="block text-sm font-bold text-foreground mb-2">
+                <label htmlFor="vsi-feedback-comment" className="block text-body font-semibold text-ink mb-2">
                   Your feedback
                 </label>
 
                 {/* Rich Toolbar */}
-                <div className="flex items-center gap-0.5 flex-wrap px-2 py-1.5 bg-muted-bg rounded-t-xl border border-border border-b-0">
+                <div className="flex items-center gap-0.5 flex-wrap px-2 py-1.5 bg-surface-2 rounded-t-xl border border-line border-b-0">
                   <ToolbarBtn onClick={() => wrapSelection("**")}  title="Bold">       <Bold         size={12} /></ToolbarBtn>
                   <ToolbarBtn onClick={() => wrapSelection("_")}   title="Italic">     <Italic       size={12} /></ToolbarBtn>
                   <ToolbarBtn onClick={() => wrapSelection("__")}  title="Underline">  <Underline    size={12} /></ToolbarBtn>
@@ -516,11 +516,11 @@ export default function FeedbackModal({ open, onClose }: FeedbackModalProps) {
                   placeholder="Tell us what you liked, what didn't work, or how we can improve..."
                   rows={5}
                   aria-describedby="vsi-char-count"
-                  className="w-full rounded-b-xl border border-border bg-background px-3.5 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ink/10 focus:border-line-strong resize-none transition-all"
+                  className="w-full rounded-b-xl border border-line bg-canvas px-3.5 py-3 text-body text-ink placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-ink/10 focus:border-line-strong resize-none transition-all"
                 />
 
                 <div className="flex items-center justify-between mt-1" id="vsi-char-count">
-                  <span className="text-caption text-muted-foreground">
+                  <span className="text-caption text-ink-3">
                     {comment.length > 0 && comment.trim().length < 4 && (
                       <span className="text-brand-strong font-medium">
                         {4 - comment.trim().length} more character{4 - comment.trim().length !== 1 ? "s" : ""} needed ·{" "}
@@ -533,23 +533,23 @@ export default function FeedbackModal({ open, onClose }: FeedbackModalProps) {
 
               {/* ─ Attachment ─────────────────────────────────────────── */}
               <div>
-                <p className="text-sm font-bold text-foreground mb-2">
+                <p className="text-body font-semibold text-ink mb-2">
                   Attachment{" "}
-                  <span className="text-muted-foreground font-normal text-xs">(optional)</span>
+                  <span className="text-ink-3 font-normal text-caption">(optional)</span>
                 </p>
 
                 {attachment ? (
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-panel border border-border bg-muted-bg">
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-panel border border-line bg-surface-2">
                     <Paperclip size={14} className="text-brand-strong shrink-0" />
-                    <span className="text-sm text-foreground font-medium flex-1 truncate">{attachment.name}</span>
-                    <span className="text-xs text-muted-foreground shrink-0">
+                    <span className="text-body text-ink font-medium flex-1 truncate">{attachment.name}</span>
+                    <span className="text-caption text-ink-3 shrink-0">
                       {(attachment.size / 1024).toFixed(0)} KB
                     </span>
                     <button
                       type="button"
                       onClick={() => { setAttachment(null); setFileError(null); }}
                       aria-label="Remove attachment"
-                      className="h-6 w-6 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all"
+                      className="h-6 w-6 rounded-control flex items-center justify-center text-ink-3 hover:text-critical hover:bg-critical/10 transition-all"
                     >
                       <X size={13} />
                     </button>
@@ -558,11 +558,11 @@ export default function FeedbackModal({ open, onClose }: FeedbackModalProps) {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-panel border border-dashed border-border hover:border-line bg-muted-bg/50 hover:bg-brand-soft text-sm text-muted-foreground hover:text-attention transition-all group"
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-panel border border-dashed border-line hover:border-line bg-surface-2/50 hover:bg-brand-soft text-body text-ink-3 hover:text-attention transition-all group"
                   >
                     <Paperclip size={14} className="shrink-0 group-hover:text-ink transition-colors" />
                     <span>Click to attach a file</span>
-                    <span className="ml-auto text-xs text-muted-foreground">PNG, JPG, PDF, TXT · max 10 MB</span>
+                    <span className="ml-auto text-caption text-ink-3">PNG, JPG, PDF, TXT · max 10 MB</span>
                   </button>
                 )}
 
@@ -577,7 +577,7 @@ export default function FeedbackModal({ open, onClose }: FeedbackModalProps) {
                 />
 
                 {fileError && (
-                  <p className="mt-2 text-xs text-red-500 flex items-center gap-1.5">
+                  <p className="mt-2 text-caption text-critical flex items-center gap-1.5">
                     <AlertCircle size={12} /> {fileError}
                   </p>
                 )}
@@ -585,12 +585,12 @@ export default function FeedbackModal({ open, onClose }: FeedbackModalProps) {
             </div>
 
             {/* ── Footer ──────────────────────────────────────────────── */}
-            <div className="flex items-center justify-end gap-3 px-7 py-4 border-t border-border bg-muted-bg/40">
+            <div className="flex items-center justify-end gap-3 px-7 py-4 border-t border-line bg-surface-2/40">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={submitting}
-                className="px-4 py-2 rounded-panel text-sm font-semibold text-foreground border border-border hover:bg-muted-bg transition-all disabled:opacity-50"
+                className="px-4 py-2 rounded-panel text-body font-semibold text-ink border border-line hover:bg-surface-2 transition-all disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -599,7 +599,7 @@ export default function FeedbackModal({ open, onClose }: FeedbackModalProps) {
                 onClick={handleSubmit}
                 disabled={!canSubmit}
                 aria-disabled={!canSubmit}
-                className="flex items-center gap-2 px-5 py-2 rounded-panel text-sm font-bold text-white bg-ink hover:bg-ink-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all "
+                className="flex items-center gap-2 px-5 py-2 rounded-panel text-body font-semibold text-white bg-ink hover:bg-ink-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all "
               >
                 {submitting ? (
                   <>

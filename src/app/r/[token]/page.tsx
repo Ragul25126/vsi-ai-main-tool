@@ -25,9 +25,9 @@ const GAP_LABELS: Record<string, string> = {
 };
 
 const HERO_TONE: Record<string, { ring: string; text: string }> = {
- good: { ring: "ring-green-200", text: "text-green-700" },
- bad: { ring: "ring-red-200", text: "text-red-700" },
- neutral: { ring: "ring-amber-200", text: "text-amber-700" },
+ good: { ring: "ring-positive/30", text: "text-positive" },
+ bad: { ring: "ring-critical/30", text: "text-critical" },
+ neutral: { ring: "ring-brand/40", text: "text-brand-strong" },
 };
 
 function shortDate(d: string | Date) {
@@ -54,11 +54,11 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  // shell. A small placeholder is friendlier than a 404.
  if (row.status === "pending") {
  return (
- <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
+ <div className="min-h-screen flex items-center justify-center bg-surface-2 px-6">
  <div className="max-w-md text-center">
- <div className="mx-auto mb-4 h-10 w-10 rounded-full border-4 border-amber-200 border-t-amber-500 animate-spin" />
- <h1 className="text-lg font-semibold text-gray-900">Generating your report…</h1>
- <p className="text-sm text-gray-500 mt-1">This page refreshes automatically. Usually under a minute.</p>
+ <div className="mx-auto mb-4 h-10 w-10 rounded-full border-4 border-brand/40 border-t-amber-500 animate-spin" />
+ <h1 className="text-title font-semibold text-ink">Generating your report…</h1>
+ <p className="text-body text-ink-3 mt-1">This page refreshes automatically. Usually under a minute.</p>
  </div>
  <meta httpEquiv="refresh" content="5" />
  </div>
@@ -66,10 +66,10 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  }
  if (row.status === "failed") {
  return (
- <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
+ <div className="min-h-screen flex items-center justify-center bg-surface-2 px-6">
  <div className="max-w-md text-center">
- <h1 className="text-lg font-semibold text-gray-900">Report could not be generated</h1>
- <p className="text-sm text-gray-500 mt-2">Open VSI and try generating it again.</p>
+ <h1 className="text-title font-semibold text-ink">Report could not be generated</h1>
+ <p className="text-body text-ink-3 mt-2">Open VSI and try generating it again.</p>
  </div>
  </div>
  );
@@ -115,7 +115,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  const color = c.branding.primaryColor;
 
  return (
- <div className="min-h-screen bg-gray-100 text-gray-900">
+ <div className="min-h-screen bg-surface-2 text-ink">
  <style>{`
  @media print {
  @page { size: A4; margin: 14mm; }
@@ -127,9 +127,9 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  `}</style>
 
  {/* Sticky print bar */}
- <div className="no-print sticky top-0 z-20 bg-card border-b border-gray-200">
+ <div className="no-print sticky top-0 z-20 bg-surface border-b border-line">
  <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
- <p className="text-xs text-gray-500">
+ <p className="text-caption text-ink-3">
  Generated {shortDate(c.generatedAt)}
  </p>
  <PrintButton color={color} />
@@ -138,7 +138,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
 
  {/* The actual "paper" */}
  <div className="max-w-4xl mx-auto my-6 print:my-0">
- <div className="print-page bg-card rounded-xl border border-gray-200 overflow-hidden">
+ <div className="print-page bg-surface rounded-panel border border-line overflow-hidden">
 
  {/* HEADER — full-bleed brand bar */}
  <div
@@ -150,7 +150,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
  <div className="flex items-center gap-4 min-w-0">
  {c.branding.logoUrl ? (
- <div className="h-16 w-16 rounded-xl bg-card border border-gray-200 p-2 shrink-0 flex items-center justify-center">
+ <div className="h-16 w-16 rounded-panel bg-surface border border-line p-2 shrink-0 flex items-center justify-center">
  <Image
  src={c.branding.logoUrl}
  alt={c.branding.displayName}
@@ -162,27 +162,27 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  </div>
  ) : (
  <div
- className="h-16 w-16 rounded-xl flex items-center justify-center text-white font-bold text-xl shrink-0"
+ className="h-16 w-16 rounded-panel flex items-center justify-center text-white font-semibold text-xl shrink-0"
  style={{ backgroundColor: color }}
  >
  {c.branding.displayName.charAt(0).toUpperCase()}
  </div>
  )}
  <div className="min-w-0">
- <p className="text-sm font-medium" style={{ color }}>
+ <p className="text-body font-medium" style={{ color }}>
  {c.branding.displayName}
  </p>
- <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 mt-1 leading-tight">
+ <h1 className="mt-1 text-[1.75rem] font-semibold leading-9 tracking-[-0.02em] text-ink sm:text-[2rem] sm:leading-10">
  Search Visibility Report
  </h1>
- <p className="text-sm text-gray-600 mt-1">{c.rangeLabel}</p>
+ <p className="text-body text-ink-2 mt-1">{c.rangeLabel}</p>
  </div>
  </div>
- <div className="text-left sm:text-right shrink-0 border-l-0 sm:border-l border-gray-200 sm:pl-6">
- <p className="text-xs text-gray-500">Prepared for</p>
- <p className="text-lg font-bold text-gray-900 mt-0.5">{c.client.name}</p>
+ <div className="text-left sm:text-right shrink-0 border-l-0 sm:border-l border-line sm:pl-6">
+ <p className="text-caption text-ink-3">Prepared for</p>
+ <p className="text-lg font-semibold text-ink mt-0.5">{c.client.name}</p>
  {c.client.website && (
- <p className="text-xs text-gray-500 mt-0.5">{c.client.website}</p>
+ <p className="text-caption text-ink-3 mt-0.5">{c.client.website}</p>
  )}
  </div>
  </div>
@@ -190,22 +190,22 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
 
  {/* HERO METRICS */}
  <section className="px-8 sm:px-12 pt-8 avoid-break">
- <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+ <div className="grid grid-cols-2 border-y border-line lg:grid-cols-4 lg:divide-x lg:divide-line">
  {c.hero.map((m, i) => {
  const tone = m.tone ? HERO_TONE[m.tone] : null;
  return (
  <div
  key={i}
- className={`rounded-xl bg-card p-5 ring-1 ${tone?.ring ?? "ring-gray-200"}`}
+ className="py-5 pr-4 lg:px-5 lg:first:pl-0"
  >
- <p className="text-xs text-gray-500 font-medium">
+ <p className="text-caption text-ink-3 font-medium">
  {m.label}
  </p>
- <p className={`text-3xl font-bold mt-2 ${tone?.text ?? "text-gray-900"}`}>
+ <p className={`mt-2 text-[1.75rem] font-semibold leading-8 tracking-[-0.02em] tabular ${tone?.text ?? "text-ink"}`}>
  {m.value}
  </p>
  {m.sub && (
- <p className="text-xs text-gray-500 mt-1 leading-relaxed">{m.sub}</p>
+ <p className="text-caption text-ink-3 mt-1 leading-relaxed">{m.sub}</p>
  )}
  </div>
  );
@@ -223,12 +223,12 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  accent={color}
  >
  <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
- <p className="text-4xl font-semibold text-gray-900 tabular-nums">
+ <p className="text-4xl font-semibold text-ink tabular-nums">
  {c.websiteHealth.score}
- <span className="ml-1 text-base font-normal text-gray-500">/ 100</span>
+ <span className="ml-1 text-base font-normal text-ink-3">/ 100</span>
  </p>
  {c.websiteHealth.previousScore !== null && (
- <p className="text-sm text-gray-600">
+ <p className="text-body text-ink-2">
  {c.websiteHealth.score === c.websiteHealth.previousScore
  ? "No change since the previous audit"
  : c.websiteHealth.score > c.websiteHealth.previousScore
@@ -238,16 +238,16 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  )}
  </div>
  {c.websiteHealth.issues.length > 0 ? (
- <ul className="mt-4 space-y-1.5 text-sm text-gray-700">
+ <ul className="mt-4 space-y-1.5 text-body text-ink-2">
  {c.websiteHealth.issues.map((issue) => (
  <li key={issue} className="flex gap-2">
- <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-gray-400" />
+ <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-ink-3" />
  {issue}
  </li>
  ))}
  </ul>
  ) : (
- <p className="mt-3 text-sm text-gray-600">Every check passed in the latest audit.</p>
+ <p className="mt-3 text-body text-ink-2">Every check passed in the latest audit.</p>
  )}
  </Section>
  )}
@@ -256,10 +256,10 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  <Section
  title="Wins this period"
  subtitle="Keywords that improved in rank or gained AI Mode citations"
- accent="#16a34a"
+ accent="var(--positive)"
  badge={`+${c.wins.length}`}
- badgeBg="bg-green-100"
- badgeText="text-green-700"
+ badgeBg="bg-positive-soft"
+ badgeText="text-positive"
  >
  <KeywordTable rows={c.wins} showDelta highlightDelta="good" />
  </Section>
@@ -269,10 +269,10 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  <Section
  title="Where we lost ground"
  subtitle="Keywords that dropped in rank or lost citations vs last week"
- accent="#dc2626"
+ accent="var(--critical)"
  badge={`-${c.losses.length}`}
- badgeBg="bg-red-100"
- badgeText="text-red-700"
+ badgeBg="bg-critical-soft"
+ badgeText="text-critical"
  >
  <KeywordTable rows={c.losses} showDelta highlightDelta="bad" />
  </Section>
@@ -284,8 +284,8 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  subtitle="Competitors are visible here but you aren't. Each one is a page worth improving, with a known target."
  accent={color}
  badge={String(c.opportunities.length)}
- badgeBg="bg-amber-100"
- badgeText="text-amber-800"
+ badgeBg="bg-brand-soft"
+ badgeText="text-brand-strong"
  >
  <KeywordTable rows={c.opportunities} showDelta={false} />
  </Section>
@@ -297,14 +297,14 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  subtitle="How many of the AI answers checked link to each competitor. Competitors chosen for this report's business are listed first."
  accent={color}
  >
- <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200">
+ <ul className="divide-y divide-line rounded-control border border-line">
  {c.competitors.map((comp) => (
- <li key={comp.domain} className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm">
- <span className="text-gray-900">
+ <li key={comp.domain} className="flex items-center justify-between gap-4 px-4 py-2.5 text-body">
+ <span className="text-ink">
  {comp.domain}
- {comp.tracked && <span className="ml-2 text-xs text-gray-500">Tracked competitor</span>}
+ {comp.tracked && <span className="ml-2 text-caption text-ink-3">Tracked competitor</span>}
  </span>
- <span className="tabular-nums text-gray-600">
+ <span className="tabular-nums text-ink-2">
  {comp.aiAnswers} {comp.aiAnswers === 1 ? "answer" : "answers"}
  </span>
  </li>
@@ -317,13 +317,13 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  <Section
  title="Work completed this period"
  subtitle={`${c.completedTasks.total} ${c.completedTasks.total === 1 ? "task" : "tasks"} finished${c.completedTasks.verified > 0 ? `, ${c.completedTasks.verified} confirmed by a re-check` : ""}`}
- accent="#16a34a"
+ accent="var(--positive)"
  >
- <ul className="space-y-2 text-sm">
+ <ul className="space-y-2 text-body">
  {c.completedTasks.items.map((t, i) => (
  <li key={i} className="flex items-start justify-between gap-4">
- <span className="text-gray-800">{t.title}</span>
- <span className="shrink-0 text-xs text-gray-500">
+ <span className="text-ink">{t.title}</span>
+ <span className="shrink-0 text-caption text-ink-3">
  {shortDate(t.completedAt)}
  {t.verified ? " · Confirmed" : ""}
  </span>
@@ -334,9 +334,9 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  )}
 
  {c.wins.length === 0 && c.losses.length === 0 && c.opportunities.length === 0 && (
- <div className="rounded-xl border border-dashed border-gray-300 p-10 text-center">
- <p className="text-sm text-gray-500">No ranking or AI citation changes to compare this period.</p>
- <p className="text-xs text-gray-400 mt-1">
+ <div className="rounded-panel border border-dashed border-line-strong p-10 text-center">
+ <p className="text-body text-ink-3">No ranking or AI citation changes to compare this period.</p>
+ <p className="text-caption text-ink-3 mt-1">
  Wins, drops and opportunities appear here once there are checks from two consecutive weeks to compare.
  </p>
  </div>
@@ -344,14 +344,14 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  </div>
 
  {/* FOOTER */}
- <footer className="px-8 sm:px-12 py-6 border-t border-gray-200 bg-gray-50">
+ <footer className="px-8 sm:px-12 py-6 border-t border-line bg-surface-2">
  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
  <div>
- <p className="text-sm text-gray-700 font-medium">
+ <p className="text-body text-ink-2 font-medium">
  {c.branding.displayName}
  </p>
  {c.branding.footer && (
- <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap mt-1.5 max-w-xl">
+ <p className="text-caption text-ink-2 leading-relaxed whitespace-pre-wrap mt-1.5 max-w-xl">
  {c.branding.footer}
  </p>
  )}
@@ -359,7 +359,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
  {c.branding.supportEmail && (
  <a
  href={`mailto:${c.branding.supportEmail}`}
- className="text-xs text-gray-600 hover:underline shrink-0"
+ className="text-caption text-ink-2 hover:underline shrink-0"
  style={{ color }}
  >
  {c.branding.supportEmail}
@@ -399,15 +399,15 @@ function Section({
  className="inline-block w-1.5 h-6 rounded-full mt-0.5"
  style={{ backgroundColor: accent }}
  />
- <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+ <h2 className="text-[1.1875rem] font-semibold leading-7 tracking-[-0.01em] text-ink">{title}</h2>
  {badge && (
- <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${badgeBg} ${badgeText}`}>
+ <span className={`rounded-full px-2 py-0.5 text-caption font-semibold ${badgeBg} ${badgeText}`}>
  {badge}
  </span>
  )}
  </div>
  {subtitle && (
- <p className="text-xs text-gray-500 ml-4 mb-4 leading-relaxed">{subtitle}</p>
+ <p className="text-caption text-ink-3 ml-4 mb-4 leading-relaxed">{subtitle}</p>
  )}
  <div className="mt-3">{children}</div>
  </section>
@@ -424,8 +424,8 @@ function KeywordTable({
  highlightDelta?: "good" | "bad";
 }) {
  return (
- <div className="rounded-xl border border-gray-200 overflow-hidden bg-card">
- <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2.5 bg-gray-50 text-xs text-gray-500 font-medium border-b border-gray-200">
+ <div className="rounded-panel border border-line overflow-hidden bg-surface">
+ <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2.5 bg-surface-2 text-caption text-ink-3 font-medium border-b border-line">
  <div className="col-span-5">Keyword</div>
  <div className="col-span-2 text-center">Rank</div>
  <div className="col-span-2 text-center">AI Mode</div>
@@ -435,29 +435,29 @@ function KeywordTable({
  {rows.map((r, i) => {
  const deltaRowClass =
  showDelta && r.rankDelta != null && highlightDelta === "good" && r.rankDelta > 0
- ? "bg-green-50/40"
+ ? "bg-positive-soft/40"
  : showDelta && r.rankDelta != null && highlightDelta === "bad" && r.rankDelta < 0
- ? "bg-red-50/40"
+ ? "bg-critical-soft/40"
  : "";
  return (
  <div
  key={i}
- className={`border-t border-gray-100 px-4 py-3 text-xs flex flex-col gap-2 sm:grid sm:grid-cols-12 sm:gap-2 sm:items-center ${deltaRowClass}`}
+ className={`border-t border-line px-4 py-3 text-caption flex flex-col gap-2 sm:grid sm:grid-cols-12 sm:gap-2 sm:items-center ${deltaRowClass}`}
  >
- <div className="sm:col-span-5 font-medium text-gray-900 sm:truncate">{r.keyword}</div>
+ <div className="sm:col-span-5 font-medium text-ink sm:truncate">{r.keyword}</div>
 
  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:contents">
  <div className="sm:col-span-2 sm:text-center">
- <span className="text-gray-400 sm:hidden">Rank:</span>{" "}
+ <span className="text-ink-3 sm:hidden">Rank:</span>{" "}
  {r.rank ? (
- <span className="text-blue-700 font-semibold">#{r.rank}</span>
+ <span className="text-info font-semibold">#{r.rank}</span>
  ) : (
- <span className="text-gray-400">Not checked</span>
+ <span className="text-ink-3">Not checked</span>
  )}
  {showDelta && r.rankDelta != null && r.rankDelta !== 0 && (
  <span
- className={`ml-1.5 inline-block rounded px-1.5 py-0.5 text-[10px] font-bold ${
- r.rankDelta > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+ className={`ml-1.5 inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+ r.rankDelta > 0 ? "bg-positive-soft text-positive" : "bg-critical-soft text-critical"
  }`}
  >
  {r.rankDelta > 0 ? "▲" : "▼"}
@@ -467,30 +467,30 @@ function KeywordTable({
  </div>
 
  <div className="sm:col-span-2 sm:text-center">
- <span className="text-gray-400 sm:hidden">AI Mode:</span>{" "}
+ <span className="text-ink-3 sm:hidden">AI Mode:</span>{" "}
  {r.clientCited ? (
- <span className="text-green-700 font-medium">✓ Cited</span>
+ <span className="text-positive font-medium">✓ Cited</span>
  ) : r.mentionedInText ? (
- <span className="text-blue-700 font-medium">~ Mentioned</span>
+ <span className="text-info font-medium">~ Mentioned</span>
  ) : r.aioPresent ? (
- <span className="text-red-700 font-medium">✗ Invisible</span>
+ <span className="text-critical font-medium">✗ Invisible</span>
  ) : (
- <span className="text-gray-400">Not checked</span>
+ <span className="text-ink-3">Not checked</span>
  )}
  </div>
 
  <div className="sm:col-span-2 sm:text-center">
- <span className="text-gray-400 sm:hidden">ChatGPT:</span>{" "}
+ <span className="text-ink-3 sm:hidden">ChatGPT:</span>{" "}
  {r.chatgptCited ? (
- <span className="text-green-700 font-medium">✓ Cited</span>
+ <span className="text-positive font-medium">✓ Cited</span>
  ) : r.chatgptMentioned ? (
- <span className="text-blue-700 font-medium">~ Mentioned</span>
+ <span className="text-info font-medium">~ Mentioned</span>
  ) : (
- <span className="text-gray-400">Not checked</span>
+ <span className="text-ink-3">Not checked</span>
  )}
  </div>
 
- <div className="sm:col-span-1 sm:text-right text-gray-500 text-[11px]">
+ <div className="sm:col-span-1 sm:text-right text-ink-3 text-caption">
  {GAP_LABELS[r.gap] ?? r.gap}
  </div>
  </div>

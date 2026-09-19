@@ -111,7 +111,7 @@ export default function NextActionsView({ data }: { data: NextActionsData }) {
                     role="tab"
                     aria-selected={filter === s}
                     onClick={() => setFilter(s)}
-                    className={cn("rounded-control px-2.5 py-1", filter === s ? "bg-surface-2 font-medium text-ink" : "text-ink-3 hover:text-ink")}
+                    className={cn("rounded-control px-2.5 py-1 transition-colors", filter === s ? "bg-brand-soft font-medium text-ink" : "text-ink-3 hover:text-ink")}
                   >
                     {s === "all" ? "All" : TASK_SOURCE_LABEL[s]}
                   </button>
@@ -121,21 +121,26 @@ export default function NextActionsView({ data }: { data: NextActionsData }) {
           </div>
 
           <ol className="divide-y divide-line rounded-panel border border-line bg-surface">
-            {shown.map((f) => (
+            {shown.map((f, i) => (
               <li key={f.key}>
-                <button type="button" onClick={() => setOpen(f)} className="flex w-full items-start gap-3 px-4 py-4 text-left hover:bg-surface-2">
-                  <span className="mt-0.5">
-                    <StatusIcon tone={f.tone} size={18} />
+                <button type="button" onClick={() => setOpen(f)} className="group grid w-full gap-x-4 gap-y-2 px-4 py-4 text-left transition-colors hover:bg-surface-2 md:grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)_1rem] md:px-5">
+                  <span className="hidden h-6 w-6 items-center justify-center rounded-full bg-brand-soft font-mono text-caption font-medium text-brand-strong md:flex" aria-hidden>
+                    {i + 1}
                   </span>
-                  <span className="min-w-0 flex-1 space-y-0.5">
+                  <span className="min-w-0 space-y-0.5">
                     <span className="block text-body font-medium text-ink">{f.title}</span>
                     <span className="block text-support text-ink-2">{f.whatWeFound}</span>
-                    <span className="block text-caption text-ink-3">
+                    <span className="flex flex-wrap items-center gap-x-1.5 pt-0.5 text-caption text-ink-3">
+                      <StatusIcon tone={f.tone} size={13} />
                       {f.sourceLabel}
-                      {created.has(f.key) ? " · Task created" : ""}
+                      {created.has(f.key) && <span className="text-positive">· Task created</span>}
                     </span>
                   </span>
-                  <ChevronRight size={16} strokeWidth={1.75} className="mt-1 shrink-0 text-ink-3" aria-hidden />
+                  <span className="min-w-0 md:border-l md:border-line md:pl-4">
+                    <span className="block text-caption font-medium text-ink-3">What to do</span>
+                    <span className="mt-0.5 line-clamp-2 block text-support text-ink-2">{f.whatToDo}</span>
+                  </span>
+                  <ChevronRight size={16} strokeWidth={1.75} className="mt-1 hidden shrink-0 text-line-strong transition-colors group-hover:text-ink-2 md:block" aria-hidden />
                 </button>
               </li>
             ))}

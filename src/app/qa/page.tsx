@@ -39,8 +39,8 @@ export default async function PublicQAPage() {
  <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6">
  <div className="max-w-5xl mx-auto">
  <div className="mb-6">
- <h1 className="text-xl font-semibold text-gray-900">VSI QA Checklist</h1>
- <p className="text-xs text-gray-500 mt-1">
+ <h1 className="text-display font-semibold text-ink">VSI QA Checklist</h1>
+ <p className="text-caption text-gray-500 mt-1">
  {QA_SECTIONS.length} sections · {totalTests} test cases. Sign in with your tester code; your saves attribute to you and persist server-side.
  </p>
  </div>

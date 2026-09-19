@@ -54,17 +54,17 @@ export default function KeywordRunButton({ clientId, keywordId }: Props) {
 
  if (running) {
  return (
- <div className="flex items-center gap-2 rounded-lg border border-line bg-attention-soft px-4 py-2">
+ <div className="flex items-center gap-2 rounded-control border border-line bg-attention-soft px-4 py-2">
  <span className="h-2 w-2 rounded-full bg-ink animate-pulse" />
- <span className="text-sm text-attention font-medium">Running...</span>
+ <span className="text-body text-attention font-medium">Running...</span>
  </div>
  );
  }
 
  if (done) {
  return (
- <div className="rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-sm font-medium text-green-700">
- ✓ Snapshot captured{summary ? ` - ${summary}` : ""}
+ <div className="rounded-control border border-positive/30 bg-positive-soft px-4 py-2 text-body font-medium text-positive">
+ Snapshot captured{summary ? ` - ${summary}` : ""}
  </div>
  );
  }
@@ -73,12 +73,12 @@ export default function KeywordRunButton({ clientId, keywordId }: Props) {
  <div className="flex flex-col items-end gap-1.5">
  <button
  onClick={handleRun}
- className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 transition-colors"
+ className="flex items-center gap-2 rounded-control bg-positive px-4 py-2 text-body font-semibold text-white hover:bg-positive transition-colors"
  >
  <span>▶</span>
  Re-run this keyword
  </button>
- {error && <div className="text-xs text-red-600 max-w-xs text-right">{error}</div>}
+ {error && <div className="text-caption text-critical max-w-xs text-right">{error}</div>}
  </div>
  );
 }

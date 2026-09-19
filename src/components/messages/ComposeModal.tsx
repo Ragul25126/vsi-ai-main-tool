@@ -236,26 +236,26 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
           height: isMinimized ? "52px" : "auto",
         }}
         exit={{ opacity: 0, y: 50, scale: 0.95 }}
-        className="fixed bottom-0 right-4 sm:right-12 z-50 w-full max-w-[680px] bg-card border border-border rounded-t-[20px] shadow-overlay flex flex-col overflow-hidden text-foreground"
+        className="fixed bottom-0 right-4 sm:right-12 z-50 w-full max-w-[680px] bg-surface border border-line rounded-t-[20px] shadow-overlay flex flex-col overflow-hidden text-ink"
         style={{ maxHeight: isMinimized ? "52px" : "85vh" }}
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-4 py-3 bg-muted-bg border-b border-border cursor-pointer select-none"
+          className="flex items-center justify-between px-4 py-3 bg-surface-2 border-b border-line cursor-pointer select-none"
           onClick={() => setIsMinimized(!isMinimized)}
         >
-          <div className="flex items-center gap-3 font-bold text-sm text-foreground">
+          <div className="flex items-center gap-3 font-semibold text-body text-ink">
             <span className="h-2.5 w-2.5 rounded-full bg-ink" />
             <span>{draftId ? "Edit Draft" : "New Message"}</span>
 
             {/* Auto Save Status Indicator */}
             {saveStatus === "saving" && (
-              <span className="flex items-center gap-1 text-xs text-brand-strong font-medium px-2 py-0.5 rounded-full bg-brand-soft border border-line">
+              <span className="flex items-center gap-1 text-caption text-brand-strong font-medium px-2 py-0.5 rounded-full bg-brand-soft border border-line">
                 <Loader2 size={12} className="animate-spin" /> Saving...
               </span>
             )}
             {saveStatus === "saved" && (
-              <span className="flex items-center gap-1 text-xs text-emerald-500 font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              <span className="flex items-center gap-1 text-caption text-positive font-medium px-2 py-0.5 rounded-full bg-positive/10 border border-positive/30">
                 <Check size={12} /> Saved {lastSavedTimeStr ? `at ${lastSavedTimeStr}` : ''}
               </span>
             )}
@@ -267,7 +267,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                 e.stopPropagation();
                 setIsMinimized(!isMinimized);
               }}
-              className="p-1.5 hover:bg-card rounded-lg transition-colors text-muted-foreground hover:text-foreground"
+              className="p-1.5 hover:bg-surface rounded-control transition-colors text-ink-3 hover:text-ink"
               title={isMinimized ? "Expand" : "Minimize"}
             >
               {isMinimized ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
@@ -277,7 +277,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                 e.stopPropagation();
                 handleCloseSave();
               }}
-              className="p-1.5 hover:bg-rose-500/10 rounded-lg hover:text-rose-500 transition-colors text-muted-foreground"
+              className="p-1.5 hover:bg-critical/10 rounded-control hover:text-critical transition-colors text-ink-3"
               title="Close & Save Draft"
             >
               <X size={16} />
@@ -287,16 +287,16 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
 
         {/* Form Body */}
         {!isMinimized && (
-          <div className="flex flex-col flex-1 overflow-y-auto bg-card">
+          <div className="flex flex-col flex-1 overflow-y-auto bg-surface">
             {/* Priority & Recipient To Field */}
-            <div className="border-b border-border px-4 py-3">
+            <div className="border-b border-line px-4 py-3">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-muted-foreground text-sm font-semibold w-16">To</span>
+                <span className="text-ink-3 text-body font-semibold w-16">To</span>
                 <input
                   type="text"
                   value={to}
                   onChange={(e) => handleContentChange("to", e.target.value)}
-                  className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground/60 font-medium"
+                  className="flex-1 bg-transparent outline-none text-body text-ink placeholder:text-ink-3/60 font-medium"
                   placeholder="recipient@example.com"
                 />
 
@@ -307,7 +307,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                     setPriority(e.target.value as MessagePriority);
                     triggerAutoSave();
                   }}
-                  className="text-xs bg-muted-bg border border-border rounded-lg px-2 py-1 outline-none text-foreground font-semibold cursor-pointer"
+                  className="text-caption bg-surface-2 border border-line rounded-control px-2 py-1 outline-none text-ink font-semibold cursor-pointer"
                 >
                   <option value="normal">Normal Priority</option>
                   <option value="high">High Priority</option>
@@ -317,34 +317,34 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                 <button
                   type="button"
                   onClick={() => setShowCcBcc(!showCcBcc)}
-                  className="text-xs font-semibold text-brand-strong hover:underline ml-1"
+                  className="text-caption font-semibold text-brand-strong hover:underline ml-1"
                 >
                   {showCcBcc ? "Hide Cc/Bcc" : "Cc/Bcc"}
                 </button>
               </div>
-              {errors.to && <p className="text-xs text-rose-500 font-semibold mt-1 pl-16">{errors.to}</p>}
+              {errors.to && <p className="text-caption text-critical font-semibold mt-1 pl-16">{errors.to}</p>}
             </div>
 
             {/* Optional Cc / Bcc */}
             {showCcBcc && (
               <>
-                <div className="flex items-center border-b border-border px-4 py-2.5">
-                  <span className="text-muted-foreground text-sm font-semibold w-16">Cc</span>
+                <div className="flex items-center border-b border-line px-4 py-2.5">
+                  <span className="text-ink-3 text-body font-semibold w-16">Cc</span>
                   <input
                     type="text"
                     value={cc}
                     onChange={(e) => handleContentChange("cc", e.target.value)}
-                    className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground/60"
+                    className="flex-1 bg-transparent outline-none text-body text-ink placeholder:text-ink-3/60"
                     placeholder="cc@example.com"
                   />
                 </div>
-                <div className="flex items-center border-b border-border px-4 py-2.5">
-                  <span className="text-muted-foreground text-sm font-semibold w-16">Bcc</span>
+                <div className="flex items-center border-b border-line px-4 py-2.5">
+                  <span className="text-ink-3 text-body font-semibold w-16">Bcc</span>
                   <input
                     type="text"
                     value={bcc}
                     onChange={(e) => handleContentChange("bcc", e.target.value)}
-                    className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground/60"
+                    className="flex-1 bg-transparent outline-none text-body text-ink placeholder:text-ink-3/60"
                     placeholder="bcc@example.com"
                   />
                 </div>
@@ -352,18 +352,18 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
             )}
 
             {/* Subject Field */}
-            <div className="border-b border-border px-4 py-3">
+            <div className="border-b border-line px-4 py-3">
               <div className="flex items-center">
-                <span className="text-muted-foreground text-sm font-semibold w-16">Subject</span>
+                <span className="text-ink-3 text-body font-semibold w-16">Subject</span>
                 <input
                   type="text"
                   value={subject}
                   onChange={(e) => handleContentChange("subject", e.target.value)}
-                  className="flex-1 bg-transparent outline-none text-sm font-semibold text-foreground placeholder:text-muted-foreground/60"
+                  className="flex-1 bg-transparent outline-none text-body font-semibold text-ink placeholder:text-ink-3/60"
                   placeholder="Subject"
                 />
               </div>
-              {errors.subject && <p className="text-xs text-rose-500 font-semibold mt-1 pl-16">{errors.subject}</p>}
+              {errors.subject && <p className="text-caption text-critical font-semibold mt-1 pl-16">{errors.subject}</p>}
             </div>
 
             {/* Message Body Textarea */}
@@ -371,19 +371,19 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
               <textarea
                 value={body}
                 onChange={(e) => handleContentChange("body", e.target.value)}
-                className="flex-1 min-h-[240px] bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground/60 resize-none leading-relaxed"
+                className="flex-1 min-h-[240px] bg-transparent outline-none text-body text-ink placeholder:text-ink-3/60 resize-none leading-relaxed"
                 placeholder="Write your message..."
               />
-              {errors.body && <p className="text-xs text-rose-500 font-semibold mt-1">{errors.body}</p>}
+              {errors.body && <p className="text-caption text-critical font-semibold mt-1">{errors.body}</p>}
             </div>
 
             {/* Attached Files List */}
             {attachedFiles.length > 0 && (
-              <div className="px-4 py-2 bg-muted-bg/50 border-t border-border flex flex-wrap gap-2">
+              <div className="px-4 py-2 bg-surface-2/50 border-t border-line flex flex-wrap gap-2">
                 {attachedFiles.map((att) => (
                   <span
                     key={att.id}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-card border border-border text-xs text-foreground font-medium"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-control bg-surface border border-line text-caption text-ink font-medium"
                   >
                     📎 {att.name} ({att.size})
                     <button
@@ -391,7 +391,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                         setAttachedFiles((prev) => prev.filter((a) => a.id !== att.id));
                         triggerAutoSave();
                       }}
-                      className="ml-1 text-muted-foreground hover:text-rose-500 font-bold"
+                      className="ml-1 text-ink-3 hover:text-critical font-semibold"
                     >
                       ✕
                     </button>
@@ -401,12 +401,12 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
             )}
 
             {/* Formatting Toolbar & Action Footer */}
-            <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-muted-bg border-t border-border">
-              <div className="flex items-center gap-1 text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-surface-2 border-t border-line">
+              <div className="flex items-center gap-1 text-ink-3">
                 <button
                   type="button"
                   onClick={() => applyFormat("bold")}
-                  className="p-2 hover:bg-card hover:text-foreground rounded-lg transition-colors"
+                  className="p-2 hover:bg-surface hover:text-ink rounded-control transition-colors"
                   title="Bold"
                 >
                   <Bold size={16} />
@@ -414,7 +414,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                 <button
                   type="button"
                   onClick={() => applyFormat("italic")}
-                  className="p-2 hover:bg-card hover:text-foreground rounded-lg transition-colors"
+                  className="p-2 hover:bg-surface hover:text-ink rounded-control transition-colors"
                   title="Italic"
                 >
                   <Italic size={16} />
@@ -422,7 +422,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                 <button
                   type="button"
                   onClick={() => applyFormat("underline")}
-                  className="p-2 hover:bg-card hover:text-foreground rounded-lg transition-colors"
+                  className="p-2 hover:bg-surface hover:text-ink rounded-control transition-colors"
                   title="Underline"
                 >
                   <Underline size={16} />
@@ -430,7 +430,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                 <button
                   type="button"
                   onClick={() => applyFormat("list")}
-                  className="p-2 hover:bg-card hover:text-foreground rounded-lg transition-colors"
+                  className="p-2 hover:bg-surface hover:text-ink rounded-control transition-colors"
                   title="Bullet List"
                 >
                   <List size={16} />
@@ -438,14 +438,14 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
 
                 <div className="w-px h-4 bg-border mx-1" />
 
-                <label className="p-2 hover:bg-card hover:text-foreground rounded-lg transition-colors cursor-pointer" title="Attach File">
+                <label className="p-2 hover:bg-surface hover:text-ink rounded-control transition-colors cursor-pointer" title="Attach File">
                   <Paperclip size={16} />
                   <input type="file" onChange={handleFileUpload} className="hidden" />
                 </label>
                 <button
                   type="button"
                   onClick={() => applyFormat("link")}
-                  className="p-2 hover:bg-card hover:text-foreground rounded-lg transition-colors"
+                  className="p-2 hover:bg-surface hover:text-ink rounded-control transition-colors"
                   title="Insert Link"
                 >
                   <LinkIcon size={16} />
@@ -457,7 +457,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                 <button
                   type="button"
                   onClick={handleDiscard}
-                  className="px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-full transition-colors flex items-center gap-1.5"
+                  className="px-4 py-2 text-caption font-semibold text-ink-3 hover:text-critical hover:bg-critical/10 rounded-control transition-colors flex items-center gap-1.5"
                   title="Discard draft"
                 >
                   <Trash2 size={15} /> Discard
@@ -465,7 +465,7 @@ export default function ComposeModal({ isOpen, onClose, replyTo, draftData }: Co
                 <button
                   type="button"
                   onClick={handleSend}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-ink hover:bg-ink-2 text-white font-bold text-sm rounded-full transition-all /20"
+                  className="flex items-center gap-2 px-6 py-2.5 bg-ink hover:bg-ink-2 text-white font-semibold text-body rounded-control transition-all"
                 >
                   <Send size={15} />
                   Send

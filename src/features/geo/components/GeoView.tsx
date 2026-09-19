@@ -7,6 +7,7 @@ import { PageContainer, PageHeader, Section, TextLink } from "@/components/ui/Pa
 import { Notice, StatusIcon, StatusLabel, type Tone } from "@/components/ui/Status";
 import { ButtonLink } from "@/components/ui/Button";
 import { Disclosure } from "@/components/ui/Disclosure";
+import { MetricHero } from "@/components/ui/MetricHero";
 import { Fraction } from "@/components/ui/Metrics";
 import { AnswerScene } from "@/components/illustrations";
 import { CapabilityList } from "@/components/intro/FeatureIntro";
@@ -156,22 +157,18 @@ export default function GeoView({ data }: { data: GeoViewData }) {
       )}
 
       {/* Conclusion */}
-      <section aria-label="Your AI visibility" className="grid gap-8 md:grid-cols-[auto_1fr_minmax(0,260px)] md:items-center">
-        <div>
-          <p className="text-caption font-medium text-ink-3">AI visibility</p>
-          <p className="mt-1 text-metric font-semibold tabular text-ink">{summary.visibility === null ? "Not yet" : `${summary.visibility}%`}</p>
-          {summary.early && <p className="mt-1 text-support text-ink-3">Early read: based on {summary.answered} answers</p>}
-        </div>
-        <div className="space-y-3">
-          <p className="max-w-[52ch] text-section font-medium text-ink">{geoConclusion(summary)}</p>
-          {summary.answered > 0 && <Fraction value={summary.appears} total={summary.answered} tone="you" label="AI answers mention you" className="max-w-sm" />}
-        </div>
-        {data.trend.length >= 2 ? (
-          <TrendLine points={data.trend} format={(v) => `${v}%`} ariaLabel="AI visibility over time" />
-        ) : (
-          <p className="text-support text-ink-3">A trend appears here after your next check.</p>
-        )}
-      </section>
+      <MetricHero
+        ariaLabel="Your AI visibility"
+        label="AI visibility"
+        value={summary.visibility === null ? "Not yet" : `${summary.visibility}%`}
+        meter={summary.visibility}
+        note={summary.early ? `Early read: based on ${summary.answered} answers` : undefined}
+        conclusion={geoConclusion(summary)}
+        chart={data.trend.length >= 2 ? <TrendLine points={data.trend} format={(v) => `${v}%`} ariaLabel="AI visibility over time" /> : null}
+        chartEmpty="A trend appears here after your next check."
+      >
+        {summary.answered > 0 && <Fraction value={summary.appears} total={summary.answered} tone="you" label="AI answers mention you" className="max-w-sm" />}
+      </MetricHero>
 
       {/* What you can improve */}
       <Section title="What you can improve" description="Ranked by how much each one is costing you. Open one to see the searches involved.">
@@ -457,7 +454,7 @@ function TrackedSearches({ summary: s, projectId, showOverviews }: { summary: Ge
   return (
     <Section title="Searches we check" description="Searches where you don't appear are listed first.">
       <div className="rounded-panel border border-line bg-surface">
-        <div className="hidden gap-4 border-b border-line px-4 py-2.5 text-caption font-medium text-ink-3 md:grid md:[grid-template-columns:var(--cols)]" style={{ "--cols": cols } as CSSProperties}>
+        <div className="hidden gap-4 rounded-t-panel border-b border-line bg-surface-2 px-4 py-2.5 text-caption font-medium text-ink-3 md:grid md:[grid-template-columns:var(--cols)]" style={{ "--cols": cols } as CSSProperties}>
           <span>Search</span>
           {engines.map((e) => (
             <span key={e.id}>{e.label}</span>

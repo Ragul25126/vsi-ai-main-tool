@@ -266,20 +266,17 @@ export default function FeedbackPage() {
   };
 
  return (
- <div className="p-4 sm:p-8 space-y-8 max-w-[1600px] mx-auto font-sans">
+ <div className="mx-auto w-full max-w-[1240px] animate-fade-in space-y-10 px-4 pb-24 pt-6 font-sans md:px-8 md:pt-9 xl:px-10">
  {/* Page Header */}
- <div className="pb-6 border-b border-border">
- <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight flex items-center gap-3">
- <MessageSquare className="text-primary" size={28} />
- <span>Feedback & Product Requests</span>
- </h1>
- <p className="text-sm text-[#666666] mt-1">
- Submit product feedback, request new AI engine integrations, and upvote agency feature suggestions.
+ <header className="border-b border-line pb-7">
+ <h1 className="text-display font-semibold text-ink">Feedback</h1>
+ <p className="mt-2 max-w-[65ch] text-body text-ink-2 md:text-[0.9375rem] md:leading-6">
+ Tell us what could be better. Every message goes to the people who build VSI.
  </p>
- </div>
+ </header>
 
  {submitted && (
- <div className="rounded-panel bg-[#22C55E]/10 border border-[#22C55E]/20 p-3.5 flex items-center gap-2 text-[#22C55E] text-xs font-medium">
+ <div role="status" className="flex items-center gap-2 rounded-panel bg-positive-soft p-3.5 text-support font-medium text-positive">
  <CheckCircle2 size={16} />
  <span>Thank you! Your feedback has been submitted to the product team.</span>
  </div>
@@ -287,18 +284,18 @@ export default function FeedbackPage() {
 
  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
  {/* Submit Form (5 Cols) */}
- <div className="lg:col-span-5 bg-card rounded-panel border border-border p-6 space-y-4">
- <h2 className="text-base font-bold text-foreground">Submit New Feedback</h2>
+ <div className="lg:col-span-5 bg-surface rounded-panel border border-line p-6 space-y-4">
+ <h2 className="text-[1.0625rem] font-semibold leading-6 text-ink">Send feedback</h2>
 
  <form onSubmit={handleSubmitFeedback} className="space-y-4">
  <div>
- <label className="block text-xs font-semibold text-foreground mb-1">
+ <label className="block text-caption font-semibold text-ink mb-1">
  Category
  </label>
  <select
  value={category}
  onChange={(e) => setCategory(e.target.value as FeedbackItem["category"])}
- className="w-full rounded-panel border border-border bg-background px-3.5 py-2 text-xs text-foreground focus:outline-none focus:border-line-strong"
+ className="w-full rounded-panel border border-line bg-canvas px-3.5 py-2 text-caption text-ink focus:outline-none focus:border-line-strong"
  >
  <option value="Feature Request">Feature Request</option>
  <option value="Bug Report">Bug Report</option>
@@ -307,8 +304,8 @@ export default function FeedbackPage() {
  </div>
 
  <div>
- <label className="block text-xs font-semibold text-foreground mb-1">
- Subject Title
+ <label className="block text-caption font-semibold text-ink mb-1">
+ Subject
  </label>
  <input
  type="text"
@@ -316,13 +313,13 @@ export default function FeedbackPage() {
  placeholder="Brief summary of your feedback..."
  value={subject}
  onChange={(e) => setSubject(e.target.value)}
- className="w-full rounded-panel border border-border bg-background px-3.5 py-2 text-xs text-foreground focus:outline-none focus:border-line-strong"
+ className="w-full rounded-panel border border-line bg-canvas px-3.5 py-2 text-caption text-ink focus:outline-none focus:border-line-strong"
  />
  </div>
 
  <div>
- <label className="block text-xs font-semibold text-foreground mb-1">
- Detailed Explanation
+ <label className="block text-caption font-semibold text-ink mb-1">
+ Details
  </label>
  <textarea
  rows={5}
@@ -330,56 +327,59 @@ export default function FeedbackPage() {
  placeholder="Describe how this feature will improve your workflow..."
  value={message}
  onChange={(e) => setMessage(e.target.value)}
- className="w-full rounded-panel border border-border bg-background p-3.5 text-xs text-foreground focus:outline-none focus:border-line-strong"
+ className="w-full rounded-panel border border-line bg-canvas p-3.5 text-caption text-ink focus:outline-none focus:border-line-strong"
  />
  </div>
 
  <button
  type="submit"
- className="w-full flex items-center justify-center gap-2 rounded-full bg-ink hover:bg-ink-2 text-white px-4 py-2.5 text-xs font-bold transition-colors"
+ className="w-full flex items-center justify-center gap-2 rounded-control bg-ink hover:bg-ink-2 text-white px-4 py-2.5 text-caption font-semibold transition-colors"
  >
  <Send size={14} />
- <span>Submit Feedback</span>
+ <span>Send feedback</span>
  </button>
  </form>
  </div>
 
  {/* Existing Feedback Board (7 Cols) */}
  <div className="lg:col-span-7 space-y-4">
- <h2 className="text-base font-bold text-foreground">Community & Agency Requests</h2>
+ <div className="flex flex-wrap items-baseline justify-between gap-2">
+ <h2 className="text-[1.0625rem] font-semibold leading-6 text-ink">What feedback looks like</h2>
+ <span className="rounded-control border border-dashed border-line-strong px-2 py-0.5 text-caption text-ink-3">Examples, not real requests</span>
+ </div>
 
  <div className="space-y-3">
  {feedbackList.map((item) => (
  <div
  key={item.id}
- className="bg-card rounded-panel border border-border p-5 flex items-start gap-4"
+ className="bg-surface rounded-panel border border-line p-5 flex items-start gap-4"
  >
  <button
  onClick={() => handleUpvote(item.id)}
- className="flex flex-col items-center justify-center rounded-panel bg-muted-bg hover:bg-brand-soft hover:text-ink border border-border px-3 py-2 text-muted-foreground transition-colors shrink-0"
+ className="flex flex-col items-center justify-center rounded-panel bg-surface-2 hover:bg-brand-soft hover:text-ink border border-line px-3 py-2 text-ink-3 transition-colors shrink-0"
  >
  <ThumbsUp size={14} />
- <span className="text-xs font-bold mt-1">{item.upvotes}</span>
+ <span className="text-caption font-semibold mt-1">{item.upvotes}</span>
  </button>
 
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-2 flex-wrap mb-1">
- <span className="text-caption font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+ <span className="text-caption font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
  {item.category}
  </span>
  <span className={`text-caption font-semibold px-2 py-0.5 rounded ${
- item.status === "Resolved" ? "bg-[#22C55E]/10 text-[#22C55E]" :
- item.status === "In Review" ? "bg-[#3B82F6]/10 text-[#3B82F6]" :
- "bg-[#F5F5F3] text-[#666666]"
+ item.status === "Resolved" ? "bg-positive-soft text-positive" :
+ item.status === "In Review" ? "bg-info-soft text-info" :
+ "bg-surface-2 text-ink-2"
  }`}>
  {item.status}
  </span>
  </div>
 
- <h3 className="text-sm font-bold text-foreground">{item.subject}</h3>
- <p className="text-xs text-[#666666] mt-1">{item.message}</p>
+ <h3 className="text-body font-semibold text-ink">{item.subject}</h3>
+ <p className="text-caption text-ink-2 mt-1">{item.message}</p>
 
- <div className="mt-3 flex items-center justify-between text-caption text-[#666666]">
+ <div className="mt-3 flex items-center justify-between text-caption text-ink-2">
  <span>Submitted by {item.author}</span>
  <span>{item.createdAt}</span>
  </div>
@@ -391,41 +391,38 @@ export default function FeedbackPage() {
  </div>
 
  {/* My Submitted Feedback Section */}
- <div className="mt-12 pt-8 border-t border-border space-y-6">
-   <div className="flex items-center gap-3">
-     <Clock className="text-primary" size={20} />
-     <h2 className="text-lg font-bold text-foreground">My Submitted Feedback</h2>
-   </div>
+ <div className="mt-12 pt-8 border-t border-line space-y-6">
+   <h2 className="text-[1.0625rem] font-semibold leading-6 text-ink">Your feedback</h2>
    
    {myFeedback.length === 0 ? (
-     <div className="rounded-panel border border-dashed border-border p-10 text-center text-[#666666] text-sm">
+     <div className="rounded-panel border border-dashed border-line p-10 text-center text-ink-2 text-body">
        You haven't submitted any feedback yet.
      </div>
    ) : (
      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
        {myFeedback.map((item) => (
-         <div key={item.id} className="bg-card rounded-panel border border-border p-5 flex flex-col justify-between gap-4">
+         <div key={item.id} className="bg-surface rounded-panel border border-line p-5 flex flex-col justify-between gap-4">
             <div className="space-y-3">
                <div className="flex items-center justify-between gap-2 flex-wrap">
-                 <span className="text-caption font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                 <span className="text-caption font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
                    {item.category}
                  </span>
                  <span className={`text-caption font-semibold px-2 py-0.5 rounded ${
-                   item.status === "Resolved" ? "bg-[#22C55E]/10 text-[#22C55E]" :
-                   item.status === "In Review" ? "bg-[#3B82F6]/10 text-[#3B82F6]" :
-                   "bg-[#F5F5F3] text-[#666666]"
+                   item.status === "Resolved" ? "bg-positive-soft text-positive" :
+                   item.status === "In Review" ? "bg-info-soft text-info" :
+                   "bg-surface-2 text-ink-2"
                  }`}>
                    {item.status}
                  </span>
                </div>
                
                <div>
-                 <h3 className="text-sm font-bold text-foreground">{item.subject}</h3>
-                 <p className="text-xs text-[#666666] mt-1 whitespace-pre-wrap leading-relaxed">{item.message}</p>
+                 <h3 className="text-body font-semibold text-ink">{item.subject}</h3>
+                 <p className="text-caption text-ink-2 mt-1 whitespace-pre-wrap leading-relaxed">{item.message}</p>
                </div>
             </div>
             
-            <div className="pt-3 border-t border-border/40 flex items-center justify-between text-caption text-[#666666]">
+            <div className="pt-3 border-t border-line/40 flex items-center justify-between text-caption text-ink-2">
                <span>Submitted by you</span>
                <span>{item.createdAt}</span>
             </div>

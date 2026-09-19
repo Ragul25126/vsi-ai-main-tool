@@ -4,10 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useNotifications } from "@/contexts/NotificationsContext";
 import { motion } from "framer-motion";
-import { 
-  ArrowLeft, Bell, AlertCircle, Zap, FileText, UserPlus, 
-  Check, Trash2, Archive, Download, ExternalLink, ChevronRight 
-} from "lucide-react";
+import { ArrowLeft, Bell, AlertCircle, FileText, UserPlus, Check, Trash2, Archive, Download, ExternalLink, ChevronRight, Info } from "lucide-react";
 import Link from "next/link";
 
 export default function NotificationDetailsPage() {
@@ -27,16 +24,16 @@ export default function NotificationDetailsPage() {
   if (!notification) {
     return (
       <div className="p-4 sm:p-8 max-w-[1200px] mx-auto min-h-[calc(100vh-64px)] flex flex-col items-center justify-center animate-in fade-in duration-500">
-        <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-6">
-          <Bell className="text-muted-foreground w-10 h-10" />
+        <div className="w-20 h-20 bg-surface-2 rounded-full flex items-center justify-center mb-6">
+          <Bell className="text-ink-3 w-10 h-10" />
         </div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">Notification Not Found</h1>
-        <p className="text-muted-foreground mb-6 text-center max-w-md">
+        <h1 className="text-display font-semibold text-ink mb-2">Notification Not Found</h1>
+        <p className="text-ink-3 mb-6 text-center max-w-md">
           The notification you're looking for might have been deleted or never existed.
         </p>
         <button 
           onClick={() => router.push("/dashboard/notifications")}
-          className="px-6 py-2 bg-ink hover:bg-ink-2 text-white font-bold rounded-full transition-all"
+          className="px-6 py-2 bg-ink hover:bg-ink-2 text-white font-semibold rounded-control transition-all"
         >
           Return to Notifications
         </button>
@@ -126,20 +123,20 @@ export default function NotificationDetailsPage() {
   // Icon and Color mappings
   const getTypeConfig = (type: string) => {
     switch(type) {
-      case 'alert': return { icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-500/10 border-rose-500/20' };
-      case 'system': return { icon: Zap, color: 'text-brand-strong', bg: 'bg-brand-soft border-line' };
+      case 'alert': return { icon: AlertCircle, color: 'text-critical', bg: 'bg-critical/10 border-critical/30' };
+      case 'system': return { icon: Info, color: 'text-brand-strong', bg: 'bg-brand-soft border-line' };
       case 'report': return { icon: FileText, color: 'text-primary', bg: 'bg-primary/10 border-primary/20' };
-      case 'user': return { icon: UserPlus, color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/20' };
-      default: return { icon: Bell, color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/20' };
+      case 'user': return { icon: UserPlus, color: 'text-positive', bg: 'bg-positive/10 border-positive/30' };
+      default: return { icon: Bell, color: 'text-info', bg: 'bg-info/10 border-info/30' };
     }
   };
   
   const getSeverityBadge = (severity: string) => {
     switch(severity) {
-      case 'high': return <span className="px-2 py-0.5 text-caption font-bold rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20">High</span>;
-      case 'medium': return <span className="px-2 py-0.5 text-caption font-bold rounded-full bg-brand-soft text-brand-strong border border-line">Medium</span>;
-      case 'low': return <span className="px-2 py-0.5 text-caption font-bold rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20">Low</span>;
-      case 'info': return <span className="px-2 py-0.5 text-caption font-bold rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">Info</span>;
+      case 'high': return <span className="px-2 py-0.5 text-caption font-semibold rounded-full bg-critical/10 text-critical border border-critical/30">High</span>;
+      case 'medium': return <span className="px-2 py-0.5 text-caption font-semibold rounded-full bg-brand-soft text-brand-strong border border-line">Medium</span>;
+      case 'low': return <span className="px-2 py-0.5 text-caption font-semibold rounded-full bg-info/10 text-info border border-info/30">Low</span>;
+      case 'info': return <span className="px-2 py-0.5 text-caption font-semibold rounded-full bg-positive/10 text-positive border border-positive/30">Info</span>;
       default: return null;
     }
   };
@@ -163,14 +160,14 @@ export default function NotificationDetailsPage() {
   };
 
   return (
-    <div className="p-4 sm:p-8 max-w-[1000px] mx-auto font-sans transition-colors bg-background min-h-[calc(100vh-64px)]">
+    <div className="p-4 sm:p-8 max-w-[1000px] mx-auto font-sans transition-colors bg-canvas min-h-[calc(100vh-64px)]">
       
       {/* Loading Overlay */}
       {isNavigating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-canvas/50 ">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-            <p className="text-sm font-semibold text-foreground">Navigating...</p>
+            <p className="text-body font-semibold text-ink">Navigating...</p>
           </div>
         </div>
       )}
@@ -180,13 +177,13 @@ export default function NotificationDetailsPage() {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex items-center gap-2 text-xs font-semibold text-muted-foreground mb-6"
+        className="flex items-center gap-2 text-caption font-semibold text-ink-3 mb-6"
       >
-        <Link href="/dashboard" className="hover:text-foreground transition-colors">Dashboard</Link>
+        <Link href="/dashboard" className="hover:text-ink transition-colors">Dashboard</Link>
         <ChevronRight size={14} />
-        <Link href="/dashboard/notifications" className="hover:text-foreground transition-colors">Notifications</Link>
+        <Link href="/dashboard/notifications" className="hover:text-ink transition-colors">Notifications</Link>
         <ChevronRight size={14} />
-        <span className="text-foreground">Notification Details</span>
+        <span className="text-ink">Notification Details</span>
       </motion.div>
 
       {/* Main Content */}
@@ -200,21 +197,21 @@ export default function NotificationDetailsPage() {
         <motion.div variants={itemVariants} className="flex items-center justify-between">
           <button 
             onClick={handleNavigateBack}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-muted-bg text-muted-foreground hover:text-foreground transition-colors text-sm font-bold"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-control hover:bg-surface-2 text-ink-3 hover:text-ink transition-colors text-body font-semibold"
           >
             <ArrowLeft size={16} />
             Back
           </button>
           <div className="flex items-center gap-2">
             <button 
-              className="p-2 rounded-full hover:bg-muted-bg text-muted-foreground hover:text-foreground transition-colors border border-transparent hover:border-border"
+              className="p-2 rounded-full hover:bg-surface-2 text-ink-3 hover:text-ink transition-colors border border-transparent hover:border-line"
               title="Archive Notification"
             >
               <Archive size={16} />
             </button>
             <button 
               onClick={handleDelete}
-              className="p-2 rounded-full hover:bg-rose-500/10 text-muted-foreground hover:text-rose-500 transition-colors border border-transparent hover:border-rose-500/20"
+              className="p-2 rounded-full hover:bg-critical/10 text-ink-3 hover:text-critical transition-colors border border-transparent hover:border-critical/30"
               title="Delete Notification"
             >
               <Trash2 size={16} />
@@ -225,7 +222,7 @@ export default function NotificationDetailsPage() {
         {/* Hero Card */}
         <motion.div 
           variants={scaleVariants}
-          className="relative bg-card border border-border/80 rounded-panel p-6 sm:p-8 overflow-hidden"
+          className="relative bg-surface border border-line/80 rounded-panel p-6 sm:p-8 overflow-hidden"
         >
           {/* Background Gradient Effect */}
           <div className={`absolute top-0 right-0 w-64 h-64 opacity-5 blur-[100px] rounded-full ${typeConfig.bg.split(' ')[0]}`} />
@@ -238,23 +235,23 @@ export default function NotificationDetailsPage() {
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-3 mb-3">
                 {getSeverityBadge(notification.severity)}
-                <span className="px-2 py-0.5 text-caption font-bold rounded-full bg-muted-bg text-muted-foreground border border-border">
+                <span className="px-2 py-0.5 text-caption font-semibold rounded-full bg-surface-2 text-ink-3 border border-line">
                   {notification.type}
                 </span>
-                <span className="text-xs font-semibold text-muted-foreground ml-auto">
+                <span className="text-caption font-semibold text-ink-3 ml-auto">
                   {notification.timestamp}
                 </span>
               </div>
               
-              <h1 className="text-2xl sm:text-3xl font-semibold text-foreground mb-3 leading-tight">
+              <h1 className="text-display font-semibold text-ink mb-3 leading-tight">
                 {notification.title}
               </h1>
               
-              <p className="text-base sm:text-lg text-foreground/80 font-medium mb-6 leading-relaxed">
+              <p className="text-base sm:text-lg text-ink/80 font-medium mb-6 leading-relaxed">
                 {notification.message}
               </p>
               
-              <div className="p-4 rounded-panel bg-muted-bg border border-border/60 text-sm text-foreground/90 leading-relaxed shadow-inner">
+              <div className="p-4 rounded-panel bg-surface-2 border border-line/60 text-body text-ink/90 leading-relaxed shadow-inner">
                 {notification.fullDetails}
               </div>
             </div>
@@ -265,26 +262,26 @@ export default function NotificationDetailsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Metadata Sidebar */}
           <motion.div variants={itemVariants} className="col-span-1 flex flex-col gap-4">
-            <div className="bg-card border border-border/80 rounded-panel p-5">
-              <h3 className="text-xs font-bold text-muted-foreground mb-4">Metadata</h3>
+            <div className="bg-surface border border-line/80 rounded-panel p-5">
+              <h3 className="text-caption font-semibold text-ink-3 mb-4">Metadata</h3>
               <div className="space-y-4">
                 {notification.relatedClient && (
                   <div>
-                    <p className="text-xs text-muted-foreground font-semibold mb-1">Related Client</p>
-                    <p className="text-sm font-bold text-foreground">{notification.relatedClient}</p>
+                    <p className="text-caption text-ink-3 font-semibold mb-1">Related Client</p>
+                    <p className="text-body font-semibold text-ink">{notification.relatedClient}</p>
                   </div>
                 )}
                 {notification.aiEngine && (
                   <div>
-                    <p className="text-xs text-muted-foreground font-semibold mb-1">AI Engine</p>
-                    <p className="text-sm font-bold text-foreground">{notification.aiEngine}</p>
+                    <p className="text-caption text-ink-3 font-semibold mb-1">AI Engine</p>
+                    <p className="text-body font-semibold text-ink">{notification.aiEngine}</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-xs text-muted-foreground font-semibold mb-1">Status</p>
+                  <p className="text-caption text-ink-3 font-semibold mb-1">Status</p>
                   <div className="flex items-center gap-1.5 mt-1">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <p className="text-sm font-bold text-emerald-500">Processed</p>
+                    <div className="w-2 h-2 rounded-full bg-positive" />
+                    <p className="text-body font-semibold text-positive">Processed</p>
                   </div>
                 </div>
               </div>
@@ -293,8 +290,8 @@ export default function NotificationDetailsPage() {
 
           {/* Recommended Actions */}
           <motion.div variants={itemVariants} className="col-span-1 md:col-span-2 flex flex-col gap-4">
-            <div className="bg-card border border-border/80 rounded-panel p-5 h-full flex flex-col">
-              <h3 className="text-xs font-bold text-muted-foreground mb-4">Recommended Actions</h3>
+            <div className="bg-surface border border-line/80 rounded-panel p-5 h-full flex flex-col">
+              <h3 className="text-caption font-semibold text-ink-3 mb-4">Recommended Actions</h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-auto mb-auto">
                 {notification.recommendedActions.map((action, index) => {
@@ -306,21 +303,21 @@ export default function NotificationDetailsPage() {
                       onClick={() => handleActionClick(action)}
                       className={`flex items-center justify-between p-3 rounded-panel border transition-all duration-200 group ${
                         isPrimary 
-                          ? 'bg-ink hover:bg-ink-2 border-line text-white  '
-                          : 'bg-muted-bg hover:bg-card border-border hover:border-line text-foreground  '
+                          ? 'bg-ink hover:bg-ink-2 border-line text-white '
+                          : 'bg-surface-2 hover:bg-surface border-line hover:border-line text-ink '
                       }`}
                     >
-                      <span className="text-sm font-bold">{action}</span>
-                      <ExternalLink size={16} className={`transition-transform group-hover:translate-x-1 group- ${isPrimary ? 'text-white' : 'text-muted-foreground'}`} />
+                      <span className="text-body font-semibold">{action}</span>
+                      <ExternalLink size={16} className={`transition-transform group-hover:translate-x-1 group- ${isPrimary ? 'text-white' : 'text-ink-3'}`} />
                     </button>
                   );
                 })}
 
                 {/* Always provide a download report if it's a report */}
                 {notification.type === 'report' && (
-                  <button className="flex items-center justify-between p-3 rounded-panel border bg-muted-bg hover:bg-card border-border hover:border-primary/50 text-foreground transition-all duration-200 group">
-                    <span className="text-sm font-bold">Download Report</span>
-                    <Download size={16} className="text-muted-foreground transition-transform group-hover:translate-y-0.5" />
+                  <button className="flex items-center justify-between p-3 rounded-panel border bg-surface-2 hover:bg-surface border-line hover:border-primary/50 text-ink transition-all duration-200 group">
+                    <span className="text-body font-semibold">Download Report</span>
+                    <Download size={16} className="text-ink-3 transition-transform group-hover:translate-y-0.5" />
                   </button>
                 )}
 
@@ -328,9 +325,9 @@ export default function NotificationDetailsPage() {
                 {notification.type === 'alert' && (
                   <button 
                     onClick={handleResolve}
-                    className="flex items-center justify-between p-3 rounded-panel border bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 hover:border-emerald-500/50 text-emerald-600 transition-all duration-200 group"
+                    className="flex items-center justify-between p-3 rounded-panel border bg-positive/10 hover:bg-positive/20 border-positive/30 hover:border-positive/30 text-positive transition-all duration-200 group"
                   >
-                    <span className="text-sm font-bold">Resolve Notification</span>
+                    <span className="text-body font-semibold">Resolve Notification</span>
                     <Check size={16} className="transition-transform group-" />
                   </button>
                 )}

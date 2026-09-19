@@ -94,7 +94,7 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
  return (
  <div
  className={`group rounded-panel border transition-all duration-300   ${
- status === "done" ? "border-emerald-500/30 bg-surface-2 backdrop-blur-md" : status === "skipped" ? "border-white/5 bg-card/[0.01] opacity-60" : "border-white/10 bg-card/[0.03] backdrop-blur-md hover:border-white/20 hover:bg-card/[0.05]"
+ status === "done" ? "border-positive/30 bg-surface-2 " : status === "skipped" ? "border-line bg-surface opacity-60" : "border-line bg-surface hover:border-line hover:bg-surface-2"
  }`}
  >
  <div className="p-5">
@@ -104,26 +104,26 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
  onClick={toggleStatus}
  disabled={saving}
  aria-label={`Mark ${meta.label}`}
- className={`shrink-0 mt-0.5 h-5 w-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+ className={`shrink-0 mt-0.5 h-5 w-5 rounded-control border-2 flex items-center justify-center transition-colors ${
  status === "done"
- ? "bg-emerald-500 border-emerald-500 text-white"
+ ? "bg-positive border-positive/30 text-white"
  : status === "in_progress"
- ? "border-cyan-500 bg-cyan-500/10"
- : "border-white/20 hover:border-white/40 bg-card/5"
+ ? "border-info/30 bg-info/10"
+ : "border-line hover:border-line bg-surface-2"
  }`}
  >
- {status === "done" && <span className="text-xs leading-none">✓</span>}
- {status === "in_progress" && <span className="h-2 w-2 rounded-full bg-cyan-500" />}
+ {status === "done" && <span className="text-caption leading-none">✓</span>}
+ {status === "in_progress" && <span className="h-2 w-2 rounded-full bg-info" />}
  </button>
 
  <div className="flex-1 min-w-0">
  <div className="flex items-start justify-between gap-2">
- <p className={`text-sm font-semibold ${status === "done" ? "text-gray-500 line-through" : "text-gray-200"}`}>
+ <p className={`text-body font-semibold ${status === "done" ? "text-ink-3 line-through" : "text-ink-3"}`}>
  {local.title}
  </p>
  <button
  onClick={() => setExpanded((v) => !v)}
- className="shrink-0 text-xs text-gray-500 hover:text-white transition-colors"
+ className="shrink-0 text-caption text-ink-3 hover:text-ink transition-colors"
  >
  {expanded ? "Hide" : "Open"}
  </button>
@@ -135,29 +135,29 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
  {local.group_name}
  </span>
  {local.owner && (
- <span className={`rounded-full px-2 py-0.5 text-caption font-semibold  ${OWNER_META[local.owner].chip}`}>
+ <span className={`rounded-full px-2 py-0.5 text-caption font-semibold ${OWNER_META[local.owner].chip}`}>
  {local.owner}
  </span>
  )}
  {local.effort && (
- <span className="rounded-full bg-card/5 border border-white/10 px-2 py-0.5 text-caption font-semibold text-gray-300">
+ <span className="rounded-full bg-surface-2 border border-line px-2 py-0.5 text-caption font-semibold text-ink-3">
  {EFFORT_LABEL[local.effort]}
  </span>
  )}
  {local.impact && (
- <span className="rounded-full bg-card/5 border border-white/10 px-2 py-0.5 text-caption font-semibold text-gray-300">
+ <span className="rounded-full bg-surface-2 border border-line px-2 py-0.5 text-caption font-semibold text-ink-3">
  Impact: {local.impact}
  </span>
  )}
  {progress.total > 0 && (
- <span className="rounded-full bg-card/10 px-2 py-0.5 text-caption font-semibold text-white">
+ <span className="rounded-full bg-surface-2 px-2 py-0.5 text-caption font-semibold text-ink">
  {progress.done}/{progress.total} steps
  </span>
  )}
  {local.due_date && (
  <span className={`rounded-full px-2 py-0.5 text-caption font-semibold ${
  new Date(local.due_date) < new Date(new Date().toDateString())
- ? "bg-red-100 text-red-700"
+ ? "bg-critical-soft text-critical"
  : "bg-attention-soft text-attention"
  }`}>
  Due {new Date(local.due_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
@@ -166,13 +166,13 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
  {keywordLabel && keywordHref && (
  <Link
  href={keywordHref}
- className="rounded-full bg-card/10 px-2 py-0.5 text-caption font-medium text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
+ className="rounded-full bg-surface-2 px-2 py-0.5 text-caption font-medium text-ink-3 hover:text-info hover:bg-info/10 transition-colors"
  >
  &ldquo;{keywordLabel}&rdquo;
  </Link>
  )}
  <span
- className="rounded-full bg-card/5 border border-white/10 px-2 py-0.5 text-caption font-medium text-gray-400"
+ className="rounded-full bg-surface-2 border border-line px-2 py-0.5 text-caption font-medium text-ink-3"
  title={`Created ${fullDateTime(local.created_at)}`}
  >
  Created {relativeDays(local.created_at)}
@@ -180,22 +180,22 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
  <span className={`rounded-full px-2 py-0.5 text-caption font-semibold ${meta.chip}`}>{meta.label}</span>
 
  {local.outcome_status === "verified" && (
- <span className="rounded-full bg-green-100 text-green-800 px-2 py-0.5 text-caption font-bold">
- ✓ Outcome verified
+ <span className="rounded-full bg-positive-soft text-positive px-2 py-0.5 text-caption font-semibold">
+ Outcome verified
  </span>
  )}
  {local.outcome_status === "regressed" && (
- <span className="rounded-full bg-red-100 text-red-800 px-2 py-0.5 text-caption font-bold">
+ <span className="rounded-full bg-critical-soft text-critical px-2 py-0.5 text-caption font-semibold">
  ↓ Regressed
  </span>
  )}
 
  {isStale && local.status !== "done" && local.status !== "skipped" && (
  <span
- className="rounded-full bg-yellow-100 text-yellow-800 px-2 py-0.5 text-caption font-bold"
+ className="rounded-full bg-attention-soft text-attention px-2 py-0.5 text-caption font-semibold"
  title="Underlying SERP/AIO/citation signals shifted significantly since this task was created. Re-evaluate."
  >
- ⚠ Context changed
+ Context changed
  </span>
  )}
  </div>
@@ -206,14 +206,14 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
  <div className="mt-4 pl-8 space-y-3">
  {local.description && (
  <div>
- <p className="text-caption font-bold text-gray-500 mb-1">Description</p>
- <p className="text-xs text-gray-300 leading-relaxed whitespace-pre-line">{local.description}</p>
+ <p className="text-caption font-semibold text-ink-3 mb-1">Description</p>
+ <p className="text-caption text-ink-3 leading-relaxed whitespace-pre-line">{local.description}</p>
  </div>
  )}
 
  {local.acceptance.length > 0 && (
  <div>
- <p className="text-caption font-bold text-gray-500 mb-1">Acceptance criteria</p>
+ <p className="text-caption font-semibold text-ink-3 mb-1">Acceptance criteria</p>
  <div className="space-y-1.5">
  {local.acceptance.map((c, i) => (
  <label key={i} className="flex items-start gap-2 cursor-pointer group">
@@ -222,9 +222,9 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
  checked={c.done}
  onChange={() => toggleAcceptance(i)}
  disabled={saving}
- className="mt-0.5 h-3.5 w-3.5 rounded border-white/20 bg-card/5 text-cyan-500 focus:ring-cyan-500/50"
+ className="mt-0.5 h-3.5 w-3.5 rounded border-line bg-surface-2 text-info focus:ring-info/30"
  />
- <span className={`text-xs leading-relaxed ${c.done ? "text-gray-600 line-through" : "text-gray-300"}`}>
+ <span className={`text-caption leading-relaxed ${c.done ? "text-ink-2 line-through" : "text-ink-3"}`}>
  {c.text}
  </span>
  </label>
@@ -234,17 +234,17 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
  )}
 
  <div>
- <p className="text-caption font-bold text-gray-500 mb-1">Status</p>
+ <p className="text-caption font-semibold text-ink-3 mb-1">Status</p>
  <div className="flex items-center gap-1.5">
  {(["todo", "in_progress", "done", "skipped"] as TaskStatus[]).map((s) => (
  <button
  key={s}
  onClick={() => setStatus(s)}
  disabled={saving || s === status}
- className={`rounded-md px-2.5 py-1 text-caption font-semibold transition-colors ${
+ className={`rounded-control px-2.5 py-1 text-caption font-semibold transition-colors ${
  s === status
  ? STATUS_META[s].chip
- : "border border-white/10 text-gray-400 hover:bg-card/5 hover:text-white"
+ : "border border-line text-ink-3 hover:bg-surface-2 hover:text-ink"
  }`}
  >
  {STATUS_META[s].label}
@@ -254,41 +254,41 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
  </div>
 
  <div>
- <p className="text-caption font-bold text-gray-500 mb-1">Lifecycle</p>
- <div className="space-y-0.5 text-caption text-gray-600">
+ <p className="text-caption font-semibold text-ink-3 mb-1">Lifecycle</p>
+ <div className="space-y-0.5 text-caption text-ink-2">
  <p>
- <span className="text-gray-400">Created:</span> {fullDateTime(local.created_at)}
- <span className="text-gray-400"> · {relativeDays(local.created_at)}</span>
+ <span className="text-ink-3">Created:</span> {fullDateTime(local.created_at)}
+ <span className="text-ink-3"> · {relativeDays(local.created_at)}</span>
  </p>
  {local.updated_at && local.updated_at !== local.created_at && (
  <p>
- <span className="text-gray-400">Last updated:</span> {fullDateTime(local.updated_at)}
- <span className="text-gray-400"> · {relativeDays(local.updated_at)}</span>
+ <span className="text-ink-3">Last updated:</span> {fullDateTime(local.updated_at)}
+ <span className="text-ink-3"> · {relativeDays(local.updated_at)}</span>
  </p>
  )}
  {local.completed_at && (
  <p>
- <span className="text-gray-400">Completed:</span> {fullDateTime(local.completed_at)}
- <span className="text-gray-400"> · {relativeDays(local.completed_at)}</span>
+ <span className="text-ink-3">Completed:</span> {fullDateTime(local.completed_at)}
+ <span className="text-ink-3"> · {relativeDays(local.completed_at)}</span>
  </p>
  )}
  {local.context_snapshot && (
  <p>
- <span className="text-gray-400">Context captured:</span> {fullDateTime(local.context_snapshot.capturedAt)}
- <span className="text-gray-400"> · rank {local.context_snapshot.rankPosition ?? "-"}, {local.context_snapshot.citedDomainCount} citations</span>
+ <span className="text-ink-3">Context captured:</span> {fullDateTime(local.context_snapshot.capturedAt)}
+ <span className="text-ink-3"> · rank {local.context_snapshot.rankPosition ?? "-"}, {local.context_snapshot.citedDomainCount} citations</span>
  </p>
  )}
  </div>
  </div>
 
  <div className="flex items-center justify-between pt-1">
- <p className="text-caption text-gray-400">
- {isStale ? "⚠ Context changed since this task was created" : "Tracking signals match the original context"}
+ <p className="text-caption text-ink-3">
+ {isStale ? "Context changed since this task was created" : "Tracking signals match the original context"}
  </p>
  <button
  onClick={deleteTask}
  disabled={saving}
- className="text-caption text-red-600 hover:text-red-800 transition-colors"
+ className="text-caption text-critical hover:text-critical transition-colors"
  >
  Delete
  </button>
@@ -296,7 +296,7 @@ export default function TaskCard({ task, keywordLabel, keywordHref, isStale = fa
  </div>
  )}
  </div>
- {pending && <div className="h-0.5 w-full bg-amber-200 animate-pulse" />}
+ {pending && <div className="h-0.5 w-full bg-brand-soft animate-pulse" />}
  </div>
  );
 }

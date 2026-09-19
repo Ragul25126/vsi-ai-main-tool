@@ -7,6 +7,7 @@ import { PageContainer, PageHeader, Section } from "@/components/ui/Page";
 import { Notice, StatusIcon, StatusLabel } from "@/components/ui/Status";
 import { ButtonLink } from "@/components/ui/Button";
 import { Disclosure } from "@/components/ui/Disclosure";
+import { MetricHero } from "@/components/ui/MetricHero";
 import { SiteAuditScene } from "@/components/illustrations";
 import { CapabilityList } from "@/components/intro/FeatureIntro";
 import { SetupPanel } from "@/components/intro/SetupPanel";
@@ -172,35 +173,23 @@ export default function SiteAuditView({ data }: { data: SiteAuditViewData }) {
 
       <>
           {/* Conclusion */}
-          <section aria-label="Website health" className="grid gap-8 md:grid-cols-[auto_1fr_minmax(0,260px)] md:items-center">
-            <div>
-              <p className="text-caption font-medium text-ink-3">Website health</p>
-              <p className="mt-1 flex items-baseline gap-1">
-                <span className="text-metric font-semibold tabular text-ink">{data.completed.score}</span>
-                <span className="text-body text-ink-3">/ 100</span>
-              </p>
-              {data.previous && (
-                <p className="mt-1 text-support text-ink-3">
-                  {scoreChange(data.completed.score, data.previous.score)} since {data.previous.when}
-                </p>
-              )}
+          <MetricHero
+            ariaLabel="Website health"
+            label="Website health"
+            value={data.completed.score}
+            suffix="/ 100"
+            meter={data.completed.score}
+            note={data.previous ? `${scoreChange(data.completed.score, data.previous.score)} since ${data.previous.when}` : undefined}
+            conclusion={auditConclusion(data.completed.score, problems.length, failing)}
+            chart={data.history.length >= 2 ? <TrendLine points={data.history} ariaLabel="Website health score over time" /> : null}
+            chartEmpty="Your score history appears here after your next audit."
+          >
+            <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+              {failing > 0 && <StatusLabel tone="critical">{failing} to fix</StatusLabel>}
+              {problems.length - failing > 0 && <StatusLabel tone="attention">{problems.length - failing} to improve</StatusLabel>}
+              <StatusLabel tone="positive">{passing} looking good</StatusLabel>
             </div>
-            <div className="space-y-3">
-              <p className="max-w-[52ch] text-section font-medium text-ink">
-                {auditConclusion(data.completed.score, problems.length, failing)}
-              </p>
-              <div className="flex flex-wrap gap-x-5 gap-y-1.5">
-                {failing > 0 && <StatusLabel tone="critical">{failing} to fix</StatusLabel>}
-                {problems.length - failing > 0 && <StatusLabel tone="attention">{problems.length - failing} to improve</StatusLabel>}
-                <StatusLabel tone="positive">{passing} looking good</StatusLabel>
-              </div>
-            </div>
-            {data.history.length >= 2 ? (
-              <TrendLine points={data.history} ariaLabel="Website health score over time" />
-            ) : (
-              <p className="text-support text-ink-3">Your score history appears here after your next audit.</p>
-            )}
-          </section>
+          </MetricHero>
 
           {/* What needs attention */}
           {problems.length > 0 && (
@@ -273,8 +262,13 @@ export default function SiteAuditView({ data }: { data: SiteAuditViewData }) {
                 const inArea = checks.filter((c) => CHECK_COPY[c.id].area === area);
                 if (inArea.length === 0) return null;
                 return (
-                  <div key={area} className="border-t border-line pt-4">
-                    <h3 className="mb-3 text-support font-medium text-ink">{AREA_LABEL[area]}</h3>
+                  <div key={area} className="border-t border-line-strong pt-4">
+                    <div className="mb-3 flex items-baseline justify-between gap-3">
+                      <h3 className="text-body font-semibold text-ink">{AREA_LABEL[area]}</h3>
+                      <p className="text-caption text-ink-3">
+                        <span className="font-medium tabular text-ink-2">{inArea.filter((c) => c.status === "pass").length}</span> of {inArea.length} passing
+                      </p>
+                    </div>
                     <ul className="space-y-2.5">
                       {inArea.map((c) => (
                         <li key={c.id}>

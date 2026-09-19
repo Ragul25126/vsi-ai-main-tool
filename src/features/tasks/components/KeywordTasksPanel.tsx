@@ -20,11 +20,11 @@ export default function KeywordTasksPanel({ clientId, trackedKeywordId, tasks, c
  }
 
  return (
- <div className="rounded-panel border border-gray-200 bg-card p-5">
+ <div className="rounded-panel border border-line bg-surface p-5">
  <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
  <div>
- <h3 className="text-base font-semibold text-gray-900">Tasks</h3>
- <p className="text-xs text-gray-500 mt-0.5">
+ <h3 className="text-base font-semibold text-ink">Tasks</h3>
+ <p className="text-caption text-ink-3 mt-0.5">
  {open.length} open · {closed.length} closed. Generate a Task List report and click <strong>Import to tracker</strong>, or add tasks manually.
  </p>
  </div>
@@ -32,7 +32,7 @@ export default function KeywordTasksPanel({ clientId, trackedKeywordId, tasks, c
  <NewTaskButton clientId={clientId} trackedKeywordId={trackedKeywordId} label="+ Add task" />
  <Link
  href={`/dashboard/clients/${clientId}/tasks?status=open`}
- className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
+ className="text-caption text-ink-3 hover:text-ink transition-colors"
  >
  Client view →
  </Link>
@@ -40,15 +40,15 @@ export default function KeywordTasksPanel({ clientId, trackedKeywordId, tasks, c
  </div>
 
  {tasks.length === 0 ? (
- <div className="rounded-lg bg-gray-50 border border-gray-200 px-4 py-6 text-center">
- <p className="text-xs text-gray-500">No tasks yet for this keyword.</p>
- <p className="text-caption text-gray-400 mt-1">Generate a Task List report above and import it, or click <strong>+ Add task</strong>.</p>
+ <div className="rounded-control bg-surface-2 border border-line px-4 py-6 text-center">
+ <p className="text-caption text-ink-3">No tasks yet for this keyword.</p>
+ <p className="text-caption text-ink-3 mt-1">Generate a Task List report above and import it, or click <strong>+ Add task</strong>.</p>
  </div>
  ) : (
  <div className="space-y-3">
  {open.length > 0 && (
  <div>
- <p className="text-caption font-bold text-gray-500 mb-2">Open ({open.length})</p>
+ <p className="text-caption font-semibold text-ink-3 mb-2">Open ({open.length})</p>
  <div className="space-y-2">
  {open.map((t) => (
  <TaskCard key={t.id} task={t} isStale={stale(t)} />
@@ -59,7 +59,7 @@ export default function KeywordTasksPanel({ clientId, trackedKeywordId, tasks, c
 
  {closed.length > 0 && (
  <details className="group [&_summary::-webkit-details-marker]:hidden">
- <summary className="flex items-center gap-2 text-caption font-bold text-gray-500 cursor-pointer hover:text-gray-700 transition-colors">
+ <summary className="flex items-center gap-2 text-caption font-semibold text-ink-3 cursor-pointer hover:text-ink-2 transition-colors">
  <span>Closed ({closed.length})</span>
  <svg
  className="h-3 w-3 transition-transform duration-200 group-open:rotate-180"

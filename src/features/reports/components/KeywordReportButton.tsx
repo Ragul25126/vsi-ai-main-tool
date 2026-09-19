@@ -196,11 +196,11 @@ export default function KeywordReportButton({ trackedKeywordId, priorReports = [
  const hasAny = reports.length > 0;
 
  return (
- <div id="reports-section" className="rounded-panel border border-gray-200 bg-card p-5 scroll-mt-20">
+ <div id="reports-section" className="rounded-panel border border-line bg-surface p-5 scroll-mt-20">
  <div className="flex items-start justify-between gap-3 flex-wrap">
  <div className="flex-1 min-w-0">
- <h3 className="text-base font-semibold text-gray-900">Reports</h3>
- <p className="text-xs text-gray-500 mt-0.5">
+ <h3 className="text-base font-semibold text-ink">Reports</h3>
+ <p className="text-caption text-ink-3 mt-0.5">
  Produce a shareable, branded report from the latest snapshot. Each new report is saved alongside the previous ones - generating a different type does not replace the old one.
  </p>
  </div>
@@ -209,11 +209,11 @@ export default function KeywordReportButton({ trackedKeywordId, priorReports = [
  <button
  onClick={() => setOpen((v) => !v)}
  disabled={!!loading}
- className="rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-ink-2 disabled:opacity-50 transition-colors flex items-center gap-2"
+ className="rounded-control bg-ink px-4 py-2 text-body font-semibold text-white hover:bg-ink-2 disabled:opacity-50 transition-colors flex items-center gap-2"
  >
  {loading ? (
  <>
- <span className="inline-block h-3 w-3 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+ <span className="inline-block h-3 w-3 rounded-full border-2 border-line border-t-white animate-spin" />
  Generating {TYPE_LABEL[loading]}…
  </>
  ) : (
@@ -227,26 +227,26 @@ export default function KeywordReportButton({ trackedKeywordId, priorReports = [
  </button>
 
  {open && !loading && (
- <div className="absolute right-0 mt-2 w-80 rounded-panel border border-gray-200 bg-card z-20 overflow-hidden">
+ <div className="absolute right-0 mt-2 w-80 rounded-panel border border-line bg-surface z-20 overflow-hidden">
  {OPTIONS.map((o) => {
  const wantsStrategy = o.needsStrategy && !hasCitationStrategy;
  return (
  <button
  key={o.type}
  onClick={() => generate(o.type)}
- className="w-full text-left px-4 py-3 hover:bg-attention-soft transition-colors border-b border-gray-100 last:border-b-0"
+ className="w-full text-left px-4 py-3 hover:bg-attention-soft transition-colors border-b border-line last:border-b-0"
  >
  <div className="flex items-center justify-between gap-2">
- <p className="text-sm font-semibold text-gray-900">{o.title}</p>
+ <p className="text-body font-semibold text-ink">{o.title}</p>
  {o.needsStrategy && (
- <span className={`text-caption font-bold   rounded-full px-1.5 py-0.5 ${
- hasCitationStrategy ? "bg-green-100 text-green-700" : "bg-attention-soft text-attention"
+ <span className={`text-caption font-semibold   rounded-full px-1.5 py-0.5 ${
+ hasCitationStrategy ? "bg-positive-soft text-positive" : "bg-attention-soft text-attention"
  }`}>
  {hasCitationStrategy ? "Grounded" : "Best after Citation Strategy"}
  </span>
  )}
  </div>
- <p className="text-xs text-gray-500 mt-0.5">{o.subtitle}</p>
+ <p className="text-caption text-ink-3 mt-0.5">{o.subtitle}</p>
  {wantsStrategy && (
  <p className="text-caption text-attention mt-1.5 leading-relaxed">
  Run <strong>Citation Strategy</strong> first - the task list will then map every ticket to its patterns, gaps, and page changes.
@@ -261,21 +261,21 @@ export default function KeywordReportButton({ trackedKeywordId, priorReports = [
  </div>
 
  {loading && (
- <div className="mt-3 rounded-lg bg-attention-soft border border-line px-4 py-3 flex items-center gap-3">
+ <div className="mt-3 rounded-control bg-attention-soft border border-line px-4 py-3 flex items-center gap-3">
  <span className="shrink-0 inline-block h-4 w-4 rounded-full border-2 border-line border-t-ink animate-spin" />
  <div className="min-w-0">
- <p className="text-sm font-semibold text-attention">Generating {TYPE_LABEL[loading]}…</p>
+ <p className="text-body font-semibold text-attention">Generating {TYPE_LABEL[loading]}…</p>
  <p className="text-caption text-attention/80 mt-0.5">Running in the background - usually 30 to 90 seconds. You can leave the page and come back; the report will be saved.</p>
  </div>
  </div>
  )}
 
  {error && (
- <div className="mt-3 rounded-lg bg-red-50 border border-red-300 px-4 py-3 text-sm text-red-700">{error}</div>
+ <div className="mt-3 rounded-control bg-critical-soft border border-critical/30 px-4 py-3 text-body text-critical">{error}</div>
  )}
 
  {importMsg && (
- <div className="mt-3 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-sm text-emerald-800">{importMsg}</div>
+ <div className="mt-3 rounded-control bg-positive-soft border border-positive/30 px-4 py-2.5 text-body text-positive">{importMsg}</div>
  )}
 
  {hasAny && (
@@ -285,21 +285,21 @@ export default function KeywordReportButton({ trackedKeywordId, priorReports = [
  if (list.length === 0) return null;
  return (
  <div key={t}>
- <p className="text-xs font-bold text-gray-500 mb-1.5">{TYPE_LABEL[t]}</p>
+ <p className="text-caption font-semibold text-ink-3 mb-1.5">{TYPE_LABEL[t]}</p>
  <div className="space-y-1.5">
  {list.map((r) => {
  const fresh = justGenerated === r.shareUrl;
  return (
  <div
  key={r.shareUrl}
- className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 transition-colors ${
- fresh ? "border-green-300 bg-green-50" : "border-gray-200 bg-gray-50"
+ className={`flex flex-wrap items-center justify-between gap-2 rounded-control border px-3 py-2 transition-colors ${
+ fresh ? "border-positive/30 bg-positive-soft" : "border-line bg-surface-2"
  }`}
  >
  <div className="min-w-0 flex-1">
- <p className="text-xs text-gray-700 truncate">{r.shareUrl}</p>
- <p className="text-caption text-gray-500 mt-0.5">
- {fresh && <span className="text-green-700 font-semibold mr-1">Just generated · </span>}
+ <p className="text-caption text-ink-2 truncate">{r.shareUrl}</p>
+ <p className="text-caption text-ink-3 mt-0.5">
+ {fresh && <span className="text-positive font-semibold mr-1">Just generated · </span>}
  {shortDateTime(r.generatedAt)}
  </p>
  </div>
@@ -308,7 +308,7 @@ export default function KeywordReportButton({ trackedKeywordId, priorReports = [
  <button
  onClick={() => importToTracker(r.id!)}
  disabled={importing === r.id}
- className="rounded-md bg-emerald-500 px-2.5 py-1 text-caption font-semibold text-white hover:bg-emerald-600 disabled:opacity-50 transition-colors"
+ className="rounded-control bg-positive px-2.5 py-1 text-caption font-semibold text-white hover:bg-positive disabled:opacity-50 transition-colors"
  title="Push these tasks into the built-in task tracker"
  >
  {importing === r.id ? "Importing…" : "Import to tracker"}
@@ -316,19 +316,19 @@ export default function KeywordReportButton({ trackedKeywordId, priorReports = [
  )}
  <button
  onClick={() => copyToClipboard(window.location.origin + r.shareUrl)}
- className="rounded-md border border-gray-300 bg-card px-2 py-1 text-caption font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+ className="rounded-control border border-line-strong bg-surface px-2 py-1 text-caption font-semibold text-ink-2 hover:bg-surface-2 transition-colors"
  >Copy link</button>
  <a
  href={r.shareUrl}
  target="_blank"
  rel="noopener noreferrer"
- className="rounded-md bg-ink px-2.5 py-1 text-caption font-semibold text-white hover:bg-ink-2 transition-colors"
+ className="rounded-control bg-ink px-2.5 py-1 text-caption font-semibold text-white hover:bg-ink-2 transition-colors"
  >Open →</a>
  {r.id && (
  <button
  onClick={() => deleteReport(r.id!)}
  title="Delete this report"
- className="rounded-md border border-gray-300 bg-card px-2 py-1 text-caption font-semibold text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
+ className="rounded-control border border-line-strong bg-surface px-2 py-1 text-caption font-semibold text-critical hover:bg-critical-soft hover:border-critical/30 transition-colors"
  >✕</button>
  )}
  </div>

@@ -3,10 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Inbox, Send, File, Star, Archive, Trash2, Search as SearchIcon, 
-  Filter, Plus, Paperclip, Mail, CheckCircle2, ArrowUpDown, Tag, AlertCircle, Clock
-} from "lucide-react";
+import { AlertCircle, Archive, ArrowUpDown, CheckCircle2, Clock, File, FileText, Filter, Inbox, Mail, Paperclip, Plus, Search as SearchIcon, Send, Star, Tag, Trash2 } from "lucide-react";
 import { useMessages } from "@/contexts/MessagesContext";
 import { MessageFolder, Message } from "@/lib/types/messages";
 import ComposeModal from "@/components/messages/ComposeModal";
@@ -116,7 +113,7 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-background text-foreground overflow-hidden relative">
+    <div className="flex h-[calc(100vh-64px)] bg-canvas text-ink overflow-hidden relative">
       {/* Toast Notification Banner */}
       <AnimatePresence>
         {toastMessage && (
@@ -124,14 +121,14 @@ export default function MessagesPage() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-full bg-emerald-500 text-white font-semibold text-sm shadow-overlay flex items-center gap-3"
+            className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-control bg-positive text-white font-semibold text-body shadow-overlay flex items-center gap-3"
           >
             <CheckCircle2 size={18} />
             <span>{typeof toastMessage === "string" ? toastMessage : toastMessage.text}</span>
             {typeof toastMessage === "object" && toastMessage.actionText && (
               <button
                 onClick={toastMessage.onAction}
-                className="ml-2 px-2.5 py-0.5 rounded-md bg-white/20 hover:bg-white/30 text-white font-bold text-xs transition-colors underline cursor-pointer"
+                className="ml-2 px-2.5 py-0.5 rounded-control bg-surface/20 hover:bg-surface/30 text-white font-semibold text-caption transition-colors underline cursor-pointer"
               >
                 {toastMessage.actionText}
               </button>
@@ -141,14 +138,14 @@ export default function MessagesPage() {
       </AnimatePresence>
 
       {/* Sidebar Navigation */}
-      <aside className="w-64 border-r border-border hidden md:flex flex-col bg-card/60">
+      <aside className="w-64 border-r border-line hidden md:flex flex-col bg-surface/60">
         <div className="p-4">
           <button 
             onClick={handleOpenNewCompose}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-ink hover:bg-brand-soft text-white font-bold rounded-panel /20 transition-all .5"
+            className="flex h-10 w-full items-center justify-center gap-2 rounded-control bg-ink text-body font-medium text-white transition-colors hover:bg-ink-2 active:translate-y-px"
           >
-            <Plus size={18} />
-            Compose Message
+            <Plus size={15} strokeWidth={2} aria-hidden />
+            New message
           </button>
         </div>
         
@@ -160,19 +157,19 @@ export default function MessagesPage() {
               <button
                 key={folder.id}
                 onClick={() => setActiveFolder(folder.id)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-panel text-sm font-semibold transition-colors ${
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-panel text-body font-semibold transition-colors ${
                   isActive 
                     ? "bg-brand-soft text-brand-strong" 
-                    : "text-muted-foreground hover:bg-muted-bg hover:text-foreground"
+                    : "text-ink-3 hover:bg-surface-2 hover:text-ink"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon size={18} className={isActive ? "text-brand-strong" : "text-muted-foreground"} />
+                  <Icon size={18} className={isActive ? "text-brand-strong" : "text-ink-3"} />
                   {folder.label}
                 </div>
                 {folder.badge !== undefined && folder.badge > 0 && (
-                  <span className={`text-caption font-bold px-2 py-0.5 rounded-full ${
-                    isActive ? "bg-ink text-white" : "bg-muted-bg text-muted-foreground border border-border/50"
+                  <span className={`text-caption font-semibold px-2 py-0.5 rounded-full ${
+                    isActive ? "bg-ink text-white" : "bg-surface-2 text-ink-3 border border-line/50"
                   }`}>
                     {folder.badge}
                   </span>
@@ -184,17 +181,17 @@ export default function MessagesPage() {
       </aside>
 
       {/* Main Message List */}
-      <main className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header Toolbar */}
-        <div className="h-16 border-b border-border flex items-center px-4 sm:px-6 justify-between shrink-0 bg-card/80 backdrop-blur-md gap-3">
+        <div className="h-16 border-b border-line flex items-center px-4 sm:px-6 justify-between shrink-0 bg-surface/80 gap-3">
           <div className="flex-1 max-w-md relative">
-            <SearchIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <SearchIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
             <input 
               type="text" 
               placeholder={`Search in ${activeFolder}...`} 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-muted-bg/60 border border-border rounded-full pl-9 pr-4 py-2 text-sm text-foreground outline-none focus:border-line-strong transition-colors"
+              className="w-full bg-surface-2/60 border border-line rounded-control pl-9 pr-4 py-2 text-body text-ink outline-none focus:border-line-strong transition-colors"
             />
           </div>
 
@@ -202,7 +199,7 @@ export default function MessagesPage() {
             {/* Sort Toggle */}
             <button
               onClick={() => setSortBy(prev => prev === "newest" ? "oldest" : "newest")}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted-bg/60 border border-border text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-control bg-surface-2/60 border border-line text-caption font-semibold text-ink-3 hover:text-ink transition-colors"
               title="Toggle Sort Order"
             >
               <ArrowUpDown size={14} />
@@ -213,7 +210,7 @@ export default function MessagesPage() {
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className="bg-muted-bg/60 border border-border rounded-full px-3 py-1.5 text-xs font-semibold text-muted-foreground outline-none cursor-pointer"
+              className="bg-surface-2/60 border border-line rounded-control px-3 py-1.5 text-caption font-semibold text-ink-3 outline-none cursor-pointer"
             >
               <option value="all">All Priority</option>
               <option value="high">High Priority</option>
@@ -227,7 +224,7 @@ export default function MessagesPage() {
               className={`p-2 rounded-full border transition-colors ${
                 filterUnread 
                   ? 'bg-brand-soft border-line-strong text-brand-strong' 
-                  : 'bg-muted-bg/60 border-border text-muted-foreground hover:text-foreground'
+                  : 'bg-surface-2/60 border-line text-ink-3 hover:text-ink'
               }`}
               title="Filter unread"
             >
@@ -247,7 +244,7 @@ export default function MessagesPage() {
               // Loading Skeleton
               <div className="space-y-3">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-20 rounded-panel bg-card border border-border animate-pulse p-4" />
+                  <div key={i} className="h-20 rounded-panel bg-surface border border-line animate-pulse p-4" />
                 ))}
               </div>
             ) : (
@@ -256,37 +253,37 @@ export default function MessagesPage() {
                   // Custom Empty States for Drafts, Archived, and standard folders
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                    className="flex flex-col items-center justify-center py-24 text-center text-muted-foreground"
+                    className="flex flex-col items-center justify-center py-24 text-center text-ink-3"
                   >
                     {activeFolder === "drafts" ? (
                       <>
-                        <div className="text-5xl mb-4 select-none">📝</div>
-                        <h3 className="text-xl font-bold text-foreground mb-1">No Drafts</h3>
-                        <p className="text-sm text-muted-foreground max-w-sm">
+                        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-surface-2 text-ink-3"><FileText size={20} strokeWidth={1.6} aria-hidden /></div>
+                        <h3 className="mb-1 text-[1.0625rem] font-semibold leading-6 text-ink">No drafts</h3>
+                        <p className="text-body text-ink-3 max-w-sm">
                           Your saved drafts will appear here.
                         </p>
                       </>
                     ) : activeFolder === "archived" ? (
                       <>
-                        <div className="text-5xl mb-4 select-none">📦</div>
-                        <h3 className="text-xl font-bold text-foreground mb-1">No Archived Messages</h3>
-                        <p className="text-sm text-muted-foreground max-w-sm">
+                        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-surface-2 text-ink-3"><Archive size={20} strokeWidth={1.6} aria-hidden /></div>
+                        <h3 className="mb-1 text-[1.0625rem] font-semibold leading-6 text-ink">No archived messages</h3>
+                        <p className="text-body text-ink-3 max-w-sm">
                           Archived conversations will appear here.
                         </p>
                       </>
                     ) : activeFolder === "sent" ? (
                       <>
-                        <div className="text-5xl mb-4 select-none">📨</div>
-                        <h3 className="text-xl font-bold text-foreground mb-1">No Sent Messages</h3>
-                        <p className="text-sm text-muted-foreground max-w-sm">
+                        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-surface-2 text-ink-3"><Send size={20} strokeWidth={1.6} aria-hidden /></div>
+                        <h3 className="mb-1 text-[1.0625rem] font-semibold leading-6 text-ink">No sent messages</h3>
+                        <p className="text-body text-ink-3 max-w-sm">
                           Messages you compose and send will appear here.
                         </p>
                       </>
                     ) : (
                       <>
-                        <div className="text-5xl mb-4 select-none">📥</div>
-                        <h3 className="text-xl font-bold text-foreground mb-1">No Messages Found</h3>
-                        <p className="text-sm text-muted-foreground max-w-sm">
+                        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-surface-2 text-ink-3"><Inbox size={20} strokeWidth={1.6} aria-hidden /></div>
+                        <h3 className="mb-1 text-[1.0625rem] font-semibold leading-6 text-ink">No messages</h3>
+                        <p className="text-body text-ink-3 max-w-sm">
                           You&apos;re all caught up in {activeFolder}.
                         </p>
                       </>
@@ -319,8 +316,8 @@ export default function MessagesPage() {
                           onClick={() => handleMessageClick(msg)}
                           className={`group relative flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-panel border cursor-pointer transition-all duration-200  hover:shadow-overlay hover:shadow-black/5 ${
                             msg.status === "unread" 
-                              ? "bg-card border-line-strong " 
-                              : "bg-card/70 border-border hover:bg-card hover:border-border/80"
+                              ? "bg-surface border-line-strong " 
+                              : "bg-surface/70 border-line hover:bg-surface hover:border-line/80"
                           }`}
                         >
                           {/* Unread Bar Indicator */}
@@ -335,12 +332,12 @@ export default function MessagesPage() {
                               className={`p-1 rounded-full transition-colors ${
                                 msg.isStarred 
                                   ? 'text-brand-strong hover:text-ink' 
-                                  : 'text-muted-foreground hover:text-ink hover:bg-surface-2'
+                                  : 'text-ink-3 hover:text-ink hover:bg-surface-2'
                               }`}
                             >
                               <Star size={18} fill={msg.isStarred ? "currentColor" : "none"} />
                             </button>
-                            <div className="w-10 h-10 rounded-full bg-muted-bg border border-border flex items-center justify-center shrink-0 overflow-hidden text-sm font-bold text-muted-foreground">
+                            <div className="w-10 h-10 rounded-full bg-surface-2 border border-line flex items-center justify-center shrink-0 overflow-hidden text-body font-semibold text-ink-3">
                               {displayUser?.avatar ? (
                                 <img src={displayUser.avatar} alt={displayUser.name} className="w-full h-full object-cover" />
                               ) : (
@@ -353,7 +350,7 @@ export default function MessagesPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1 gap-2">
                               <div className="flex items-center gap-2 truncate">
-                                <h4 className={`text-sm truncate ${msg.status === "unread" ? 'font-bold text-foreground' : 'font-semibold text-foreground/80'}`}>
+                                <h4 className={`text-body truncate ${msg.status === "unread" ? 'font-semibold text-ink' : 'font-semibold text-ink/80'}`}>
                                   {isDraft 
                                     ? `Draft: ${displayUser?.name || displayUser?.email || 'Recipient'}` 
                                     : activeFolder === "sent" 
@@ -363,39 +360,39 @@ export default function MessagesPage() {
 
                                 {/* Priority Badge */}
                                 {msg.priority === "high" && (
-                                  <span className="px-1.5 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-500 text-caption font-bold">
+                                  <span className="px-1.5 py-0.5 rounded bg-critical/10 border border-critical/30 text-critical text-caption font-semibold">
                                     High
                                   </span>
                                 )}
                                 {isDraft && (
-                                  <span className="px-1.5 py-0.5 rounded bg-brand-soft border border-line text-brand-strong text-caption font-bold">
+                                  <span className="px-1.5 py-0.5 rounded bg-brand-soft border border-line text-brand-strong text-caption font-semibold">
                                     Draft
                                   </span>
                                 )}
                               </div>
 
-                              <span className={`text-xs whitespace-nowrap ml-2 flex items-center gap-1 ${msg.status === "unread" ? 'font-bold text-brand-strong' : 'text-muted-foreground'}`}>
+                              <span className={`text-caption whitespace-nowrap ml-2 flex items-center gap-1 ${msg.status === "unread" ? 'font-semibold text-brand-strong' : 'text-ink-3'}`}>
                                 <Clock size={12} className="opacity-70" />
                                 {formattedDate} {formattedTime}
                               </span>
                             </div>
 
                             <div className="flex items-baseline gap-2">
-                              <span className={`text-sm font-semibold truncate ${msg.status === "unread" ? 'text-foreground' : 'text-foreground/90'}`}>
+                              <span className={`text-body font-semibold truncate ${msg.status === "unread" ? 'text-ink' : 'text-ink/90'}`}>
                                 {msg.subject || "(No Subject)"}
                               </span>
-                              <span className="hidden sm:inline text-xs text-muted-foreground truncate flex-1">
+                              <span className="hidden sm:inline text-caption text-ink-3 truncate flex-1">
                                 - {msg.preview || "(No content)"}
                               </span>
                             </div>
-                            <span className="sm:hidden text-xs text-muted-foreground truncate block mt-1">
+                            <span className="sm:hidden text-caption text-ink-3 truncate block mt-1">
                               {msg.preview || "(No content)"}
                             </span>
                           </div>
 
                           {/* Attachment Icon */}
                           {msg.attachments && msg.attachments.length > 0 && (
-                            <div className="absolute right-4 bottom-4 sm:static flex items-center justify-center p-1.5 rounded-full bg-muted-bg border border-border text-muted-foreground" title={`${msg.attachments.length} attachment(s)`}>
+                            <div className="absolute right-4 bottom-4 sm:static flex items-center justify-center p-1.5 rounded-control bg-surface-2 border border-line text-ink-3" title={`${msg.attachments.length} attachment(s)`}>
                               <Paperclip size={14} />
                             </div>
                           )}
@@ -408,7 +405,7 @@ export default function MessagesPage() {
             )}
           </div>
         </div>
-      </main>
+      </div>
 
       <ComposeModal 
         isOpen={isComposeOpen} 

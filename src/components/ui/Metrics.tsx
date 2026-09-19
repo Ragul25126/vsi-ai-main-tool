@@ -6,7 +6,7 @@ export function StatStrip({ children, className }: { children: ReactNode; classN
   return (
     <dl
       className={cn(
-        "grid grid-cols-2 gap-y-5 border-y border-line py-5 md:auto-cols-fr md:grid-flow-col md:grid-cols-none md:divide-x md:divide-line",
+        "grid grid-cols-2 gap-y-5 border-y border-line py-6 [header+&]:-mt-4 [header+&]:border-t-0 [header+&]:pt-0 md:auto-cols-fr md:grid-flow-col md:grid-cols-none md:divide-x md:divide-line",
         className,
       )}
     >
@@ -29,7 +29,7 @@ export function Stat({
   return (
     <div className={cn("min-w-0 px-0 md:px-5 md:first:pl-0", className)}>
       <dt className="text-caption font-medium text-ink-3">{label}</dt>
-      <dd className="mt-1 text-2xl font-semibold tabular text-ink">{value}</dd>
+      <dd className="mt-1.5 text-[1.75rem] font-semibold leading-8 tracking-[-0.02em] tabular text-ink">{value}</dd>
       {sub && <dd className="mt-0.5 text-support text-ink-3">{sub}</dd>}
     </div>
   );

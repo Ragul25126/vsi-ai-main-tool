@@ -6,27 +6,27 @@ export const SERVICE_TYPE_LABELS: Record<ServiceType, { label: string; short: st
   seo: {
     label: "SEO Only",
     short: "SEO",
-    color: "bg-blue-900 text-blue-300",
+    color: "bg-surface-2 text-ink-2",
     description: "Google rank tracking only",
   },
   geo: {
     label: "GEO Only",
     short: "GEO",
-    color: "bg-purple-900 text-purple-300",
+    color: "bg-surface-2 text-ink-2",
     description: "AI Mode citations & mentions only",
   },
   seo_geo: {
     label: "SEO + GEO",
     short: "SEO+GEO",
-    color: "bg-amber-900 text-amber-300",
+    color: "bg-surface-2 text-ink-2",
     description: "Full Rank-to-Citation Gap™ intelligence",
   },
 };
 
 export const TRACK_TYPE_CONFIG: Record<TrackType, { label: string; color: string; runsSERP: boolean; runsAIO: boolean }> = {
-  seo:  { label: "SEO",  color: "bg-blue-900 text-blue-300",   runsSERP: true,  runsAIO: false },
-  geo:  { label: "GEO",  color: "bg-purple-900 text-purple-300", runsSERP: false, runsAIO: true  },
-  both: { label: "Both", color: "bg-amber-900 text-amber-300",  runsSERP: true,  runsAIO: true  },
+  seo:  { label: "SEO",  color: "bg-surface-2 text-ink-2",   runsSERP: true,  runsAIO: false },
+  geo:  { label: "GEO",  color: "bg-surface-2 text-ink-2", runsSERP: false, runsAIO: true  },
+  both: { label: "Both", color: "bg-surface-2 text-ink-2",  runsSERP: true,  runsAIO: true  },
 };
 
 export const INDUSTRIES = [
@@ -132,24 +132,24 @@ const PLATFORM_PATTERNS: Array<{ platform: PlatformType; patterns: string[] }> =
 ];
 
 export const PLATFORM_LABELS: Record<PlatformType, { label: string; color: string; icon: string }> = {
-  linkedin:    { label: "LinkedIn",    color: "bg-blue-900 text-blue-300",    icon: "in" },
-  reddit:      { label: "Reddit",      color: "bg-orange-900 text-orange-300", icon: "r/" },
-  quora:       { label: "Quora",       color: "bg-red-900 text-red-300",      icon: "Q" },
-  youtube:     { label: "YouTube",     color: "bg-red-900 text-red-300",      icon: "▶" },
-  twitter:     { label: "X / Twitter", color: "bg-gray-800 text-gray-300",    icon: "𝕏" },
-  facebook:    { label: "Facebook",    color: "bg-blue-900 text-blue-300",    icon: "f" },
-  instagram:   { label: "Instagram",   color: "bg-pink-900 text-pink-300",    icon: "ig" },
-  trustpilot:  { label: "Trustpilot",  color: "bg-green-900 text-green-300",  icon: "★" },
-  clutch:      { label: "Clutch",      color: "bg-red-900 text-red-300",      icon: "C" },
-  g2:          { label: "G2",          color: "bg-orange-900 text-orange-300", icon: "G2" },
-  tripadvisor: { label: "TripAdvisor", color: "bg-green-900 text-green-300",  icon: "TA" },
-  yelp:        { label: "Yelp",        color: "bg-red-900 text-red-300",      icon: "Y" },
-  glassdoor:   { label: "Glassdoor",   color: "bg-green-900 text-green-300",  icon: "GD" },
-  medium:      { label: "Medium",      color: "bg-gray-800 text-gray-300",    icon: "M" },
-  wikipedia:   { label: "Wikipedia",   color: "bg-gray-800 text-gray-300",    icon: "W" },
-  news:        { label: "News",        color: "bg-gray-800 text-gray-300",    icon: "📰" },
-  brand:       { label: "Brand",       color: "bg-amber-900 text-amber-300",  icon: "★" },
-  other:       { label: "Other",       color: "bg-gray-800 text-gray-500",    icon: "•" },
+  linkedin:    { label: "LinkedIn",    color: "bg-surface-2 text-ink-2",    icon: "in" },
+  reddit:      { label: "Reddit",      color: "bg-surface-2 text-ink-2", icon: "r/" },
+  quora:       { label: "Quora",       color: "bg-surface-2 text-ink-2",      icon: "Q" },
+  youtube:     { label: "YouTube",     color: "bg-surface-2 text-ink-2",      icon: "▶" },
+  twitter:     { label: "X / Twitter", color: "bg-surface-2 text-ink-2",    icon: "𝕏" },
+  facebook:    { label: "Facebook",    color: "bg-surface-2 text-ink-2",    icon: "f" },
+  instagram:   { label: "Instagram",   color: "bg-surface-2 text-ink-2",    icon: "ig" },
+  trustpilot:  { label: "Trustpilot",  color: "bg-surface-2 text-ink-2",  icon: "★" },
+  clutch:      { label: "Clutch",      color: "bg-surface-2 text-ink-2",      icon: "C" },
+  g2:          { label: "G2",          color: "bg-surface-2 text-ink-2", icon: "G2" },
+  tripadvisor: { label: "TripAdvisor", color: "bg-surface-2 text-ink-2",  icon: "TA" },
+  yelp:        { label: "Yelp",        color: "bg-surface-2 text-ink-2",      icon: "Y" },
+  glassdoor:   { label: "Glassdoor",   color: "bg-surface-2 text-ink-2",  icon: "GD" },
+  medium:      { label: "Medium",      color: "bg-surface-2 text-ink-2",    icon: "M" },
+  wikipedia:   { label: "Wikipedia",   color: "bg-surface-2 text-ink-2",    icon: "W" },
+  news:        { label: "News",        color: "bg-surface-2 text-ink-2",    icon: "📰" },
+  brand:       { label: "Brand",       color: "bg-surface-2 text-ink-2",  icon: "★" },
+  other:       { label: "Other",       color: "bg-surface-2 text-ink-2",    icon: "•" },
 };
 
 export function detectPlatform(domain: string, clientDomain?: string): PlatformType {

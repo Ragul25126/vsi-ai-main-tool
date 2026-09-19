@@ -177,6 +177,24 @@
   --animate-guide-in: guide-in 520ms var(--ease-out-soft) 250ms both;
   --animate-guide-in-down: guide-in-down 520ms var(--ease-out-soft) 250ms both;
 
+  /* First-use pages: each plays once on load, then stays still. */
+  --animate-rise-in: rise-in 600ms var(--ease-out-soft) both;
+  --animate-line-grow: line-grow 700ms var(--ease-out-soft) both;
+  --animate-scan-settle: scan-settle 1500ms var(--ease-out-soft) 200ms both;
+
+  @keyframes rise-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes line-grow {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+  @keyframes scan-settle {
+    from { opacity: 0; transform: translateY(-96px); }
+    25% { opacity: 1; }
+    to { opacity: 1; transform: translateY(0); }
+  }
   @keyframes drawer-in {
     from { transform: translateX(24px); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
@@ -223,6 +241,61 @@
   }
 }
 
+/* Section reveal (see components/ui/Reveal). Only sections that start below the
+   fold are ever hidden, and only once the script is running. */
+[data-reveal="hidden"] {
+  opacity: 0;
+  transform: translateY(14px);
+}
+[data-reveal="shown"] {
+  opacity: 1;
+  transform: none;
+  transition: opacity 520ms cubic-bezier(0.22, 1, 0.36, 1), transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Trend charts: the line draws once when the chart appears. */
+@keyframes trend-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+.trend-draw {
+  stroke-dasharray: 1;
+  animation: trend-draw 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Overview scene (illustrations/OverviewScene): one slow 9s loop that shows
+   VSI working. Resting state is the finished drawing, which is also what
+   people who ask for reduced motion see. */
+@keyframes vsi-scan {
+  0% { transform: translateY(0); opacity: 0; }
+  4% { opacity: 1; }
+  30% { transform: translateY(112px); opacity: 1; }
+  35%, 100% { transform: translateY(112px); opacity: 0; }
+}
+@keyframes vsi-dot {
+  0%, 30% { transform: translateX(0); opacity: 0; }
+  33% { opacity: 1; }
+  41% { transform: translateX(56px); opacity: 1; }
+  44%, 100% { transform: translateX(56px); opacity: 0; }
+}
+@keyframes vsi-row-1 { 0%, 42% { opacity: 0; transform: translateX(-6px); } 47%, 93% { opacity: 1; transform: none; } 98%, 100% { opacity: 0; transform: none; } }
+@keyframes vsi-row-2 { 0%, 48% { opacity: 0; transform: translateX(-6px); } 53%, 93% { opacity: 1; transform: none; } 98%, 100% { opacity: 0; transform: none; } }
+@keyframes vsi-row-3 { 0%, 54% { opacity: 0; transform: translateX(-6px); } 59%, 93% { opacity: 1; transform: none; } 98%, 100% { opacity: 0; transform: none; } }
+@keyframes vsi-row-4 { 0%, 60% { opacity: 0; transform: translateX(-6px); } 65%, 93% { opacity: 1; transform: none; } 98%, 100% { opacity: 0; transform: none; } }
+@keyframes vsi-done { 0%, 70% { opacity: 0; } 75%, 93% { opacity: 1; } 98%, 100% { opacity: 0; } }
+
+.vsi-loop-scan { opacity: 0; animation: vsi-scan 9s cubic-bezier(0.45, 0, 0.2, 1) infinite; }
+.vsi-loop-dot { opacity: 0; animation: vsi-dot 9s ease-in-out infinite; }
+.vsi-loop-row-1 { animation: vsi-row-1 9s ease-out infinite; }
+.vsi-loop-row-2 { animation: vsi-row-2 9s ease-out infinite; }
+.vsi-loop-row-3 { animation: vsi-row-3 9s ease-out infinite; }
+.vsi-loop-row-4 { animation: vsi-row-4 9s ease-out infinite; }
+.vsi-loop-done { animation: vsi-done 9s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vsi-loop-scan, .vsi-loop-dot, .vsi-loop-row, .vsi-loop-done { animation: none !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -257,60 +330,6 @@
   background: var(--muted-foreground);
 }
 
-/* ─── Enterprise Card & Utility Classes ─── */
-.enterprise-card {
-  background-color: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius);
-  box-shadow: var(--card-shadow);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.enterprise-card:hover {
-  border-color: var(--card-hover-border);
-}
-
-/* Buttons */
-.btn-primary {
-  background-color: var(--dark);
-  color: var(--primary-foreground);
-  border-radius: var(--radius-button);
-  padding: 0.5rem 1rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-.btn-primary:hover {
-  background-color: var(--dark-secondary);
-}
-.btn-secondary {
-  background-color: var(--card-bg);
-  color: var(--dark);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-button);
-  padding: 0.5rem 1rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-.btn-secondary:hover {
-  background-color: var(--muted-bg);
-}
-
-/* Typography utilities */
-.text-heading { font-size: 42px; font-weight: 700; }
-.text-card-title { font-size: 18px; font-weight: 600; }
-.text-value { font-size: 38px; font-weight: 700; }
-.text-normal { font-size: 15px; font-weight: 500; }
-.text-small { font-size: 13px; font-weight: 400; }
-
-/* Interactive hover effects */
-.interactive-hover {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.interactive-hover:hover {
-  border-color: var(--card-hover-border);
-}
-
 /* ValGrow Custom Utilities */
 .label-mono {
   font-family: var(--font-mono);
@@ -334,19 +353,6 @@
 
 .signal-text {
   color: var(--signal);
-}
-
-@keyframes marquee-x {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-.marquee-track {
-  animation: marquee-x 32s linear infinite;
 }
 
 @keyframes pulse-node {
@@ -419,160 +425,4 @@
 nextjs-portal, [data-nextjs-toast], [data-next-badge], #next-logo, #next-badge {
   display: none !important;
 }
-
-/* Custom Login Page Cyber Grid & Glassmorphism */
-.bg-cyber-grid {
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-.bg-radial-vignette {
-  background: radial-gradient(circle at center, transparent 30%, rgba(5, 5, 5, 0.8) 100%);
-}
-
-.glass-panel {
-  background: rgba(11, 14, 20, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 85, 0, 0.3);
-}
-
-.glass-panel-subtle {
-  background: rgba(12, 16, 24, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.text-gradient-red {
-  background: linear-gradient(135deg, #FF7700 0%, #FF5500 50%, #FF3300 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.btn-red-gradient {
-  background: linear-gradient(135deg, #FF5500 0%, #FF3300 100%);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 25px rgba(255, 85, 0, 0.45);
-}
-
-.btn-red-gradient:hover {
-  background: linear-gradient(135deg, #FF6600 0%, #FF4400 100%);
-  box-shadow: 0 6px 30px rgba(255, 85, 0, 0.6);
-  transform: translateY(-1px);
-}
-
-.btn-red-gradient:active {
-  transform: translateY(0px) scale(0.99);
-}
-
-@keyframes wave-hand {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(14deg); }
-  75% { transform: rotate(-10deg); }
-}
-
-.animate-wave {
-  animation: wave-hand 2s ease-in-out infinite;
-  transform-origin: 70% 70%;
-}
-
-/* Spotlight Background Component Styles */
-.spotlight-container {
-  position: relative;
-  width: 100%;
-  min-height: 100vh;
-  overflow: hidden;
-  background-color: #000000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.spotlight-overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.spotlight {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(100px);
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.spotlight-left {
-  top: 10%;
-  left: 10%;
-  width: 45vw;
-  height: 45vw;
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.45) 0%, rgba(147, 51, 234, 0.15) 50%, transparent 80%);
-}
-
-.spotlight-mid {
-  top: 5%;
-  right: 15%;
-  width: 40vw;
-  height: 40vw;
-  background: radial-gradient(circle, rgba(249, 115, 22, 0.4) 0%, rgba(234, 88, 12, 0.12) 50%, transparent 80%);
-}
-
-.spotlight-right {
-  bottom: 10%;
-  left: 30%;
-  width: 50vw;
-  height: 50vw;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.35) 0%, rgba(99, 102, 241, 0.12) 50%, transparent 80%);
-}
-
-.spotlight-content {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.spotlight-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  max-width: 32rem;
-  padding: 2rem;
-}
-
-.spotlight-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 1rem;
-}
-
-.spotlight-description {
-  font-size: 1.125rem;
-  color: #a1a1aa;
-  margin-bottom: 1.5rem;
-}
-
-.spotlight-button {
-  background-color: #f97316;
-  color: #ffffff;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  transition: background-color 0.2s ease;
-}
-
-.spotlight-button:hover {
-  background-color: #ea580c;
-}
-
 

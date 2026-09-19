@@ -52,20 +52,20 @@ export default function ClientIdentityForm({ clientId, initial, scope = "agency"
  }
 
  return (
-    <div className="rounded-panel border border-border bg-card p-6 shadow-overlay relative overflow-hidden">
+    <div className="rounded-panel border border-line bg-surface p-6 shadow-overlay relative overflow-hidden">
       <div className="flex items-baseline justify-between mb-5">
         <div>
-          <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+          <h2 className="text-body font-semibold text-ink flex items-center gap-2">
             <Shield size={14} className="text-brand-strong" />
             <span>Tracked Brand Identity Signals</span>
           </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Primary domains and brand names used by AI agents to detect citations and answer mentions.</p>
+          <p className="text-caption text-ink-3 mt-0.5">Primary domains and brand names used by AI agents to detect citations and answer mentions.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <label className="block">
-          <span className="flex items-center gap-1.5 text-caption font-bold text-foreground mb-2">
+          <span className="flex items-center gap-1.5 text-caption font-semibold text-ink mb-2">
             <Tag size={12} className="text-brand-strong" /> Brand Name Anchor
           </span>
           <input
@@ -73,12 +73,12 @@ export default function ClientIdentityForm({ clientId, initial, scope = "agency"
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
             placeholder="e.g. Valgrow Labs"
-            className="w-full rounded-panel border border-border bg-background text-foreground px-4 py-3 text-sm focus:border-line-strong focus:outline-none placeholder:text-muted-foreground/70 transition-colors"
+            className="w-full rounded-panel border border-line bg-canvas text-ink px-4 py-3 text-body focus:border-line-strong focus:outline-none placeholder:text-ink-3/70 transition-colors"
           />
         </label>
 
         <label className="block">
-          <span className="flex items-center gap-1.5 text-caption font-bold text-foreground mb-2">
+          <span className="flex items-center gap-1.5 text-caption font-semibold text-ink mb-2">
             <Globe size={12} className="text-brand-strong" /> Primary Domain
           </span>
           <input
@@ -86,27 +86,27 @@ export default function ClientIdentityForm({ clientId, initial, scope = "agency"
             value={website}
             onChange={(e) => setWebsite(e.target.value)}
             placeholder="e.g. valgrowlabs.com"
-            className={`w-full rounded-panel border bg-background text-foreground px-4 py-3 text-sm focus:outline-none placeholder:text-muted-foreground/70 transition-colors ${
+            className={`w-full rounded-panel border bg-background text-foreground px-4 py-3 text-body focus:outline-none placeholder:text-muted-foreground/70 transition-colors ${
               website.trim() && !websiteOk
-                ? "border-rose-500 focus:border-rose-500"
-                : "border-border focus:border-line-strong"
+                ? "border-critical/30 focus:border-critical/30"
+                : "border-line focus:border-line-strong"
             }`}
           />
           {website.trim() && !websiteOk && (
-            <span className="mt-1.5 block text-xs font-mono text-rose-500">
+            <span className="mt-1.5 block text-caption font-mono text-critical">
               Invalid domain format. Use bare host like <span className="underline">example.com</span> without https://.
             </span>
           )}
         </label>
  </div>
 
- <div className="mt-6 pt-4 border-t border-white/[0.05] flex items-center justify-between flex-wrap gap-4">
- <p className="text-caption font-mono text-gray-500 max-w-md">
+ <div className="mt-6 pt-4 border-t border-line flex items-center justify-between flex-wrap gap-4">
+ <p className="text-caption text-ink-3 max-w-md">
  Updating your identity instantly recalculates brand mentions across all tracked keywords on your next scan.
  </p>
  <div className="flex items-center gap-3">
  {msg && (
- <span className={`text-xs font-mono font-bold ${msg.kind === "ok" ? "text-emerald-400" : "text-rose-400"}`}>
+ <span className={`text-caption font-mono font-semibold ${msg.kind === "ok" ? "text-positive" : "text-critical"}`}>
  {msg.text}
  </span>
  )}

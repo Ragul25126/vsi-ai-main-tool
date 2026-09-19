@@ -5,7 +5,7 @@ import Link from "next/link";
 import { getOpportunitySignal, groupByPriority, PRIORITY_ORDER } from "@/lib/opportunities";
 import type { KeywordOpportunity, Priority } from "@/lib/opportunities";
 import type { OpportunityBrief } from "@/app/api/opportunity-brief/route";
-import { Sparkles, ArrowRight, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ArrowRight, AlertTriangle, CheckCircle2, Lightbulb } from "lucide-react";
 
 interface RawResult {
  id: string;
@@ -49,32 +49,32 @@ function KeywordCard({
  const chips: { label: string; tone: "blue" | "green" | "yellow" | "gray" | "red" }[] = [];
  if (opp.rankPosition) chips.push({ label: `#${opp.rankPosition} Google`, tone: "blue" });
  else if (opp.trackType !== "geo") chips.push({ label: "Not ranking", tone: "gray" });
- if (opp.clientCited) chips.push({ label: "✓ Cited in AI", tone: "green" });
+ if (opp.clientCited) chips.push({ label: "Cited in AI", tone: "green" });
  else if (opp.mentionedInText) chips.push({ label: "~ Mentioned in AI", tone: "blue" });
- else if (opp.aioPresent) chips.push({ label: "✗ AI invisible", tone: "yellow" });
+ else if (opp.aioPresent) chips.push({ label: "Not in AI answers", tone: "yellow" });
  if (opp.citedDomains.length > 0 && !opp.clientCited)
  chips.push({ label: `${opp.citedDomains.length} competitors cited`, tone: "gray" });
 
  const toneClass: Record<"blue" | "green" | "yellow" | "gray" | "red", string> = {
- blue: "bg-cyan-500/10 text-cyan-400 border border-cyan-500/25 ",
- green: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 ",
+ blue: "bg-info/10 text-info border border-info/30 ",
+ green: "bg-positive/10 text-positive border border-positive/30 ",
  yellow: "bg-brand-soft text-brand-strong border border-line ",
- gray: "bg-card/[0.04] text-gray-400 border border-white/10",
- red: "bg-rose-500/10 text-rose-400 border border-rose-500/25 ",
+ gray: "bg-surface-2 text-ink-3 border border-line",
+ red: "bg-critical/10 text-critical border border-critical/30 ",
  };
 
  const priorityRailMap: Record<string, string> = {
- "text-rose-700": "bg-rose-500 ",
+ "text-critical": "bg-critical ",
  "text-attention": "bg-ink ",
- "text-cyan-700": "bg-cyan-500 ",
- "text-emerald-700": "bg-emerald-500 ",
- "text-gray-500": "bg-gray-600",
+ "text-info": "bg-info ",
+ "text-positive": "bg-positive ",
+ "text-ink-3": "bg-ink",
  };
 
  const railGlow = priorityRailMap[signal.priorityColor] ?? "bg-ink";
 
  const inner = (
- <div className="group rounded-panel border border-white/[0.08] hover:border-line bg-[#121215] p-5 transition-all duration-300 .5 shadow-overlay hover:shadow-overlay relative overflow-hidden">
+ <div className="group rounded-panel border border-line hover:border-line bg-surface p-5 transition-all duration-300 shadow-overlay hover:shadow-overlay relative overflow-hidden">
  <div className="absolute top-0 right-0 w-32 h-32 bg-brand-soft rounded-full blur-2xl pointer-events-none group-hover:bg-brand-soft transition-all" />
 
  <div className="flex items-start gap-4 relative z-10">
@@ -85,26 +85,26 @@ function KeywordCard({
  />
  <div className="flex-1 min-w-0">
  <div className="flex flex-wrap items-center gap-2.5 mb-2.5">
- <p className="text-base font-heading font-semibold text-white truncate group-hover:text-ink transition-colors">
+ <p className="text-base font-heading font-semibold text-ink truncate group-hover:text-ink transition-colors">
  {opp.keyword}
  </p>
  {briefReady && (
- <span className="rounded-full bg-cyan-500/10 px-2.5 py-0.5 text-caption font-mono font-bold text-cyan-400 border border-cyan-500/30 flex items-center gap-1">
- <Sparkles size={11} /> Brief Ready
+ <span className="rounded-control bg-info/10 px-2.5 py-0.5 text-caption font-mono font-semibold text-info border border-info/30 flex items-center gap-1">
+ <Lightbulb size={11} /> Brief Ready
  </span>
  )}
  </div>
  {chips.length > 0 && (
  <div className="flex flex-wrap gap-1.5">
  {chips.map((c, i) => (
- <span key={i} className={`rounded-lg px-2.5 py-1 text-xs font-mono ${toneClass[c.tone]}`}>
+ <span key={i} className={`rounded-control px-2.5 py-1 text-caption font-mono ${toneClass[c.tone]}`}>
  {c.label}
  </span>
  ))}
  </div>
  )}
  </div>
- <div className="shrink-0 flex items-center gap-1.5 text-xs font-mono font-bold text-gray-500 transition-all duration-300 group-hover:text-ink group-hover:translate-x-1">
+ <div className="shrink-0 flex items-center gap-1.5 text-caption font-semibold text-ink-3 transition-all duration-300 group-hover:text-ink group-hover:translate-x-1">
  <span>Inspect</span>
  <ArrowRight size={14} />
  </div>
@@ -120,10 +120,10 @@ export default function OpportunityPanel({ results, clientId, briefsByKeywordId 
 
  if (results.length === 0) {
  return (
- <div className="rounded-panel border border-dashed border-white/15 bg-[#121215] p-12 text-center shadow-overlay">
- <Sparkles size={32} className="text-brand-strong mx-auto mb-3 animate-pulse" />
- <p className="text-sm font-heading font-bold text-white">No Diagnostic Results Yet</p>
- <p className="text-xs text-gray-400 mt-1">Run the AI visibility scan above to generate prioritized keywords and competitor opportunities.</p>
+ <div className="rounded-panel border border-dashed border-line bg-surface p-12 text-center shadow-overlay">
+ <Lightbulb size={32} className="text-brand-strong mx-auto mb-3 animate-pulse" />
+ <p className="text-body font-heading font-semibold text-ink">No Diagnostic Results Yet</p>
+ <p className="text-caption text-ink-3 mt-1">Run the AI visibility scan above to generate prioritized keywords and competitor opportunities.</p>
  </div>
  );
  }
@@ -148,11 +148,11 @@ export default function OpportunityPanel({ results, clientId, briefsByKeywordId 
  const grouped = groupByPriority(opportunities);
 
  const priorityMeta: Record<Priority, { label: string; count: number; color: string; glow: string }> = {
- critical: { label: "Critical", count: grouped.critical.length, color: "text-rose-400", glow: "from-rose-500 to-red-600" },
- high: { label: "High", count: grouped.high.length, color: "text-brand-strong", glow: "from-amber-500 to-orange-500" },
- medium: { label: "Medium", count: grouped.medium.length, color: "text-cyan-400", glow: "from-cyan-500 to-blue-500" },
- protect: { label: "Winning", count: grouped.protect.length, color: "text-emerald-400", glow: "from-emerald-500 to-teal-500" },
- info: { label: "Info", count: grouped.info.length, color: "text-gray-400", glow: "from-gray-500 to-gray-600" },
+ critical: { label: "Critical", count: grouped.critical.length, color: "text-critical", glow: " " },
+ high: { label: "High", count: grouped.high.length, color: "text-brand-strong", glow: " " },
+ medium: { label: "Medium", count: grouped.medium.length, color: "text-info", glow: " " },
+ protect: { label: "Winning", count: grouped.protect.length, color: "text-positive", glow: " to-teal-500" },
+ info: { label: "Info", count: grouped.info.length, color: "text-ink-3", glow: " " },
  };
 
  const visiblePriorities = PRIORITY_ORDER.filter(
@@ -162,13 +162,13 @@ export default function OpportunityPanel({ results, clientId, briefsByKeywordId 
  return (
  <div className="space-y-6">
  {/* Extej Filter Tabs Bar */}
- <div className="flex items-center gap-2 flex-wrap bg-[#121215] border border-white/[0.08] p-1.5 rounded-panel w-fit">
+ <div className="flex items-center gap-2 flex-wrap bg-surface border border-line p-1.5 rounded-panel w-fit">
  <button
  onClick={() => setFilter("all")}
- className={`rounded-panel px-4 py-1.5 text-xs font-mono font-bold transition-all ${
+ className={`rounded-panel px-4 py-1.5 text-caption font-mono font-semibold transition-all ${
  filter === "all"
- ? "bg-surface-2 text-black  scale-105"
- : "text-gray-400 hover:text-white hover:bg-card/5"
+ ? "bg-surface-2 text-ink scale-105"
+ : "text-ink-3 hover:text-ink hover:bg-surface-2"
  }`}
  >
  ALL ({opportunities.length})
@@ -179,14 +179,14 @@ export default function OpportunityPanel({ results, clientId, briefsByKeywordId 
  <button
  key={p}
  onClick={() => setFilter(p)}
- className={`rounded-panel px-4 py-1.5 text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+ className={`rounded-panel px-4 py-1.5 text-caption font-mono font-semibold transition-all flex items-center gap-1.5 ${
  active
- ? `bg-surface-2 ${priorityMeta[p].glow} text-black  scale-105`
- : "text-gray-400 hover:text-white hover:bg-card/5"
+ ? `bg-surface-2 ${priorityMeta[p].glow} text-ink scale-105`
+ : "text-ink-3 hover:text-ink hover:bg-surface-2"
  }`}
  >
- <span className={active ? "text-black font-semibold" : priorityMeta[p].color}>{priorityMeta[p].label.toUpperCase()}</span>
- <span className={active ? "text-black/80" : "text-gray-500 font-normal"}>({priorityMeta[p].count})</span>
+ <span className={active ? "text-ink font-semibold" : priorityMeta[p].color}>{priorityMeta[p].label.toUpperCase()}</span>
+ <span className={active ? "text-ink/80" : "text-ink-3 font-normal"}>({priorityMeta[p].count})</span>
  </button>
  );
  })}
@@ -196,13 +196,13 @@ export default function OpportunityPanel({ results, clientId, briefsByKeywordId 
  {visiblePriorities.map((priority) => (
  <div key={priority} className="space-y-3">
  <div className="flex items-center gap-3 mb-4 pt-2">
- <h3 className={`text-xs font-heading font-semibold   ${priorityMeta[priority].color} flex items-center gap-1.5`}>
+ <h3 className={`text-caption font-heading font-semibold ${priorityMeta[priority].color} flex items-center gap-1.5`}>
  <span className="w-2 h-2 rounded-full bg-current" />
  <span>{priorityMeta[priority].label} PRIORITY - {grouped[priority].length} KEYWORD{grouped[priority].length !== 1 ? "S" : ""}</span>
  </h3>
  {priority === "critical" && (
- <span className="rounded-full bg-rose-500/10 border border-rose-500/30 px-3 py-0.5 text-caption font-mono font-bold text-rose-300 flex items-center gap-1">
- <AlertTriangle size={12} className="text-rose-400" /> Act Now · AI Visibility Deficit
+ <span className="rounded-control bg-critical/10 border border-critical/30 px-3 py-0.5 text-caption font-mono font-semibold text-critical flex items-center gap-1">
+ <AlertTriangle size={12} className="text-critical" /> Act Now · AI Visibility Deficit
  </span>
  )}
  </div>

@@ -13,6 +13,7 @@ import { SetupPanel } from "@/components/intro/SetupPanel";
 import { INTROS } from "@/components/intro/intros";
 import { cn } from "@/lib/utils";
 import NewTaskButton from "./NewTaskButton";
+import { Stat, StatStrip } from "@/components/ui/Metrics";
 
 export interface BoardTask {
   id: string;
@@ -163,25 +164,33 @@ export default function TasksBoard({ data }: { data: TasksBoardData }) {
     <PageContainer>
       {header}
 
-      <p className="text-body text-ink-2">
-        {byStatus.todo.length + byStatus.in_progress.length} open, {byStatus.done.length} done
-        {verified > 0 ? `, ${verified} confirmed by a re-check` : ""}.
-      </p>
+      <StatStrip>
+        <Stat label="Open" value={byStatus.todo.length + byStatus.in_progress.length} sub={`${byStatus.in_progress.length} in progress`} />
+        <Stat label="Done" value={byStatus.done.length} />
+        <Stat label="Confirmed by a re-check" value={verified} sub="A later check confirmed the result" />
+      </StatStrip>
       {error && <Notice tone="critical" title={error} />}
 
       <div className="grid gap-8 lg:grid-cols-3 lg:gap-6">
         {COLUMNS.map((col) => (
           <section key={col.status} aria-label={col.title} className="min-w-0">
-            <h2 className="mb-3 flex items-center justify-between border-b border-line pb-2 text-support font-medium text-ink">
+            <h2
+              className={cn(
+                "mb-3 flex items-center justify-between border-t-2 pt-3 text-body font-semibold text-ink",
+                col.status === "in_progress" ? "border-brand" : col.status === "done" ? "border-positive" : "border-line-strong",
+              )}
+            >
               {col.title}
-              <span className="tabular text-ink-3">{byStatus[col.status].length}</span>
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-surface-2 px-1.5 text-caption font-medium tabular text-ink-2">
+                {byStatus[col.status].length}
+              </span>
             </h2>
             {byStatus[col.status].length === 0 ? (
               <p className="text-support text-ink-3">{col.status === "done" ? "Finished tasks appear here." : "Nothing here."}</p>
             ) : (
               <ul className="space-y-2">
                 {byStatus[col.status].map((t) => (
-                  <li key={t.id} className={cn("rounded-panel border border-line bg-surface", pending === t.id && "opacity-60")}>
+                  <li key={t.id} className={cn("rounded-panel border border-line bg-surface transition-colors hover:border-line-strong", pending === t.id && "opacity-60")}>
                     <div className="space-y-2 p-3.5">
                       <p className="text-body font-medium text-ink">{t.title}</p>
                       <p className="text-caption text-ink-3">

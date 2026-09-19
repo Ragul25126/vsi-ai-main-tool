@@ -1,7 +1,9 @@
 "use client";
  
-import { SunIcon as Sunburst, AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
+import { OverviewScene } from "@/components/illustrations";
 
 interface FullScreenSignupProps {
   onLoginSubmit?: (email: string, password: string) => Promise<void> | void;
@@ -65,86 +67,43 @@ export const FullScreenSignup = ({
     }
   };
  
+  const field = (invalid: boolean) =>
+    `h-11 w-full rounded-control border bg-surface px-3.5 text-[0.9375rem] text-ink placeholder:text-ink-3 transition-colors focus:outline-none ${
+      invalid ? "border-critical focus:border-critical" : "border-line-strong focus:border-brand"
+    }`;
+
   return (
-    <div className="min-h-screen bg-white text-slate-900 flex items-center justify-center overflow-hidden p-4 sm:p-6 lg:p-12 font-sans selection:bg-orange-500 selection:text-white">
-      {/* Outer Card with subtle shadow and border */}
-      <div className="w-full relative max-w-5xl overflow-hidden flex flex-col md:flex-row rounded-3xl border border-slate-200/90 shadow-2xl bg-white min-h-[540px]">
-        
-        {/* Left Side: Dark Hero Image Panel with Glowing Orange Pillars & Dashboard Copy */}
-        <div className="bg-black text-white p-8 md:p-12 md:w-1/2 relative rounded-l-3xl md:rounded-r-none rounded-t-3xl md:rounded-bl-3xl overflow-hidden flex flex-col justify-between z-10 min-h-[460px]">
-          {/* Top Gradient Overlay */}
-          <div className="w-full h-full z-2 absolute inset-0 bg-gradient-to-t from-transparent via-black/40 to-black/80 pointer-events-none"></div>
-          
-          {/* Vertical Glowing Pillar Strips matching original image design */}
-          <div className="flex absolute inset-0 z-2 overflow-hidden backdrop-blur-2xl pointer-events-none">
-            <div className="h-[40rem] z-2 w-[4rem] bg-gradient-to-r from-transparent via-black via-[69%] to-white/20 opacity-30 overflow-hidden"></div>
-            <div className="h-[40rem] z-2 w-[4rem] bg-gradient-to-r from-transparent via-black via-[69%] to-white/20 opacity-30 overflow-hidden"></div>
-            <div className="h-[40rem] z-2 w-[4rem] bg-gradient-to-r from-transparent via-black via-[69%] to-white/20 opacity-30 overflow-hidden"></div>
-            <div className="h-[40rem] z-2 w-[4rem] bg-gradient-to-r from-transparent via-black via-[69%] to-white/20 opacity-30 overflow-hidden"></div>
-            <div className="h-[40rem] z-2 w-[4rem] bg-gradient-to-r from-transparent via-black via-[69%] to-white/20 opacity-30 overflow-hidden"></div>
-            <div className="h-[40rem] z-2 w-[4rem] bg-gradient-to-r from-transparent via-black via-[69%] to-white/20 opacity-30 overflow-hidden"></div>
-          </div>
-          
-          {/* Bottom Glowing Orbs */}
-          <div className="w-[16rem] h-[16rem] bg-orange-500/90 blur-xl absolute z-1 rounded-full -bottom-10 -left-10 pointer-events-none"></div>
-          <div className="w-[10rem] h-[6rem] bg-white/40 blur-lg absolute z-1 rounded-full bottom-0 left-4 pointer-events-none"></div>
-          <div className="w-[8rem] h-[5rem] bg-orange-400/50 blur-md absolute z-1 rounded-full bottom-2 left-16 pointer-events-none"></div>
- 
-          {/* Dashboard Platform Content */}
-          <div className="relative z-10 my-auto flex flex-col gap-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs font-semibold tracking-wide w-fit">
-              VSI AI Suite • GEO Platform
-            </div>
-            <h1 className="text-2xl md:text-4xl font-extrabold text-white leading-tight tracking-tight">
-              AI Search Intelligence & GEO platform for enterprise brands.
-            </h1>
-            <p className="text-zinc-300 text-sm md:text-base leading-relaxed font-normal mt-1">
-              Monitor AI search mentions, citation share of voice, and brand visibility across ChatGPT, Perplexity, Gemini & Claude.
-            </p>
+    <div className="grid min-h-screen w-full bg-canvas font-sans text-ink lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+      {/* Sign in */}
+      <div className="flex items-center justify-center px-5 py-10 sm:px-10">
+        <div className="w-full max-w-[400px] animate-rise-in">
+          <div className="flex items-center gap-2.5">
+            <Image src="/vg-logo.png" alt="" width={32} height={32} className="rounded-md ring-1 ring-line" priority />
+            <span>
+              <span className="block text-[0.9375rem] font-semibold leading-5 tracking-[-0.01em] text-ink">VSI</span>
+              <span className="block text-[0.6875rem] font-medium uppercase leading-4 tracking-[0.08em] text-ink-3">Search Intelligence</span>
+            </span>
           </div>
 
-          <div className="relative z-10 text-xs text-zinc-400 font-medium">
-            © ValGrow Labs • Generative Engine Optimization
-          </div>
-        </div>
- 
-        {/* Right Side: Form Panel with Clean White Background */}
-        <div className="p-8 md:p-12 md:w-1/2 flex flex-col justify-center bg-white text-slate-900 z-10">
-          <div className="flex flex-col items-start mb-6">
-            <div className="text-orange-500 mb-3 drop-shadow-sm">
-              <Sunburst className="h-10 w-10 stroke-[2]" />
-            </div>
-            <h2 className="text-3xl font-bold mb-1.5 tracking-tight text-slate-900">
-              Get Started
-            </h2>
-            <p className="text-left text-slate-500 text-sm">
-              Welcome to VSI AI Suite — Sign in to your dashboard
-            </p>
-          </div>
+          <h1 className="mt-10 text-[1.75rem] font-semibold leading-9 tracking-[-0.02em] text-ink">Sign in</h1>
+          <p className="mt-2 text-body text-ink-2 md:text-[0.9375rem] md:leading-6">Use the email and password for your VSI account.</p>
 
-          {/* Auth Error Banner */}
           {authError && (
-            <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+            <div role="alert" className="mt-6 flex items-start gap-2.5 rounded-control bg-critical-soft px-3.5 py-3 text-support text-critical">
+              <AlertCircle className="mt-px h-4 w-4 shrink-0" aria-hidden />
               <span>{authError}</span>
             </div>
           )}
- 
-          <form
-            className="flex flex-col gap-4"
-            onSubmit={handleSubmit}
-            noValidate
-          >
+
+          <form className="mt-7 flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
             <div>
-              <label htmlFor="email" className="block text-sm mb-1.5 font-semibold text-slate-700">
-                Your email
+              <label htmlFor="email" className="mb-1.5 block text-support font-medium text-ink">
+                Email
               </label>
               <input
                 type="email"
                 id="email"
-                className={`text-sm font-medium w-full py-2.5 px-3.5 border rounded-xl focus:outline-none focus:ring-2 bg-slate-50 text-slate-900 focus:bg-white focus:ring-orange-500 transition-all ${
-                  emailError ? "border-red-500 focus:ring-red-500" : "border-slate-300"
-                }`}
+                className={field(!!emailError)}
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
@@ -154,25 +113,24 @@ export const FullScreenSignup = ({
                 aria-invalid={!!emailError}
                 aria-describedby="email-error"
                 autoComplete="email"
+                placeholder="you@company.com"
               />
               {emailError && (
-                <p id="email-error" className="text-red-500 text-xs mt-1 font-medium">
+                <p id="email-error" className="mt-1.5 text-caption text-critical">
                   {emailError}
                 </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm mb-1.5 font-semibold text-slate-700">
-                Create new password
+              <label htmlFor="password" className="mb-1.5 block text-support font-medium text-ink">
+                Password
               </label>
               <div className="relative flex items-center">
                 <input
                   type={showPassword ? "text" : "password"}
                   id="password"
-                  className={`text-sm font-medium w-full py-2.5 pl-3.5 pr-10 border rounded-xl focus:outline-none focus:ring-2 bg-slate-50 text-slate-900 focus:bg-white focus:ring-orange-500 transition-all ${
-                    passwordError ? "border-red-500 focus:ring-red-500" : "border-slate-300"
-                  }`}
+                  className={`${field(!!passwordError)} pr-11`}
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -186,45 +144,52 @@ export const FullScreenSignup = ({
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 text-slate-400 hover:text-slate-600 focus:text-slate-600 p-1 rounded-lg transition-colors focus:outline-none cursor-pointer"
+                  className="absolute right-2 rounded-control p-1.5 text-ink-3 transition-colors hover:text-ink"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
+                  {showPassword ? <EyeOff className="h-[18px] w-[18px]" aria-hidden /> : <Eye className="h-[18px] w-[18px]" aria-hidden />}
                 </button>
               </div>
               {passwordError && (
-                <p id="password-error" className="text-red-500 text-xs mt-1 font-medium">
+                <p id="password-error" className="mt-1.5 text-caption text-critical">
                   {passwordError}
                 </p>
               )}
             </div>
- 
+
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-orange-500 hover:bg-orange-600 active:scale-[0.99] text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md shadow-orange-500/20 disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2 mt-2"
+              className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-control bg-ink text-[0.9375rem] font-medium text-white transition-colors hover:bg-ink-2 active:translate-y-px disabled:pointer-events-none disabled:opacity-60"
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Authenticating...</span>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                  <span>Signing in</span>
                 </>
               ) : (
-                <span>Sign In to Dashboard</span>
+                <span>Sign in</span>
               )}
             </button>
- 
-            <div className="text-center text-slate-500 text-sm mt-1">
-              Already have account?{" "}
-              <a href="/login" className="text-orange-600 font-semibold hover:underline">
-                Login
-              </a>
-            </div>
           </form>
+
+          <p className="mt-8 text-caption text-ink-3">Access is by invitation. Ask your VSI contact if you need an account.</p>
+        </div>
+      </div>
+
+      {/* What VSI is, shown with the product's own drawing. Hidden on small screens so sign-in stays first. */}
+      <div className="hidden border-l border-line bg-surface lg:flex lg:flex-col lg:justify-center lg:px-14 xl:px-20">
+        <div className="mx-auto w-full max-w-[520px]">
+          <p className="flex items-center gap-2.5 text-caption font-semibold uppercase tracking-[0.14em] text-brand-strong">
+            <span className="h-px w-6 bg-brand" aria-hidden />
+            VSI
+          </p>
+          <p className="mt-4 text-balance text-[1.75rem] font-semibold leading-9 tracking-[-0.02em] text-ink">
+            Understand how your website appears across search and AI.
+          </p>
+          <div className="mt-8 rounded-panel border border-line bg-surface bg-[radial-gradient(var(--line)_1px,transparent_1px)] px-6 py-5 text-ink-2 [background-size:18px_18px]">
+            <OverviewScene />
+          </div>
         </div>
       </div>
     </div>

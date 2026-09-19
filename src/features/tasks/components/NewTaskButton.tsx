@@ -98,7 +98,7 @@ export default function NewTaskButton({
  {open && (
  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/30" onClick={() => !saving && setOpen(false)}>
  <div
- className="w-full max-w-lg rounded-panel bg-card shadow-overlay border border-line overflow-hidden"
+ className="w-full max-w-lg rounded-panel bg-surface shadow-overlay border border-line overflow-hidden"
  onClick={(e) => e.stopPropagation()}
  >
  <div className="px-5 py-3.5 border-b border-line flex items-center justify-between">
@@ -116,7 +116,7 @@ export default function NewTaskButton({
  <select
  value={selectedClientId}
  onChange={(e) => setSelectedClientId(e.target.value)}
- className="w-full rounded-control border border-line bg-card px-2.5 py-1.5 text-sm focus:border-line-strong focus:outline-none"
+ className="w-full rounded-control border border-line bg-surface px-2.5 py-1.5 text-body focus:border-line-strong focus:outline-none"
  >
  {clientOptions.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
  </select>
@@ -128,20 +128,20 @@ export default function NewTaskButton({
  value={title}
  onChange={(e) => setTitle(e.target.value)}
  placeholder="For example: Fix the broken links on the About page"
- className="w-full rounded-control border border-line px-2.5 py-1.5 text-sm focus:border-line-strong focus:outline-none"
+ className="w-full rounded-control border border-line px-2.5 py-1.5 text-body focus:border-line-strong focus:outline-none"
  />
  </Field>
 
  <div className="grid grid-cols-2 gap-3">
  <Field label="Group">
  <select value={group} onChange={(e) => setGroup(e.target.value as TaskGroup)}
- className="w-full rounded-control border border-line bg-card px-2.5 py-1.5 text-sm">
+ className="w-full rounded-control border border-line bg-surface px-2.5 py-1.5 text-body">
  {GROUPS.map((g) => <option key={g} value={g}>{g}</option>)}
  </select>
  </Field>
  <Field label="Owner">
  <select value={owner} onChange={(e) => setOwner(e.target.value as TaskOwner | "")}
- className="w-full rounded-control border border-line bg-card px-2.5 py-1.5 text-sm">
+ className="w-full rounded-control border border-line bg-surface px-2.5 py-1.5 text-body">
  <option value="">Not set</option>
  {OWNERS.map((o) => <option key={o} value={o}>{o}</option>)}
  </select>
@@ -151,21 +151,21 @@ export default function NewTaskButton({
  <div className="grid grid-cols-3 gap-3">
  <Field label="Effort">
  <select value={effort} onChange={(e) => setEffort(e.target.value as TaskEffort | "")}
- className="w-full rounded-control border border-line bg-card px-2.5 py-1.5 text-sm">
+ className="w-full rounded-control border border-line bg-surface px-2.5 py-1.5 text-body">
  <option value="">Not set</option>
  {EFFORTS.map((x) => <option key={x} value={x}>{x}</option>)}
  </select>
  </Field>
  <Field label="Impact">
  <select value={impact} onChange={(e) => setImpact(e.target.value as TaskImpact | "")}
- className="w-full rounded-control border border-line bg-card px-2.5 py-1.5 text-sm">
+ className="w-full rounded-control border border-line bg-surface px-2.5 py-1.5 text-body">
  <option value="">Not set</option>
  {IMPACTS.map((x) => <option key={x} value={x}>{x}</option>)}
  </select>
  </Field>
  <Field label="Due date">
  <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)}
- className="w-full rounded-control border border-line px-2.5 py-1.5 text-sm" />
+ className="w-full rounded-control border border-line px-2.5 py-1.5 text-body" />
  </Field>
  </div>
 
@@ -175,7 +175,7 @@ export default function NewTaskButton({
  onChange={(e) => setDescription(e.target.value)}
  rows={3}
  placeholder="What needs doing and why."
- className="w-full rounded-control border border-line px-2.5 py-1.5 text-sm focus:border-line-strong focus:outline-none resize-none"
+ className="w-full rounded-control border border-line px-2.5 py-1.5 text-body focus:border-line-strong focus:outline-none resize-none"
  />
  </Field>
 
@@ -185,11 +185,11 @@ export default function NewTaskButton({
  onChange={(e) => setAcceptanceText(e.target.value)}
  rows={4}
  placeholder={"Client appears in top 3 of the listicle\nArticle indexed in Bing Webmaster\nFAQ section answers 3 adjacent queries"}
- className="w-full rounded-control border border-line px-2.5 py-1.5 text-xs focus:border-line-strong focus:outline-none resize-none"
+ className="w-full rounded-control border border-line px-2.5 py-1.5 text-caption focus:border-line-strong focus:outline-none resize-none"
  />
  </Field>
 
- {err && <p className="text-xs text-critical bg-critical-soft rounded-control px-3 py-2">{err}</p>}
+ {err && <p className="text-caption text-critical bg-critical-soft rounded-control px-3 py-2">{err}</p>}
  </div>
 
  <div className="px-5 py-3 border-t border-line bg-surface-2 flex items-center justify-end gap-2">

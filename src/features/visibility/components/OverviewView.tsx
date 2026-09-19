@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { PageContainer, PageHeader, Section, TextLink } from "@/components/ui/Page";
+import { Eyebrow, PageContainer, PageHeader, Section, TextLink } from "@/components/ui/Page";
+import { ButtonLink } from "@/components/ui/Button";
 import { Notice, StatusIcon } from "@/components/ui/Status";
 import { SetupChecklist, type SetupItem } from "@/components/intro/SetupPanel";
 import { Welcome } from "@/components/intro/Welcome";
@@ -119,7 +120,11 @@ export default function OverviewView({ data }: { data: OverviewData }) {
       })}
 
       {!setupDone && (
-        <Section title="Getting started" description="What has been set up for this project so far. Each step unlocks more of VSI.">
+        <Section
+          title="Getting started"
+          description="What has been set up for this project so far. Each step unlocks more of VSI."
+          aside={<SetupProgress done={setup.filter((x) => x.state === "done").length} total={setup.length} />}
+        >
           <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
             <SetupChecklist items={setup} />
             <OverviewNextStep projectId={project.id} activeSearches={data.activeSearches} anyChecks={anyChecks} />
@@ -127,17 +132,71 @@ export default function OverviewView({ data }: { data: OverviewData }) {
         </Section>
       )}
 
-      {/* Only claim "nothing needs attention" once something has actually been checked. */}
-      {(anyChecks || data.website.checkedAt) && <p className="max-w-[60ch] text-title font-medium text-ink">{headline(data)}</p>}
-
       {/* At a glance and next actions: shown once something has been checked; before that, "Getting started" says it all. */}
       {hasAnyResult && (
       <>
+      {/* The lead: the conclusion in words, next to the first things to do. Only once something has been checked. */}
+      <section aria-label="What needs attention" className="grid overflow-hidden rounded-panel border border-line bg-surface lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+        <div className="flex flex-col justify-between gap-6 p-6 md:p-8">
+          <div>
+            <Eyebrow rule>What needs attention</Eyebrow>
+            <p className="mt-4 text-balance text-[1.5rem] font-semibold leading-8 tracking-[-0.015em] text-ink md:text-[1.625rem] md:leading-9">{headline(data)}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+            <ButtonLink href="/dashboard/next-actions" variant="primary">
+              {data.findingCount > 0 ? `See all ${data.findingCount} actions` : "Next Actions"}
+              <ArrowRight size={14} strokeWidth={2} aria-hidden />
+            </ButtonLink>
+            {data.tasks && (
+              <p className="text-support text-ink-3">
+                <span className="font-medium tabular text-ink-2">{data.tasks.todo + data.tasks.inProgress}</span> open tasks
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="border-t border-line lg:border-l lg:border-t-0">
+          <p className="px-5 pb-1 pt-5 text-caption font-medium text-ink-3 md:px-6">Do these next</p>
+          {data.topFindings.length === 0 ? (
+            <p className="px-5 pb-6 pt-2 text-body text-ink-2 md:px-6">
+              {data.website.checkedAt || data.ai.checkedAt || data.search.checkedAt
+                ? "Nothing to fix from your latest checks. VSI will list new findings here after each check."
+                : "Findings from your site audit, AI checks and rankings appear here after your first checks."}
+            </p>
+          ) : (
+            <ol className="divide-y divide-line">
+              {data.topFindings.map((f, i) => (
+                <li key={f.key}>
+                  <Link
+                    href={`/dashboard/next-actions?open=${encodeURIComponent(f.key)}`}
+                    className="group flex items-start gap-3.5 px-5 py-4 transition-colors hover:bg-surface-2 md:px-6"
+                  >
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-soft font-mono text-caption font-medium text-brand-strong">
+                      {i + 1}
+                    </span>
+                    <span className="min-w-0 flex-1 space-y-0.5">
+                      <span className="block text-body font-medium text-ink">{f.title}</span>
+                      <span className="block text-support text-ink-2">{f.whatWeFound}</span>
+                      <span className="flex flex-wrap items-center gap-x-1.5 pt-0.5 text-caption text-ink-3">
+                        <StatusIcon tone={f.tone} size={13} />
+                        {f.sourceLabel}
+                        {f.hasTask ? " · Task already created" : ""}
+                      </span>
+                    </span>
+                    <ArrowRight size={15} strokeWidth={1.75} className="mt-1 shrink-0 text-line-strong transition-colors group-hover:text-ink-2" aria-hidden />
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      </section>
+
       <section aria-label="At a glance" className="grid grid-cols-1 border-y border-line sm:grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-line">
         <Glance
           label="Website health"
           value={data.website.score !== null ? `${data.website.score}` : null}
           suffix="/ 100"
+          meter={data.website.score}
           empty="Not audited yet"
           sub={data.website.error ?? (data.website.score !== null ? `${data.website.problems} ${data.website.problems === 1 ? "thing" : "things"} to fix or improve` : "Run a site audit to get your score")}
           href="/dashboard/check"
@@ -147,6 +206,7 @@ export default function OverviewView({ data }: { data: OverviewData }) {
           label="Google first page"
           value={data.search.tracked > 0 ? `${data.search.top10}` : null}
           suffix={data.search.tracked > 0 ? `of ${data.search.tracked}` : undefined}
+          meter={data.search.tracked > 0 ? Math.round((data.search.top10 / data.search.tracked) * 100) : null}
           empty="Not checked yet"
           sub={
             data.search.error ??
@@ -162,6 +222,7 @@ export default function OverviewView({ data }: { data: OverviewData }) {
         <Glance
           label="AI visibility"
           value={data.ai.visibility !== null ? `${data.ai.visibility}%` : null}
+          meter={data.ai.visibility}
           empty="Not checked yet"
           sub={data.ai.error ?? (data.ai.answered > 0 ? `Mentioned in ${data.ai.appears} of ${data.ai.answered} AI answers` : "Run an AI check to see if AI mentions you")}
           href="/dashboard/geo"
@@ -177,40 +238,6 @@ export default function OverviewView({ data }: { data: OverviewData }) {
           linkLabel="Tasks"
         />
       </section>
-
-      {/* Next actions */}
-      <Section
-        title="Do these next"
-        description="The most important findings from every part of VSI."
-        action={data.findingCount > 3 ? { label: `All ${data.findingCount} actions`, href: "/dashboard/next-actions" } : undefined}
-      >
-        {data.topFindings.length === 0 ? (
-          <p className="text-body text-ink-2">
-            {data.website.checkedAt || data.ai.checkedAt || data.search.checkedAt
-              ? "Nothing to fix from your latest checks. VSI will list new findings here after each check."
-              : "Findings from your site audit, AI checks and rankings appear here after your first checks."}
-          </p>
-        ) : (
-          <ol className="divide-y divide-line rounded-panel border border-line bg-surface">
-            {data.topFindings.map((f, i) => (
-              <li key={f.key}>
-                <Link href={`/dashboard/next-actions?open=${encodeURIComponent(f.key)}`} className="flex items-start gap-3 px-4 py-4 hover:bg-surface-2">
-                  <span className="mt-0.5 w-5 shrink-0 text-support font-semibold tabular text-ink-3">{i + 1}</span>
-                  <span className="min-w-0 flex-1 space-y-0.5">
-                    <span className="block text-body font-medium text-ink">{f.title}</span>
-                    <span className="block text-support text-ink-2">{f.whatWeFound}</span>
-                    <span className="block text-caption text-ink-3">
-                      {f.sourceLabel}
-                      {f.hasTask ? " · Task already created" : ""}
-                    </span>
-                  </span>
-                  <StatusIcon tone={f.tone} size={18} />
-                </Link>
-              </li>
-            ))}
-          </ol>
-        )}
-      </Section>
 
       </>
       )}
@@ -228,6 +255,9 @@ export default function OverviewView({ data }: { data: OverviewData }) {
 
       {(data.ai.topCompetitor || data.competitors.domains.length > 0) && (
         <Section title="Competitors" action={{ label: "Competitors", href: "/dashboard/competitors" }}>
+          {data.ai.topCompetitor && (
+            <CitationBars you={data.ai.yourCitations} them={data.ai.topCompetitor.answers} themLabel={data.ai.topCompetitor.domain} youLabel={project.domain ?? project.name} />
+          )}
           {data.ai.topCompetitor && (
             <p className="max-w-[65ch] text-body text-ink-2">
               {data.ai.topCompetitor.answers > data.ai.yourCitations ? (
@@ -264,6 +294,7 @@ function Glance({
   label,
   value,
   suffix,
+  meter,
   empty,
   sub,
   href,
@@ -272,41 +303,101 @@ function Glance({
   label: string;
   value: string | null;
   suffix?: string;
+  /** 0 to 100, from real data. Draws a thin gold meter under the number. */
+  meter?: number | null;
   empty: string;
   sub: string;
   href: string;
   linkLabel: string;
 }) {
   return (
-    <div className="flex flex-col gap-1 border-b border-line py-5 last:border-b-0 sm:px-5 sm:[&:nth-child(odd)]:pl-0 lg:border-b-0 lg:first:pl-0">
+    <div className="flex flex-col border-b border-line py-6 last:border-b-0 sm:px-6 sm:max-lg:[&:nth-child(odd)]:pl-0 sm:max-lg:[&:nth-last-child(-n+2)]:border-b-0 lg:border-b-0 lg:first:pl-0 lg:last:pr-0">
       <p className="text-caption font-medium text-ink-3">{label}</p>
       {value !== null ? (
-        <p className="flex items-baseline gap-1.5">
-          <span className="text-2xl font-semibold tabular text-ink">{value}</span>
+        <p className="mt-2 flex items-baseline gap-1.5">
+          <span className="text-[2rem] font-semibold leading-9 tracking-[-0.02em] tabular text-ink">{value}</span>
           {suffix && <span className="text-support text-ink-3">{suffix}</span>}
         </p>
       ) : (
-        <p className="text-body font-medium text-ink-3">{empty}</p>
+        <p className="mt-2 text-body font-medium leading-9 text-ink-3">{empty}</p>
       )}
-      <p className="text-support text-ink-3">{sub}</p>
-      <Link href={href} className="mt-1 inline-flex items-center gap-1 text-support font-medium text-ink-2 hover:text-ink">
+      <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-surface-2" aria-hidden>
+        {typeof meter === "number" && (
+          <div className="h-full origin-left animate-line-grow rounded-full bg-brand" style={{ width: `${Math.max(0, Math.min(100, meter))}%` }} />
+        )}
+      </div>
+      <p className="mt-3 flex-1 text-support text-ink-2">{sub}</p>
+      <Link href={href} className="group mt-3 inline-flex items-center gap-1 self-start text-support font-medium text-ink-2 hover:text-ink">
         {linkLabel}
-        <ArrowRight size={13} strokeWidth={1.75} aria-hidden />
+        <ArrowRight size={13} strokeWidth={1.75} className="transition-transform group-hover:translate-x-0.5" aria-hidden />
       </Link>
     </div>
   );
 }
 
 function TrendBlock({ title, points, format, empty }: { title: string; points: TrendPoint[]; format: (v: number) => string; empty: string }) {
+  const last = points.length >= 2 ? points[points.length - 1] : null;
+  const change = last ? last.value - points[0].value : 0;
   return (
-    <div className="border-t border-line pt-4">
-      <p className="mb-3 text-support font-medium text-ink">{title}</p>
+    <div className="rounded-panel border border-line bg-surface p-5">
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <p className="text-support font-medium text-ink">{title}</p>
+        {last && (
+          <p className="text-support text-ink-3">
+            <span className="text-body font-semibold tabular text-ink">{format(last.value)}</span>
+            {change !== 0 && (
+              <span className={change > 0 ? "ml-1.5 text-positive" : "ml-1.5 text-attention"}>
+                {change > 0 ? "+" : "-"}
+                {Math.abs(change)} since {points[0].label}
+              </span>
+            )}
+          </p>
+        )}
+      </div>
       {points.length >= 2 ? (
         <TrendLine points={points} format={format} ariaLabel={`${title} over time`} />
       ) : (
-        <p className="text-support text-ink-3">{empty}</p>
+        <p className="py-6 text-support text-ink-3">{empty}</p>
       )}
     </div>
   );
 }
 
+/** How much of the real setup list is done. Counts only, from project state. */
+function SetupProgress({ done, total }: { done: number; total: number }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="h-1.5 w-28 overflow-hidden rounded-full bg-surface-2" role="img" aria-label={`${done} of ${total} steps done`}>
+        <div className="h-full origin-left animate-line-grow rounded-full bg-brand" style={{ width: `${(done / total) * 100}%` }} />
+      </div>
+      <p className="text-support text-ink-3">
+        <span className="font-semibold tabular text-ink">{done}</span> of {total} done
+      </p>
+    </div>
+  );
+}
+
+/** Two real counts side by side: your website in gold, the closest competitor neutral. */
+function CitationBars({ you, them, youLabel, themLabel }: { you: number; them: number; youLabel: string; themLabel: string }) {
+  const max = Math.max(you, them, 1);
+  const rows = [
+    { label: youLabel, value: you, isYou: true },
+    { label: themLabel, value: them, isYou: false },
+  ];
+  return (
+    <dl className="max-w-[640px] space-y-3" aria-label="AI answers that link to each website">
+      {rows.map((r) => (
+        <div key={r.label} className="grid grid-cols-[minmax(0,11rem)_minmax(0,1fr)_2rem] items-center gap-3">
+          <dt className="truncate text-support text-ink-2">
+            {r.label}
+            {r.isYou && <span className="ml-1.5 text-caption font-medium text-brand-strong">You</span>}
+          </dt>
+          <dd className="h-2 overflow-hidden rounded-full bg-surface-2">
+            <div className={`h-full origin-left animate-line-grow rounded-full ${r.isYou ? "bg-brand" : "bg-ink-3"}`} style={{ width: `${(r.value / max) * 100}%` }} />
+          </dd>
+          <dd className="text-right text-support font-semibold tabular text-ink">{r.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}

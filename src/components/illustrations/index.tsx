@@ -73,47 +73,84 @@ function Bubble({ x, y }: { x: number; y: number }) {
   );
 }
 
-/** Overview: your website connected to every part of VSI. */
+/**
+ * Overview: VSI at work. Your website is scanned, the signal travels into
+ * VSI, the four checks fill in one by one, and an action gets ticked off.
+ * One slow loop (styles under "Overview scene" in globals.css); with reduced
+ * motion it rests in its finished state.
+ */
 export function OverviewScene({ className }: { className?: string }) {
-  const nodes = [
-    { x: 70, y: 62 },
-    { x: 370, y: 62 },
-    { x: 70, y: 238 },
-    { x: 370, y: 238 },
-  ];
+  const rows = [92, 130, 168, 206];
   return (
-    <Scene className={className} label="Your website in the middle, connected to site health, search results, AI answers, competitors and a list of actions">
-      {nodes.map((n, i) => {
-        const tx = n.x < 220 ? 160 : 280;
-        const ty = n.y < 150 ? 118 : 182;
-        return <path key={i} d={`M${n.x + (n.x < 220 ? 28 : -28)} ${n.y}C${(n.x + tx) / 2} ${n.y} ${(n.x + tx) / 2} ${ty} ${tx} ${ty}`} {...faint} strokeDasharray="3 5" />;
-      })}
-      <path d="M220 196v30" {...faint} strokeDasharray="3 5" />
-      {nodes.map((n, i) => (
-        <circle key={i} cx={n.x} cy={n.y} r={28} {...line} fill={SURFACE} />
-      ))}
-      {/* Site health */}
-      <path d="M70 47l12 4.5v9c0 8-5.5 13.5-12 16-6.5-2.5-12-8-12-16v-9z" {...line} />
-      <Check x={70} y={62} />
-      {/* Search */}
-      <Magnifier x={366} y={58} />
-      {/* AI answer */}
-      <Bubble x={70} y={236} />
-      {/* Competitors */}
-      <path d="M356 228h28M356 238h18M356 248h24" {...line} strokeWidth={3} opacity={0.6} />
+    <svg
+      viewBox="0 0 480 340"
+      role="img"
+      aria-label="Your website is scanned, then site health, search results, AI answers and competitors are checked one after another, and an action is ticked off"
+      className={cn("h-auto w-full", className)}
+    >
       {/* Your website */}
-      <Browser x={160} y={104} w={120} h={92} you>
-        <path d="M174 146h62" {...line} strokeWidth={3} />
-        <Lines x={174} y={160} widths={[88, 70, 80]} gap={10} />
+      <Browser x={16} y={84} w={176} h={160} you>
+        <path d="M32 130h70" {...line} strokeWidth={3} />
+        <Lines x={32} y={146} widths={[120, 96, 110]} gap={11} />
+        <rect x={32} y={184} width={144} height={46} rx={6} fill={FILL} />
+        <path d="M44 222l22-22 16 14 12-9 30 17" {...faint} />
+        <circle cx={156} cy={198} r={4.5} {...faint} />
+        <g className="vsi-loop-scan">
+          <rect x={17} y={108} width={174} height={16} fill={BRAND} opacity={0.12} />
+          <path d="M8 124h192" stroke={BRAND} strokeWidth={1.75} strokeLinecap="round" />
+          <circle cx={8} cy={124} r={3} fill={BRAND} />
+          <circle cx={200} cy={124} r={3} fill={BRAND} />
+        </g>
       </Browser>
-      {/* Actions */}
-      <rect x={180} y={226} width={80} height={52} rx={8} {...line} fill={SURFACE} />
-      <rect x={192} y={237} width={11} height={11} rx={2.5} {...line} />
-      <Check x={197.5} y={242.5} size={0.7} />
-      <path d="M211 242.5h36" {...faint} />
-      <rect x={192} y={256} width={11} height={11} rx={2.5} {...line} />
-      <path d="M211 261.5h28" {...faint} />
-    </Scene>
+
+      {/* The signal into VSI */}
+      <path d="M192 164h56" {...faint} strokeDasharray="3 5" />
+      <circle cx={192} cy={164} r={3.5} fill={BRAND} className="vsi-loop-dot" />
+
+      {/* VSI */}
+      <rect x={248} y={28} width={216} height={212} rx={10} {...line} fill={SURFACE} />
+      <rect x={264} y={41} width={15} height={15} rx={4} fill={BRAND_SOFT} stroke={BRAND} strokeWidth={1.5} />
+      <path d="M288 48.5h64" {...line} opacity={0.7} />
+      <path d="M248 68h216" {...line} opacity={0.3} />
+      {/* Site health, search, AI answers, competitors */}
+      <path d="M272 83l7 2.6v5.2c0 4.6-3.2 7.8-7 9.2-3.8-1.4-7-4.6-7-9.2v-5.2z" {...line} />
+      <Magnifier x={271} y={129} r={5.5} />
+      <path d="M264 160h16a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3h-9l-4 3.5v-3.5h-3a3 3 0 0 1-3-3v-6a3 3 0 0 1 3-3z" {...line} />
+      <path d="M264 200h16M264 206h10M264 212h13" {...line} strokeWidth={2.25} opacity={0.75} />
+      {rows.map((y, i) => {
+        const issue = i === 3;
+        return (
+          <g key={y} className={`vsi-loop-row vsi-loop-row-${i + 1}`}>
+            <path d={`M296 ${y - 3}h${[84, 72, 90, 66][i]}`} {...line} opacity={0.65} />
+            <path d={`M296 ${y + 6}h${[52, 60, 48, 56][i]}`} {...faint} />
+            {issue ? (
+              <>
+                <circle cx={440} cy={y} r={9} fill={ATTENTION_SOFT} stroke={ATTENTION} strokeWidth={1.5} />
+                <path d={`M440 ${y - 4.5}v5`} stroke={ATTENTION} strokeWidth={1.75} strokeLinecap="round" />
+                <circle cx={440} cy={y + 4} r={1} fill={ATTENTION} />
+              </>
+            ) : (
+              <>
+                <circle cx={440} cy={y} r={9} {...line} fill={SURFACE} />
+                <Check x={440} y={y} size={0.8} />
+              </>
+            )}
+          </g>
+        );
+      })}
+
+      {/* What to do next */}
+      <path d="M356 240v22" {...faint} strokeDasharray="3 5" />
+      <rect x={276} y={262} width={160} height={64} rx={8} {...line} fill={SURFACE} />
+      <rect x={290} y={276} width={12} height={12} rx={3} {...line} />
+      <path d="M312 282h96" {...faint} />
+      <rect x={290} y={300} width={12} height={12} rx={3} {...line} />
+      <path d="M312 306h76" {...faint} />
+      <g className="vsi-loop-row vsi-loop-done">
+        <rect x={290} y={276} width={12} height={12} rx={3} fill={BRAND_SOFT} stroke={BRAND} strokeWidth={1.5} />
+        <path d="M292.8 282l2.6 2.6 4.4-5.2" stroke={BRAND} strokeWidth={1.75} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
+    </svg>
   );
 }
 
@@ -150,6 +187,165 @@ export function SiteAuditScene({ className }: { className?: string }) {
       <path d="M381 235l24 24" stroke="currentColor" strokeWidth={7} strokeLinecap="round" />
       <path d="M334 200h36M334 212h24" {...faint} />
     </Scene>
+  );
+}
+
+/**
+ * Site Audit first-use hero: your website is scanned, one issue is spotted,
+ * and everything lands in a plain report. The scan line and the report each
+ * move once on load, then stay still.
+ */
+export function AuditFlowScene({ className }: { className?: string }) {
+  const rows = [206, 236, 266, 296];
+  return (
+    <svg
+      viewBox="0 0 480 340"
+      role="img"
+      aria-label="Your website being scanned on desktop and mobile. One issue is spotted and added to a report where most checks pass."
+      className={cn("h-auto w-full", className)}
+    >
+      <Browser x={20} y={24} w={300} h={232} you>
+        {/* The scan: gold, because it is VSI reading your website. */}
+        <g className="animate-scan-settle">
+          <rect x={21} y={124} width={298} height={28} fill={BRAND_SOFT} opacity={0.8} />
+          <path d="M10 152h320" stroke={BRAND} strokeWidth={1.75} strokeLinecap="round" />
+          <circle cx={10} cy={152} r={3} fill={BRAND} />
+          <circle cx={330} cy={152} r={3} fill={BRAND} />
+        </g>
+        {/* Already checked */}
+        <path d="M40 72h92" {...line} strokeWidth={3} />
+        <Lines x={40} y={90} widths={[140, 118, 130]} />
+        <rect x={40} y={128} width={54} height={14} rx={4} {...line} opacity={0.6} />
+        <rect x={204} y={62} width={96} height={58} rx={6} fill={FILL} />
+        <path d="M212 112l20-22 15 14 11-9 24 17" {...faint} />
+        <circle cx={280} cy={78} r={4.5} {...faint} />
+        {/* Still to check */}
+        <g opacity={0.4}>
+          <rect x={116} y={170} width={72} height={50} rx={6} {...line} />
+          <path d="M126 186h40M126 198h52" {...line} />
+          <rect x={200} y={170} width={72} height={50} rx={6} {...line} />
+          <path d="M210 186h40M210 198h30" {...line} />
+          <path d="M116 236h150M116 246h110" {...line} />
+        </g>
+      </Browser>
+
+      {/* The same website on a phone */}
+      <rect x={36} y={178} width={66} height={118} rx={11} {...line} fill={SURFACE} />
+      <path d="M60 188h18" {...faint} />
+      <rect x={46} y={198} width={46} height={26} rx={4} fill={FILL} />
+      <Lines x={46} y={236} widths={[46, 34]} gap={10} />
+      <circle cx={69} cy={272} r={9} {...line} />
+      <Check x={69} y={272} size={0.8} />
+
+      {/* The issue, and where it goes */}
+      <g className="animate-fade-in [animation-delay:1500ms] [animation-fill-mode:both]">
+        <path d="M309 62C350 62 380 84 380 116" stroke={ATTENTION} strokeWidth={1.5} strokeLinecap="round" strokeDasharray="3 4" fill="none" />
+        <path d="M374.5 110.5l5.5 7 5.5-7" stroke={ATTENTION} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      </g>
+      <circle cx={300} cy={62} r={9} fill={SURFACE} stroke={ATTENTION} strokeWidth={1.5} />
+      <path d="M300 57.5v5" stroke={ATTENTION} strokeWidth={1.75} strokeLinecap="round" />
+      <circle cx={300} cy={66.2} r={1} fill={ATTENTION} />
+
+      {/* The report */}
+      <g className="animate-rise-in [animation-delay:900ms]">
+        <rect x={286} y={120} width={174} height={200} rx={10} {...line} fill={SURFACE} />
+        <path d="M310 134l10 3.8v7.5c0 6.7-4.6 11.2-10 13.3-5.4-2.1-10-6.6-10-13.3v-7.5z" {...line} />
+        <Check x={310} y={146.5} size={0.7} />
+        <path d="M330 141h74" {...line} opacity={0.7} />
+        <path d="M330 152h46" {...faint} />
+        {[0, 1, 2, 3].map((i) => (
+          <rect key={i} x={302 + i * 37.5} y={170} width={32} height={6} rx={3} fill={i === 2 ? ATTENTION : "currentColor"} opacity={i === 2 ? 1 : 0.5} />
+        ))}
+        {rows.map((y, i) => {
+          const issue = i === 2;
+          return (
+            <g key={y}>
+              {issue ? (
+                <>
+                  <rect x={296} y={y - 14} width={154} height={28} rx={6} fill={ATTENTION_SOFT} />
+                  <circle cx={312} cy={y} r={8} fill={SURFACE} stroke={ATTENTION} strokeWidth={1.5} />
+                  <path d={`M312 ${y - 4}v4.5`} stroke={ATTENTION} strokeWidth={1.75} strokeLinecap="round" />
+                  <circle cx={312} cy={y + 3.8} r={1} fill={ATTENTION} />
+                </>
+              ) : (
+                <>
+                  <circle cx={312} cy={y} r={8} {...line} fill={SURFACE} />
+                  <Check x={312} y={y} size={0.75} />
+                </>
+              )}
+              <path d={`M330 ${y - 3}h${[96, 84, 104, 78][i]}`} {...line} opacity={issue ? 0.9 : 0.6} />
+              <path d={`M330 ${y + 5}h${[64, 70, 80, 56][i]}`} {...faint} />
+            </g>
+          );
+        })}
+      </g>
+    </svg>
+  );
+}
+
+/** Small companion drawings for the four audit areas. Same strokes and rules as the scenes. */
+export function AuditAreaArt({ area, className }: { area: "health" | "search" | "ai" | "content"; className?: string }) {
+  return (
+    <svg viewBox="0 0 160 116" aria-hidden className={cn("h-auto w-full", className)}>
+      {area === "health" && (
+        <>
+          <rect x={10} y={12} width={118} height={92} rx={8} {...line} fill={SURFACE} />
+          <path d="M10 30h118" {...line} />
+          <circle cx={21} cy={21} r={2} fill="currentColor" opacity={0.5} />
+          <circle cx={29} cy={21} r={2} fill="currentColor" opacity={0.5} />
+          <path d="M24 46h44" {...line} strokeWidth={2.5} />
+          <Lines x={24} y={60} widths={[70, 56, 64]} gap={11} />
+          <circle cx={120} cy={78} r={24} fill={SURFACE} stroke={BRAND} strokeWidth={1.5} />
+          <path d="M120 62l12 4.5v8.5c0 8-5.5 13-12 15.5-6.5-2.5-12-7.5-12-15.5v-8.5z" fill={BRAND_SOFT} stroke={BRAND} strokeWidth={1.5} strokeLinejoin="round" />
+          <path d="M114.5 77l4 4 7.5-8.5" stroke={BRAND} strokeWidth={1.75} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        </>
+      )}
+      {area === "search" && (
+        <>
+          <rect x={10} y={10} width={112} height={22} rx={6} {...line} fill={SURFACE} />
+          <path d="M22 21h52" {...faint} />
+          {[48, 72, 96].map((y, i) => (
+            <g key={y}>
+              {i === 0 && <rect x={10} y={y - 11} width={112} height={22} rx={5} fill={BRAND_SOFT} />}
+              {i === 0 && <path d={`M13 ${y - 6}v12`} stroke={BRAND} strokeWidth={2.5} strokeLinecap="round" />}
+              <path d={`M22 ${y - 3}h${[58, 48, 64][i]}`} stroke={i === 0 ? BRAND : "currentColor"} strokeWidth={i === 0 ? 2.25 : 1.75} strokeLinecap="round" opacity={i === 0 ? 1 : 0.65} />
+              <path d={`M22 ${y + 5}h${[84, 76, 70][i]}`} {...faint} />
+            </g>
+          ))}
+          <circle cx={128} cy={34} r={17} {...line} fill={SURFACE} />
+          <path d="M140.5 46.5l10 10" {...line} strokeWidth={3} />
+          <path d="M120 34h16M120 40h10" {...faint} />
+        </>
+      )}
+      {area === "ai" && (
+        <>
+          <rect x={10} y={10} width={126} height={66} rx={8} {...line} fill={SURFACE} />
+          <circle cx={24} cy={24} r={5} {...line} fill={FILL} />
+          <path d="M35 24h40" {...line} opacity={0.6} />
+          <path d="M22 40h100" {...faint} />
+          <rect x={20} y={46} width={62} height={12} rx={3} fill={BRAND_SOFT} />
+          <path d="M24 52h54" stroke={BRAND} strokeWidth={2.25} strokeLinecap="round" />
+          <path d="M88 52h34M22 64h78" {...faint} />
+          <path d="M82 58C110 70 122 78 104 92" stroke={BRAND} strokeWidth={1.25} fill="none" strokeDasharray="2.5 3.5" strokeLinecap="round" />
+          <rect x={20} y={86} width={84} height={18} rx={5} fill={BRAND_SOFT} stroke={BRAND} strokeWidth={1.5} />
+          <circle cx={31} cy={95} r={3.5} fill={BRAND} />
+          <path d="M40 95h52" stroke={BRAND} strokeWidth={2} strokeLinecap="round" />
+          <rect x={110} y={86} width={40} height={18} rx={5} {...line} opacity={0.5} />
+        </>
+      )}
+      {area === "content" && (
+        <>
+          <rect x={14} y={8} width={104} height={100} rx={8} {...line} fill={SURFACE} />
+          <path d="M28 26h46" stroke={BRAND} strokeWidth={2.75} strokeLinecap="round" />
+          <Lines x={28} y={40} widths={[76, 64]} gap={10} />
+          <path d="M28 66h34" {...line} strokeWidth={2.25} />
+          <Lines x={28} y={78} widths={[52, 44, 50]} gap={9} />
+          <rect x={92} y={56} width={56} height={44} rx={6} {...line} fill={SURFACE} />
+          <path d="M98 92l12-14 9 9 7-6 16 11" {...faint} />
+          <circle cx={136} cy={68} r={3.5} {...faint} />
+        </>
+      )}
+    </svg>
   );
 }
 

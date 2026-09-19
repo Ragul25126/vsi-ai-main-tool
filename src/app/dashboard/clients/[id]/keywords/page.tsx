@@ -4,7 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAgency } from "@/lib/auth";
 import { SERVICE_TYPE_LABELS, TRACK_TYPE_CONFIG, LOCATIONS } from "@/types/search";
 import type { ServiceType, TrackType, Location } from "@/types/search";
-import { Plus, ArrowRight, Sparkles } from "lucide-react";
+import { Plus, ArrowRight } from "lucide-react";
+import { ButtonLink } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { PageContainer, PageHeader } from "@/components/ui/Page";
+import { StatusLabel } from "@/components/ui/Status";
 
 export default async function KeywordsPage({ params }: { params: Promise<{ id: string }> }) {
  const { id } = await params;
@@ -26,102 +30,80 @@ export default async function KeywordsPage({ params }: { params: Promise<{ id: s
  const kws = keywords ?? [];
  const svc = SERVICE_TYPE_LABELS[client.service_type as ServiceType];
 
+ const active = kws.filter((k) => k.is_active).length;
+
  return (
-    <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-6 font-sans">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-6">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5 text-xs text-muted-foreground">
-            <Link href={`/dashboard/clients/${id}`} className="hover:text-ink transition-colors font-medium">
+    <PageContainer>
+      <PageHeader
+        title="Searches"
+        description="The searches VSI checks for this project, on Google and in AI answers. Open one to see where you stand."
+        meta={
+          <>
+            <Link href={`/dashboard/clients/${id}`} className="hover:text-ink">
               {client.name}
             </Link>
-            <span>/</span>
-            <span className="text-foreground font-bold">Keywords & Queries</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">Tracked Keywords</h1>
-            <span className="rounded-full bg-brand-soft border border-line text-brand-strong px-3 py-0.5 text-xs font-bold">
-              {svc.short}
+            <span>{svc.short}</span>
+            <span>
+              {active} active of {kws.length}
             </span>
-            <span className="text-xs text-muted-foreground font-medium">
-              {kws.filter((k) => k.is_active).length} Active · {kws.length} Total
-            </span>
-          </div>
-        </div>
-
-        <Link
-          href={`/dashboard/clients/${id}/keywords/new`}
-          className="inline-flex items-center gap-2 rounded-full bg-ink hover:bg-ink-2 px-5 py-2.5 text-xs font-bold text-white transition-colors"
-        >
-          <Plus size={15} />
-          <span>ADD KEYWORDS</span>
-        </Link>
-      </div>
+          </>
+        }
+        actions={
+          <ButtonLink href={`/dashboard/clients/${id}/keywords/new`} variant="primary">
+            <Plus size={15} strokeWidth={2} aria-hidden />
+            Add searches
+          </ButtonLink>
+        }
+      />
 
       {kws.length === 0 ? (
-        <div className="rounded-panel border border-dashed border-border bg-card p-16 text-center">
-          <Sparkles size={36} className="text-brand-strong mx-auto mb-4" />
-          <p className="text-lg font-bold text-foreground mb-1">No Keywords Tracked Yet</p>
-          <p className="text-xs text-muted-foreground max-w-md mx-auto mb-6">
-            Add target search terms or AI queries to start tracking visibility and AI answer citations.
-          </p>
-          <Link
-            href={`/dashboard/clients/${id}/keywords/new`}
-            className="inline-flex items-center gap-2 rounded-full bg-ink hover:bg-ink-2 px-6 py-3 text-xs font-bold text-white transition-colors"
-          >
-            <Plus size={15} /> ADD KEYWORDS
-          </Link>
-        </div>
+        <EmptyState
+          title="No searches yet"
+          action={
+            <ButtonLink href={`/dashboard/clients/${id}/keywords/new`} variant="primary">
+              <Plus size={15} strokeWidth={2} aria-hidden />
+              Add searches
+            </ButtonLink>
+          }
+        >
+          Add the searches your customers make. VSI then checks where you appear on Google and whether AI answers mention you.
+        </EmptyState>
       ) : (
-        <div className="rounded-panel border border-border bg-card overflow-hidden">
-          {/* Header */}
-          <div className="grid grid-cols-12 gap-3 px-6 py-3.5 bg-muted-bg text-xs font-bold text-muted-foreground border-b border-border">
-            <div className="col-span-5">Keyword / Query</div>
-            <div className="col-span-2">Track Type</div>
-            <div className="col-span-2">Target Location</div>
-            <div className="col-span-2">Status</div>
-            <div className="col-span-1 text-right">Inspect</div>
+        <div className="rounded-panel border border-line bg-surface">
+          <div className="hidden grid-cols-[minmax(0,1.8fr)_8rem_minmax(0,1fr)_7rem_1rem] gap-4 rounded-t-panel border-b border-line bg-surface-2 px-4 py-2.5 text-caption font-medium text-ink-3 md:grid">
+            <span>Search</span>
+            <span>Checked in</span>
+            <span>Location</span>
+            <span>Status</span>
+            <span className="sr-only">Open</span>
           </div>
-
-          {kws.map((kw) => {
-            const tt = TRACK_TYPE_CONFIG[kw.track_type as TrackType];
-            return (
-              <Link
-                key={kw.id}
-                href={`/dashboard/clients/${id}/keywords/${kw.id}`}
-                className="group grid grid-cols-12 gap-3 px-6 py-4 border-t border-border items-center hover:bg-muted-bg/50 transition-all"
-              >
-                <div className="col-span-5 min-w-0">
-                  <p className="text-sm font-bold text-foreground group-hover:text-ink transition-colors truncate">
-                    {kw.keyword}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate mt-0.5">{kw.domain}</p>
-                </div>
-                <div className="col-span-2">
-                  <span className="rounded-full px-2.5 py-1 text-xs font-bold bg-brand-soft border border-line text-brand-strong">
-                    {tt?.label ?? "AI Mode"}
-                  </span>
-                </div>
-                <div className="col-span-2 text-xs font-medium text-muted-foreground">
-                  {(LOCATIONS[kw.location as Location] ?? LOCATIONS.ae).label}
-                </div>
-                <div className="col-span-2">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
-                    kw.is_active
-                      ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                      : "bg-muted-bg text-muted-foreground border border-border"
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${kw.is_active ? "bg-emerald-500" : "bg-muted-foreground"}`} />
-                    {kw.is_active ? "Active" : "Paused"}
-                  </span>
-                </div>
-                <div className="col-span-1 flex justify-end">
-                  <ArrowRight size={16} className="text-muted-foreground group-hover:text-ink group-hover:translate-x-0.5 transition-all" />
-                </div>
-              </Link>
-            );
-          })}
+          <ul className="divide-y divide-line">
+            {kws.map((kw) => {
+              const tt = TRACK_TYPE_CONFIG[kw.track_type as TrackType];
+              return (
+                <li key={kw.id}>
+                  <Link
+                    href={`/dashboard/clients/${id}/keywords/${kw.id}`}
+                    className="group grid gap-x-4 gap-y-1 px-4 py-3.5 transition-colors hover:bg-surface-2 md:grid-cols-[minmax(0,1.8fr)_8rem_minmax(0,1fr)_7rem_1rem] md:items-center"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-body font-medium text-ink">{kw.keyword}</span>
+                      <span className="block truncate text-caption text-ink-3">{kw.domain}</span>
+                    </span>
+                    <span className="text-support text-ink-2">
+                      <span className="text-ink-3 md:hidden">Checked in: </span>
+                      {tt?.label ?? "AI answers"}
+                    </span>
+                    <span className="text-support text-ink-2">{(LOCATIONS[kw.location as Location] ?? LOCATIONS.ae).label}</span>
+                    <StatusLabel tone={kw.is_active ? "positive" : "neutral"}>{kw.is_active ? "Active" : "Paused"}</StatusLabel>
+                    <ArrowRight size={15} strokeWidth={1.75} className="hidden text-line-strong transition-colors group-hover:text-ink-2 md:block" aria-hidden />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
-    </div>
+    </PageContainer>
  );
 }

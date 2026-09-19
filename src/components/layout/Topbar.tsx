@@ -8,6 +8,7 @@ import { useMessages } from "@/contexts/MessagesContext";
 import NotificationDropdown from "@/components/NotificationDropdown";
 import { logoutAndRedirect, getClientUser, syncOAuthSession } from "@/lib/auth-client";
 import { useActiveProject } from "./ProjectProvider";
+import { displayDomain } from "@/lib/project-types";
 import { pageTitleFor } from "./nav";
 
 interface TopbarProps {
@@ -53,6 +54,7 @@ export default function Topbar({ userEmail, userRole, agencyName }: TopbarProps)
   }, [menuOpen]);
 
   const pageTitle = pageTitleFor(pathname, searchParams.get("tab"));
+  const domain = project ? displayDomain(project.website) : null;
 
   const displayName = useMemo(() => {
     if (name) return name;
@@ -71,16 +73,25 @@ export default function Topbar({ userEmail, userRole, agencyName }: TopbarProps)
 
   return (
     <header className="z-20 hidden h-14 shrink-0 items-center justify-between gap-4 border-b border-line bg-surface px-6 md:flex">
-      <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-support">
+      <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2 text-support">
         {project ? (
-          <span className="truncate text-ink-3">{project.name}</span>
+          <Link href="/dashboard" className="flex min-w-0 items-center gap-2 rounded-control py-1 pr-1 text-ink-2 transition-colors hover:text-ink">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" aria-hidden />
+            <span className="truncate font-medium">{project.name}</span>
+            {domain && domain !== project.name && <span className="hidden truncate text-ink-3 lg:inline">{domain}</span>}
+          </Link>
         ) : (
-          <span className="text-ink-3">No website added</span>
+          <span className="flex items-center gap-2 text-ink-3">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-line-strong" aria-hidden />
+            No website added
+          </span>
         )}
         {pageTitle && (
           <>
             <ChevronRight size={14} strokeWidth={1.75} className="shrink-0 text-line-strong" aria-hidden />
-            <span className="truncate font-medium text-ink">{pageTitle}</span>
+            <span className="truncate font-semibold text-ink" aria-current="page">
+              {pageTitle}
+            </span>
           </>
         )}
       </nav>
@@ -100,7 +111,9 @@ export default function Topbar({ userEmail, userRole, agencyName }: TopbarProps)
           )}
         </Link>
 
-        <div className="relative ml-2" ref={menuRef}>
+        <span className="mx-2 h-5 w-px bg-line" aria-hidden />
+
+        <div className="relative" ref={menuRef}>
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
@@ -108,11 +121,12 @@ export default function Topbar({ userEmail, userRole, agencyName }: TopbarProps)
             aria-expanded={menuOpen}
             className="flex items-center gap-2 rounded-control py-1 pl-1 pr-2 hover:bg-surface-2"
           >
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-2 text-caption font-semibold text-ink-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-soft text-caption font-semibold text-brand-strong ring-1 ring-brand/20">
               {initials}
             </span>
             <span className="hidden text-left lg:block">
               <span className="block text-support font-medium leading-tight text-ink">{displayName}</span>
+              <span className="block max-w-[11rem] truncate text-caption leading-tight text-ink-3">{agencyName}</span>
             </span>
             <ChevronDown size={14} strokeWidth={1.75} className="text-ink-3" aria-hidden />
           </button>

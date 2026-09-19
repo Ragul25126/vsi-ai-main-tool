@@ -42,10 +42,10 @@ export default function TaskFilterBar({ counts, groups, owners }: Props) {
  <button
  key={s.value}
  onClick={() => setParam("status", s.value === "open" ? null : s.value)}
- className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+ className={`rounded-control px-3 py-1.5 text-caption font-medium transition-colors ${
  status === s.value
  ? "bg-ink text-white"
- : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+ : "bg-surface-2 text-ink-2 hover:bg-line"
  }`}
  >
  {s.label}
@@ -55,11 +55,11 @@ export default function TaskFilterBar({ counts, groups, owners }: Props) {
  </div>
 
  {/* Secondary filters */}
- <div className="flex flex-wrap items-center gap-2 text-xs">
+ <div className="flex flex-wrap items-center gap-2 text-caption">
  <select
  value={group}
  onChange={(e) => setParam("group", e.target.value || null)}
- className="rounded-md border border-gray-300 bg-card px-2.5 py-1.5 text-xs text-gray-700 focus:ring-2 focus:ring-ink/10 focus:border-transparent"
+ className="rounded-control border border-line-strong bg-surface px-2.5 py-1.5 text-caption text-ink-2 focus:ring-2 focus:ring-ink/10 focus:border-transparent"
  >
  <option value="">All groups</option>
  {groups.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
@@ -68,7 +68,7 @@ export default function TaskFilterBar({ counts, groups, owners }: Props) {
  <select
  value={owner}
  onChange={(e) => setParam("owner", e.target.value || null)}
- className="rounded-md border border-gray-300 bg-card px-2.5 py-1.5 text-xs text-gray-700 focus:ring-2 focus:ring-ink/10 focus:border-transparent"
+ className="rounded-control border border-line-strong bg-surface px-2.5 py-1.5 text-caption text-ink-2 focus:ring-2 focus:ring-ink/10 focus:border-transparent"
  >
  <option value="">All owners</option>
  {owners.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -77,7 +77,7 @@ export default function TaskFilterBar({ counts, groups, owners }: Props) {
  {(group || owner) && (
  <button
  onClick={() => { setParam("group", null); setParam("owner", null); }}
- className="text-gray-500 hover:text-gray-900 transition-colors"
+ className="text-ink-3 hover:text-ink transition-colors"
  >
  Clear filters
  </button>

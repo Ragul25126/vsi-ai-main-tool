@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireAgency, isDummySupabase } from "@/lib/auth";
 import { displayDomain } from "@/lib/project-types";
 import { loadSetupStatus } from "@/lib/setup-status";
 import { formatDateTime, plural } from "@/lib/format";
 import { PageContainer, PageHeader, Section } from "@/components/ui/Page";
-import { Notice } from "@/components/ui/Status";
+import { Notice, StatusLabel } from "@/components/ui/Status";
+import { Stat, StatStrip } from "@/components/ui/Metrics";
 import { ReportScene } from "@/components/illustrations";
 import { CapabilityList } from "@/components/intro/FeatureIntro";
 import { SetupPanel } from "@/components/intro/SetupPanel";
@@ -105,34 +106,44 @@ export default async function ClientReportsPage({ params }: { params: Promise<{ 
           {INTROS.reports.capabilities && <CapabilityList {...INTROS.reports.capabilities} />}
         </>
       ) : (
-        <Section title="Your reports" description="Anyone with a report's link can open it. Links stop working when a report expires.">
-          <ul className="divide-y divide-line rounded-panel border border-line bg-surface">
-            {rows.map((r) => (
-              <li key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3.5">
-                <div className="min-w-0 flex-1">
-                  <p className="text-body font-medium text-ink">{r.label}</p>
-                  <p className="text-support text-ink-3">
-                    {formatDateTime(r.generated_at)}
-                    {r.keyword ? ` · “${r.keyword}”` : ""}
-                  </p>
-                </div>
-                {r.expired ? (
-                  <span className="text-support text-ink-3">Expired</span>
-                ) : (
-                  <a
-                    href={`/r/${r.share_token}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-support font-medium text-ink underline-offset-4 hover:underline"
-                  >
-                    Open report
-                    <ExternalLink size={13} strokeWidth={1.75} aria-hidden />
-                  </a>
-                )}
-              </li>
-            ))}
-          </ul>
-        </Section>
+        <>
+          <StatStrip>
+            <Stat label="Reports" value={rows.length} />
+            <Stat label="Links that work" value={rows.filter((r) => !r.expired).length} sub="Anyone with the link can open these" />
+            <Stat label="Expired" value={rows.filter((r) => r.expired).length} />
+          </StatStrip>
+          <Section title="Your reports" description="Anyone with a report's link can open it. Links stop working when a report expires.">
+            <ul className="divide-y divide-line rounded-panel border border-line bg-surface">
+              {rows.map((r) => (
+                <li key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-4">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand-strong" aria-hidden>
+                    <FileText size={17} strokeWidth={1.6} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-body font-medium text-ink">{r.label}</p>
+                    <p className="text-support text-ink-3">
+                      {formatDateTime(r.generated_at)}
+                      {r.keyword ? ` · “${r.keyword}”` : ""}
+                    </p>
+                  </div>
+                  {r.expired ? (
+                    <StatusLabel tone="neutral">Expired</StatusLabel>
+                  ) : (
+                    <a
+                      href={`/r/${r.share_token}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-control border border-line bg-surface px-3 text-support font-medium text-ink transition-colors hover:border-line-strong hover:bg-surface-2"
+                    >
+                      Open report
+                      <ExternalLink size={13} strokeWidth={1.75} aria-hidden />
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Section>
+        </>
       )}
     </PageContainer>
   );

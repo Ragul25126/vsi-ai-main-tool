@@ -46,8 +46,8 @@ export default function GapMetrics({ serp, aio, serpRankings = [], uniqueCompeti
   const top10Citations = aio.citations.slice(0, 10);
 
   return (
-    <div className="rounded-panel border border-border/80 bg-card p-6 space-y-6 font-sans">
-      <h3 className="text-xs font-semibold text-slate-500">
+    <div className="rounded-panel border border-line/80 bg-surface p-6 space-y-6 font-sans">
+      <h3 className="text-caption font-semibold text-ink-3">
         Rank-to-Citation Gap™ & Competitor Intelligence
       </h3>
 
@@ -77,12 +77,12 @@ export default function GapMetrics({ serp, aio, serpRankings = [], uniqueCompeti
       {/* Competitor SERP vs AIO table */}
       {top10Citations.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-slate-500 mb-3">
+          <p className="text-caption font-semibold text-ink-3 mb-3">
             Citation vs Google Rank - Top {top10Citations.length}
           </p>
-          <div className="rounded-panel border border-slate-200 overflow-hidden bg-white">
+          <div className="rounded-panel border border-line overflow-hidden bg-surface">
             {/* Header */}
-            <div className="grid grid-cols-12 gap-2 px-4 py-2.5 bg-slate-100 text-xs text-slate-600 font-semibold border-b border-slate-200">
+            <div className="grid grid-cols-12 gap-2 px-4 py-2.5 bg-surface-2 text-caption text-ink-2 font-semibold border-b border-line">
               <div className="col-span-1 text-center">AIO</div>
               <div className="col-span-5">Source</div>
               <div className="col-span-2 text-center">Google</div>
@@ -109,10 +109,10 @@ export default function GapMetrics({ serp, aio, serpRankings = [], uniqueCompeti
               }
 
               const threatColors = {
-                high: "text-rose-600 bg-rose-50 border border-rose-200",
+                high: "text-critical bg-critical-soft border border-critical/30",
                 medium: "text-attention bg-attention-soft border border-line",
-                low: "text-emerald-600 bg-emerald-50 border border-emerald-200",
-                unknown: "text-slate-600 bg-slate-100 border border-slate-200",
+                low: "text-positive bg-positive-soft border border-positive/30",
+                unknown: "text-ink-2 bg-surface-2 border border-line",
               };
 
               const isClient = c.isClient;
@@ -120,14 +120,14 @@ export default function GapMetrics({ serp, aio, serpRankings = [], uniqueCompeti
               return (
                 <div
                   key={c.url}
-                  className={`grid grid-cols-12 gap-2 px-4 py-3 border-b border-slate-100 text-xs items-center ${
-                    isClient ? "bg-brand-soft" : "hover:bg-slate-50/80"
+                  className={`grid grid-cols-12 gap-2 px-4 py-3 border-b border-line text-caption items-center ${
+                    isClient ? "bg-brand-soft" : "hover:bg-surface-2/80"
                   }`}
                 >
                   {/* AIO position */}
                   <div className="col-span-1 flex justify-center">
-                    <span className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${
-                      isClient ? "bg-ink text-white font-semibold" : "bg-slate-200 text-slate-700 border border-slate-300"
+                    <span className={`flex h-5 w-5 items-center justify-center rounded-full text-caption font-semibold ${
+                      isClient ? "bg-ink text-white font-semibold" : "bg-line text-ink-2 border border-line-strong"
                     }`}>
                       {c.position}
                     </span>
@@ -135,44 +135,44 @@ export default function GapMetrics({ serp, aio, serpRankings = [], uniqueCompeti
 
                   {/* Source name & domain */}
                   <div className="col-span-5 min-w-0">
-                    <span className={`font-semibold truncate block ${isClient ? "text-attention font-bold" : "text-slate-900"}`}>
+                    <span className={`font-semibold truncate block ${isClient ? "text-attention font-semibold" : "text-ink"}`}>
                       {c.sourceName || c.title || c.domain}
-                      {isClient && <span className="ml-1.5 text-attention text-xs font-bold">★</span>}
+                      {isClient && <span className="ml-1.5 text-attention text-caption font-semibold">You</span>}
                     </span>
-                    <span className="text-slate-500 truncate block text-caption font-mono">{normCitDomain || c.domain}</span>
+                    <span className="text-ink-3 truncate block text-caption">{normCitDomain || c.domain}</span>
                   </div>
 
                   {/* Google rank */}
                   <div className="col-span-2 text-center">
                     {gRank !== null ? (
-                      <span className={`font-bold ${isClient ? "text-attention" : "text-slate-700"}`}>
+                      <span className={`font-semibold ${isClient ? "text-attention" : "text-ink-2"}`}>
                         #{gRank}
                       </span>
                     ) : (
-                      <span className="text-slate-400">-</span>
+                      <span className="text-ink-3">-</span>
                     )}
                   </div>
 
                   {/* R2C gap */}
                   <div className="col-span-2 text-center">
                     {gap !== null ? (
-                      <span className={`font-bold ${gap > 0 ? "text-emerald-600" : gap < 0 ? "text-rose-600" : "text-slate-500"}`}>
+                      <span className={`font-semibold ${gap > 0 ? "text-positive" : gap < 0 ? "text-critical" : "text-ink-3"}`}>
                         {gap > 0 ? `+${gap}` : gap}
                       </span>
                     ) : (
-                      <span className="text-slate-400">-</span>
+                      <span className="text-ink-3">-</span>
                     )}
                   </div>
 
                   {/* Threat level */}
                   <div className="col-span-2 flex justify-center">
                     {!isClient && (
-                      <span className={`rounded-full px-2 py-0.5 text-caption font-bold   ${threatColors[threat]}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-caption font-semibold ${threatColors[threat]}`}>
                         {threat === "unknown" ? "-" : threat}
                       </span>
                     )}
                     {isClient && (
-                      <span className="text-attention text-xs font-bold">Client</span>
+                      <span className="text-attention text-caption font-semibold">Client</span>
                     )}
                   </div>
                 </div>
@@ -180,32 +180,32 @@ export default function GapMetrics({ serp, aio, serpRankings = [], uniqueCompeti
             })}
           </div>
 
-          <p className="mt-2 text-caption text-slate-500">
-            <span className="text-rose-600 font-semibold">High threat</span>: competitor ranks lower in Google organic (or is unranked) but wins AI citation.
+          <p className="mt-2 text-caption text-ink-3">
+            <span className="text-critical font-semibold">High threat</span>: competitor ranks lower in Google organic (or is unranked) but wins AI citation.
           </p>
         </div>
       )}
 
       {/* Interpretation */}
-      <div className="rounded-panel bg-slate-50 border border-slate-200 p-4">
-        <p className="text-xs text-slate-700 leading-relaxed">
+      <div className="rounded-panel bg-surface-2 border border-line p-4">
+        <p className="text-caption text-ink-2 leading-relaxed">
           {!clientCited && !mentionedInText && (
-            <><span className="text-rose-600 font-bold">Double Loss.</span> Client is unmentioned and uncited in AI Mode.</>
+            <><span className="text-critical font-semibold">Double Loss.</span> Client is unmentioned and uncited in AI Mode.</>
           )}
           {!clientCited && mentionedInText && (
-            <><span className="text-blue-600 font-bold">Partial visibility.</span> Brand name appears in the AI answer text but holds no citation link.</>
+            <><span className="text-info font-semibold">Partial visibility.</span> Brand name appears in the AI answer text but holds no citation link.</>
           )}
           {clientCited && r2cGap !== null && r2cGap > 0 && (
-            <><span className="text-emerald-600 font-bold">AIO overperformer.</span> Cited higher in AI Mode than Google organic rank suggests.</>
+            <><span className="text-positive font-semibold">AIO overperformer.</span> Cited higher in AI Mode than Google organic rank suggests.</>
           )}
           {clientCited && r2cGap !== null && r2cGap < 0 && (
-            <><span className="text-attention font-bold">Citation lag.</span> Ranks higher in Google organic than AI position.</>
+            <><span className="text-attention font-semibold">Citation lag.</span> Ranks higher in Google organic than AI position.</>
           )}
           {clientCited && r2cGap === 0 && (
-            <><span className="text-emerald-600 font-bold">Perfectly aligned.</span> Google organic rank and AIO citation match.</>
+            <><span className="text-positive font-semibold">Perfectly aligned.</span> Google organic rank and AIO citation match.</>
           )}
           {competitorsBefore > 0 && (
-            <> <span className="font-bold text-slate-900">{competitorsBefore} competitor{competitorsBefore !== 1 ? "s" : ""}</span> cited before the client.</>
+            <> <span className="font-semibold text-ink">{competitorsBefore} competitor{competitorsBefore !== 1 ? "s" : ""}</span> cited before the client.</>
           )}
         </p>
       </div>
@@ -218,15 +218,15 @@ function MetricCard({ label, value, sub, color }: {
   color: "blue" | "amber" | "green" | "red" | "gray";
 }) {
   const valueColor = {
-    blue: "text-blue-600", amber: "text-attention",
-    green: "text-emerald-600", red: "text-rose-600", gray: "text-slate-600",
+    blue: "text-info", amber: "text-attention",
+    green: "text-positive", red: "text-critical", gray: "text-ink-2",
   }[color];
 
   return (
-    <div className="rounded-panel bg-slate-50 border border-slate-200 p-3.5">
-      <p className="text-caption font-semibold text-slate-500 mb-1">{label}</p>
+    <div className="rounded-panel bg-surface-2 border border-line p-3.5">
+      <p className="text-caption font-semibold text-ink-3 mb-1">{label}</p>
       <p className="text-xl font-semibold ${valueColor}">{value}</p>
-      <p className="text-caption text-slate-500 mt-1 leading-tight">{sub}</p>
+      <p className="text-caption text-ink-3 mt-1 leading-tight">{sub}</p>
     </div>
   );
 }

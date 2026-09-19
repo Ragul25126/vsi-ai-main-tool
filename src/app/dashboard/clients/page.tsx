@@ -73,7 +73,7 @@ export default async function ProjectsPage() {
         </EmptyState>
       ) : (
         <div className="rounded-panel border border-line bg-surface">
-          <div className="hidden grid-cols-[minmax(0,1.6fr)_7rem_7rem_9rem] gap-4 border-b border-line px-4 py-2.5 text-caption font-medium text-ink-3 md:grid">
+          <div className="hidden grid-cols-[minmax(0,1.6fr)_7rem_7rem_9rem] gap-4 rounded-t-panel border-b border-line bg-surface-2 px-4 py-2.5 text-caption font-medium text-ink-3 md:grid">
             <span>Project</span>
             <span>Searches</span>
             <span>Open tasks</span>

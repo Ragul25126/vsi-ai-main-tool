@@ -122,7 +122,7 @@ export default function TestSerpApiClient() {
             <button
               type="submit"
               disabled={loading || !keyword.trim()}
-              className="w-full rounded-panel bg-ink px-3 py-2.5 text-body font-medium text-white hover:bg-ink-2 disabled:opacity-50 transition-colors /20 cursor-pointer"
+              className="w-full rounded-panel bg-ink px-3 py-2.5 text-body font-medium text-white hover:bg-ink-2 disabled:opacity-50 transition-colors cursor-pointer"
             >
               {loading ? "..." : "Test"}
             </button>
@@ -156,7 +156,7 @@ export default function TestSerpApiClient() {
                 <div className={`rounded-panel border px-3.5 py-2 text-support font-medium mb-4 ${toneClass[s.tone]}`}>
                   {s.label}
                 </div>
-                <pre className="text-support text-ink bg-surface-2 border border-line rounded-panel p-4 overflow-x-auto max-h-96 overflow-y-auto font-mono">
+                <pre className="text-support text-ink bg-surface-2 border border-line rounded-panel p-4 overflow-x-auto max-h-96 overflow-y-auto">
                   {JSON.stringify(data.bodyExcerpt, null, 2)}
                 </pre>
               </div>

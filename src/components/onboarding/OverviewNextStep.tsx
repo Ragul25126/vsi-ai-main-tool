@@ -6,13 +6,16 @@ import { RunAuditButton } from "@/features/diagnosis/components/RunAuditButton";
 import { RunChecksButton } from "@/features/geo/components/RunChecksButton";
 import { GuideTarget } from "./GuideTarget";
 import { useGuideStep } from "./OnboardingProvider";
+import { Eyebrow } from "@/components/ui/Page";
 
 function Box({ title, children, action }: { title: string; children: ReactNode; action: ReactNode }) {
   return (
-    <div className="space-y-3 rounded-panel bg-surface-2 p-5">
-      <p className="text-body font-medium text-ink">{title}</p>
-      <p className="text-support text-ink-2">{children}</p>
-      <div className="pt-1">{action}</div>
+    <div className="relative overflow-hidden rounded-panel border border-line bg-surface p-6">
+      <span className="absolute inset-y-0 left-0 w-[3px] bg-brand" aria-hidden />
+      <Eyebrow>Your next step</Eyebrow>
+      <p className="mt-3 text-[1.0625rem] font-semibold leading-6 text-ink">{title}</p>
+      <p className="mt-2 text-body text-ink-2">{children}</p>
+      <div className="pt-5">{action}</div>
     </div>
   );
 }

@@ -89,11 +89,11 @@ export default function Sidebar({ agencyName, projects, activeProjectId, userRol
       {/* Brand */}
       <div className={cn("flex h-14 shrink-0 items-center border-b border-line", isCollapsed ? "justify-center px-2" : "justify-between px-4")}>
         <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5" aria-label="VSI overview">
-          <Image src="/vg-logo.png" alt="" width={26} height={26} className="shrink-0 rounded-md" />
+          <Image src="/vg-logo.png" alt="" width={28} height={28} className="shrink-0 rounded-md ring-1 ring-line" />
           {!isCollapsed && (
-            <span className="min-w-0 leading-tight">
-              <span className="block text-body font-semibold text-ink">VSI</span>
-              <span className="block truncate text-caption text-ink-3">Search Intelligence</span>
+            <span className="min-w-0">
+              <span className="block text-[0.9375rem] font-semibold leading-5 tracking-[-0.01em] text-ink">VSI</span>
+              <span className="block truncate text-[0.6875rem] font-medium uppercase leading-4 tracking-[0.08em] text-ink-3">Search Intelligence</span>
             </span>
           )}
         </Link>
@@ -129,11 +129,11 @@ export default function Sidebar({ agencyName, projects, activeProjectId, userRol
       </div>
 
       {/* Navigation */}
-      <nav aria-label="Main" className={cn("min-h-0 flex-1 overflow-y-auto py-3", isCollapsed ? "px-2" : "px-3")}>
+      <nav aria-label="Main" className={cn("min-h-0 flex-1 overflow-y-auto py-4", isCollapsed ? "px-2" : "px-3")}>
         {NAV_GROUPS.map((group, gi) => (
-          <div key={gi} className={cn(gi > 0 && "mt-5")}>
+          <div key={gi} className={cn(gi > 0 && "mt-6")}>
             {group.title && !isCollapsed && (
-              <p className="mb-1 px-2.5 text-caption font-medium text-ink-3">{group.title}</p>
+              <p className="mb-1.5 px-2.5 text-[0.6875rem] font-semibold uppercase leading-4 tracking-[0.08em] text-ink-3">{group.title}</p>
             )}
             {group.title && isCollapsed && <div className="mx-2 mb-2 border-t border-line" aria-hidden />}
             <ul className="space-y-0.5">
@@ -147,13 +147,24 @@ export default function Sidebar({ agencyName, projects, activeProjectId, userRol
                       aria-current={isActive ? "page" : undefined}
                       title={isCollapsed ? item.label : undefined}
                       className={cn(
-                        "relative flex h-8 items-center gap-2.5 rounded-control text-body transition-colors duration-150",
+                        "group relative flex h-9 items-center gap-2.5 rounded-control text-body transition-colors duration-200",
                         isCollapsed ? "justify-center" : "px-2.5",
-                        isActive ? "bg-surface-2 font-medium text-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
+                        isActive ? "bg-brand-soft font-semibold text-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
                       )}
                     >
-                      {isActive && <span className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-brand" aria-hidden />}
-                      <Icon size={16} strokeWidth={1.75} aria-hidden className={isActive ? "text-ink" : "text-ink-3"} />
+                      <span
+                        className={cn(
+                          "absolute inset-y-2 left-0 w-[3px] origin-center rounded-full bg-brand transition-transform duration-200",
+                          isActive ? "scale-y-100" : "scale-y-0",
+                        )}
+                        aria-hidden
+                      />
+                      <Icon
+                        size={16}
+                        strokeWidth={isActive ? 2 : 1.75}
+                        aria-hidden
+                        className={cn("shrink-0 transition-colors duration-200", isActive ? "text-brand-strong" : "text-ink-3 group-hover:text-ink-2")}
+                      />
                       {!isCollapsed && <span className="truncate">{item.label}</span>}
                     </Link>
                   </li>
@@ -181,8 +192,14 @@ export default function Sidebar({ agencyName, projects, activeProjectId, userRol
             <PanelLeftOpen size={16} strokeWidth={1.75} />
           </button>
         ) : (
-          <div className="mt-2 flex items-center justify-between gap-2 border-t border-line px-2.5 pt-3">
-            <div className="min-w-0">
+          <div className="mt-2 flex items-center gap-2.5 border-t border-line px-1.5 pt-3">
+            <span
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-caption font-semibold uppercase text-brand-strong ring-1 ring-brand/20"
+              aria-hidden
+            >
+              {userEmail.charAt(0) || "?"}
+            </span>
+            <div className="min-w-0 flex-1">
               <p className="truncate text-support text-ink" title={userEmail}>
                 {userEmail}
               </p>
@@ -342,7 +359,7 @@ function ProjectSwitcher({
     return (
       <div className="space-y-2.5 px-1 py-0.5">
         <div>
-          <p className="text-caption text-ink-3">Your project</p>
+          <p className="text-[0.6875rem] font-semibold uppercase leading-4 tracking-[0.08em] text-ink-3">Your project</p>
           <p className="text-support font-medium text-ink">No website added</p>
         </div>
         {atClientCap ? (
@@ -389,7 +406,7 @@ function ProjectSwitcher({
         aria-expanded={open}
         className="flex w-full items-center gap-2.5 rounded-control border border-line bg-surface px-2.5 py-2 text-left hover:border-line-strong"
       >
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control bg-surface-2 text-support font-semibold text-ink">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control bg-brand-soft text-support font-semibold text-brand-strong">
           {initial}
         </span>
         <span className="min-w-0 flex-1">

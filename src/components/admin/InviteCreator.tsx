@@ -104,7 +104,7 @@ export default function InviteCreator() {
         </Button>
         {created && (
           <p role="status" className="text-support text-ink-2">
-            Invite code: <span className="font-mono font-medium text-ink">{created.code}</span> (single use)
+            Invite code: <span className=" font-medium text-ink">{created.code}</span> (single use)
           </p>
         )}
         {error && (

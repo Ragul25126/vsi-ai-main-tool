@@ -56,9 +56,8 @@ describe("first-use intros", () => {
       expect(chain.some((n) => n.key === step.key), step.key).toBe(true);
       expect(chain.length, step.key).toBeLessThanOrEqual(6);
     }
-    const checks = ["website", "audit", "search", "ai", "competitors"];
-    for (const k of ["audit", "search", "ai", "competitors"] as const) expect(STORY_CHAINS[k].map((n) => n.key)).toEqual(checks);
-    expect(STORY_CHAINS.actions.map((n) => n.key)).toEqual([...checks, "actions"]);
+    const core = ["website", "audit", "search", "ai", "competitors", "actions"];
+    for (const k of ["audit", "search", "ai", "competitors", "actions"] as const) expect(STORY_CHAINS[k].map((n) => n.key)).toEqual(core);
   });
 
   it("marks next-action samples as examples", () => {

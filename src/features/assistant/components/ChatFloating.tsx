@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { usePathname } from "next/navigation";
-import { MessageSquareText } from "lucide-react";
+import { Check, Copy, Maximize2, MessageSquareText, Minus, Paperclip, RefreshCw, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { useActiveProject } from "@/components/layout/ProjectProvider";
 
 type Role = "user" | "assistant";
@@ -61,24 +61,24 @@ function renderMarkdown(text: string): string {
     /\|(.+)\|[\r\n]+\|[-:| ]+\|[\r\n]+((?:\|.+\|[\r\n]*)+)/g,
     (match) => {
       const rows = match.trim().split("\n");
-      const headers = rows[0].split("|").filter((c) => c.trim() !== "").map((c) => `<th class="px-3 py-1.5 bg-muted font-bold text-left border border-border">${c.trim()}</th>`).join("");
+      const headers = rows[0].split("|").filter((c) => c.trim() !== "").map((c) => `<th class="px-3 py-1.5 bg-surface-2 font-semibold text-left border border-line">${c.trim()}</th>`).join("");
       const bodyRows = rows.slice(2).map((r) => {
-        const cols = r.split("|").filter((c) => c.trim() !== "").map((c) => `<td class="px-3 py-1.5 border border-border">${c.trim()}</td>`).join("");
-        return `<tr class="hover:bg-muted/40">${cols}</tr>`;
+        const cols = r.split("|").filter((c) => c.trim() !== "").map((c) => `<td class="px-3 py-1.5 border border-line">${c.trim()}</td>`).join("");
+        return `<tr class="hover:bg-surface-2/40">${cols}</tr>`;
       }).join("");
-      return `<div class="overflow-x-auto my-2"><table class="w-full text-xs border-collapse border border-border rounded-lg">${headers ? `<thead><tr>${headers}</tr></thead>` : ""}<tbody>${bodyRows}</tbody></table></div>`;
+      return `<div class="overflow-x-auto my-2"><table class="w-full text-caption border-collapse border border-line rounded-control">${headers ? `<thead><tr>${headers}</tr></thead>` : ""}<tbody>${bodyRows}</tbody></table></div>`;
     }
   );
 
   return formatted
-    .replace(/```([\s\S]*?)```/g, (_, code) => `<pre class="bg-slate-900 text-slate-100 rounded-panel p-3 my-2 text-xs font-mono whitespace-pre-wrap border border-slate-800 shadow-inner">${code}</pre>`)
-    .replace(/`([^`]+)`/g, '<code class="bg-muted px-1.5 py-0.5 rounded text-[12px] font-mono border border-border/50">$1</code>')
+    .replace(/```([\s\S]*?)```/g, (_, code) => `<pre class="bg-ink text-white rounded-panel p-3 my-2 text-caption font-mono whitespace-pre-wrap border border-slate-800 shadow-inner">${code}</pre>`)
+    .replace(/`([^`]+)`/g, '<code class="bg-surface-2 px-1.5 py-0.5 rounded text-caption font-mono border border-line/50">$1</code>')
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/(^|\s)\*([^*]+)\*(?=\s|$)/g, "$1<em>$2</em>")
-    .replace(/^### (.+)$/gm, '<h3 class="text-sm font-bold mt-2.5 mb-1 text-foreground">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 class="text-sm font-bold mt-3 mb-1 text-foreground">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 class="text-base font-bold mt-3.5 mb-1 text-foreground">$1</h1>')
-    .replace(/^[-•] (.+)$/gm, '<div class="flex gap-2 my-1"><span class="text-ink-3 font-bold">•</span><span>$1</span></div>')
+    .replace(/^### (.+)$/gm, '<h3 class="text-body font-semibold mt-2.5 mb-1 text-ink">$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2 class="text-body font-semibold mt-3 mb-1 text-ink">$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1 class="text-base font-semibold mt-3.5 mb-1 text-ink">$1</h1>')
+    .replace(/^[-•] (.+)$/gm, '<div class="flex gap-2 my-1"><span class="text-ink-3 font-semibold">•</span><span>$1</span></div>')
     .replace(/\n{2,}/g, '<div class="h-2"></div>')
     .replace(/\n/g, "<br/>");
 }
@@ -97,28 +97,28 @@ function ChatThumbs({ scopeKind, messageIndex }: { scopeKind: string; messageInd
     } catch {}
   }
   return (
-    <div className="mt-1 flex items-center gap-1.5 pl-1 text-caption text-muted-foreground">
+    <div className="mt-1 flex items-center gap-1.5 pl-1 text-caption text-ink-3">
       <button
         onClick={() => vote("up")}
         disabled={!!voted}
         title="Helpful"
         className={`h-5 w-5 rounded inline-flex items-center justify-center transition-colors ${
-          voted === "up" ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold" : "hover:bg-muted hover:text-foreground disabled:opacity-40"
+          voted === "up" ? "bg-positive/20 text-positive dark:text-positive font-semibold" : "hover:bg-surface-2 hover:text-ink disabled:opacity-40"
         }`}
       >
-        👍
+        <ThumbsUp size={13} strokeWidth={1.75} aria-hidden className="inline-block shrink-0 align-[-2px]" />
       </button>
       <button
         onClick={() => vote("down")}
         disabled={!!voted}
         title="Not useful"
         className={`h-5 w-5 rounded inline-flex items-center justify-center transition-colors ${
-          voted === "down" ? "bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold" : "hover:bg-muted hover:text-foreground disabled:opacity-40"
+          voted === "down" ? "bg-critical/20 text-critical dark:text-critical font-semibold" : "hover:bg-surface-2 hover:text-ink disabled:opacity-40"
         }`}
       >
-        👎
+        <ThumbsDown size={13} strokeWidth={1.75} aria-hidden className="inline-block shrink-0 align-[-2px]" />
       </button>
-      {voted && <span className="text-caption text-muted-foreground">Feedback saved</span>}
+      {voted && <span className="text-caption text-ink-3">Feedback saved</span>}
     </div>
   );
 }
@@ -395,7 +395,7 @@ export default function ChatFloating() {
           type="button"
           onClick={handleOpen}
           aria-label="Ask VSI about this project"
-          className="fixed bottom-5 right-5 z-40 inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 text-support font-medium text-white shadow-overlay transition-colors duration-150 hover:bg-ink-2"
+          className="fixed bottom-5 right-5 z-40 inline-flex h-10 items-center gap-2 rounded-control bg-ink px-4 text-support font-medium text-white shadow-overlay transition-colors duration-150 hover:bg-ink-2"
         >
           <MessageSquareText size={16} strokeWidth={1.75} aria-hidden />
           Ask VSI
@@ -408,12 +408,12 @@ export default function ChatFloating() {
         <div
           className={`fixed bottom-5 right-5 z-40 w-[420px] max-w-[calc(100vw-32px)] transition-all duration-300 ${
             isMinimized ? "h-[64px]" : "h-[620px] max-h-[calc(100vh-48px)]"
-          } flex flex-col rounded-panel shadow-overlay overflow-hidden border border-border bg-card animate-in fade-in slide-in-from-bottom-5`}
+          } flex flex-col rounded-panel shadow-overlay overflow-hidden border border-line bg-surface animate-in fade-in slide-in-from-bottom-5`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border/80 text-white bg-ink select-none">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-line/80 text-white bg-ink select-none">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center text-white shrink-0 shadow-inner">
+              <div className="h-8 w-8 rounded-full bg-surface/20 flex items-center justify-center text-white shrink-0 shadow-inner">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="11" width="18" height="10" rx="2" />
                   <circle cx="12" cy="5" r="2" />
@@ -425,9 +425,9 @@ export default function ChatFloating() {
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold leading-tight tracking-wide text-white">Ask VSI</h3>
-                  <span className="inline-flex items-center text-caption font-medium bg-black/20 text-white/95 px-1.5 py-0.5 rounded-full">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse mr-1" />
+                  <h3 className="text-body font-semibold leading-tight tracking-wide text-white">Ask VSI</h3>
+                  <span className="inline-flex items-center text-caption font-medium bg-ink/20 text-white/95 px-1.5 py-0.5 rounded-full">
+                    <span className="h-1.5 w-1.5 rounded-full bg-positive animate-pulse mr-1" />
                     Online
                   </span>
                 </div>
@@ -440,14 +440,14 @@ export default function ChatFloating() {
                 <>
                   <button
                     onClick={exportChat}
-                    className="text-xs px-2 py-1 rounded hover:bg-white/20 transition-colors text-white/90 font-medium"
+                    className="text-caption px-2 py-1 rounded hover:bg-surface/20 transition-colors text-white/90 font-medium"
                     title="Export conversation history"
                   >
                     Export
                   </button>
                   <button
                     onClick={clearChat}
-                    className="text-xs px-2 py-1 rounded hover:bg-white/20 transition-colors text-white/90 font-medium"
+                    className="text-caption px-2 py-1 rounded hover:bg-surface/20 transition-colors text-white/90 font-medium"
                     title="Clear conversation"
                   >
                     Clear
@@ -457,18 +457,18 @@ export default function ChatFloating() {
               <button
                 onClick={() => setIsMinimized(!isMinimized)}
                 aria-label={isMinimized ? "Expand" : "Minimize"}
-                className="h-7 w-7 rounded hover:bg-white/20 transition-colors flex items-center justify-center text-white/90 font-semibold"
+                className="h-7 w-7 rounded hover:bg-surface/20 transition-colors flex items-center justify-center text-white/90 font-semibold"
                 title={isMinimized ? "Expand" : "Minimize"}
               >
-                {isMinimized ? "▢" : "―"}
+                {isMinimized ? <Maximize2 size={13} strokeWidth={1.75} aria-hidden className="inline-block shrink-0 align-[-2px]" /> : <Minus size={13} strokeWidth={1.75} aria-hidden className="inline-block shrink-0 align-[-2px]" />}
               </button>
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Close"
-                className="h-7 w-7 rounded hover:bg-white/20 transition-colors flex items-center justify-center text-white text-base font-bold"
+                className="h-7 w-7 rounded hover:bg-surface/20 transition-colors flex items-center justify-center text-white text-base font-semibold"
                 title="Close"
               >
-                ✕
+                <X size={13} strokeWidth={1.75} aria-hidden className="inline-block shrink-0 align-[-2px]" />
               </button>
             </div>
           </div>
@@ -476,21 +476,21 @@ export default function ChatFloating() {
           {!isMinimized && (
             <>
               {/* Messages Body */}
-              <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-4 bg-background">
+              <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-4 bg-canvas">
                 {messages.length === 0 && !streaming && (
                   <div className="space-y-4">
-                    <div className="p-3.5 rounded-panel bg-brand-soft border border-line text-xs text-foreground">
+                    <div className="p-3.5 rounded-panel bg-brand-soft border border-line text-caption text-ink">
                       <p className="font-semibold text-ink mb-1 flex items-center gap-1.5">
-                        <span>🤖</span> Ready to Assist
+                        Ready to assist
                       </p>
-                      <p className="text-muted-foreground leading-relaxed">
+                      <p className="text-ink-3 leading-relaxed">
                         I analyze live SERP data, AI mode citations, keyword opportunities, and dashboard metrics for{" "}
-                        <strong className="text-foreground">{label}</strong>.
+                        <strong className="text-ink">{label}</strong>.
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-xs font-semibold text-muted-foreground mb-2 px-1">
+                      <p className="text-caption font-semibold text-ink-3 mb-2 px-1">
                         Suggested AI Queries
                       </p>
                       <div className="grid grid-cols-2 gap-1.5">
@@ -498,10 +498,10 @@ export default function ChatFloating() {
                           <button
                             key={chip.label}
                             onClick={() => send(chip.prompt)}
-                            className="text-left text-xs font-medium text-muted-foreground hover:text-foreground transition-all rounded-panel p-2.5 border border-border hover:border-line-strong bg-card hover:bg-surface-2 group flex flex-col justify-between"
+                            className="text-left text-caption font-medium text-ink-3 hover:text-ink transition-all rounded-panel p-2.5 border border-line hover:border-line-strong bg-surface hover:bg-surface-2 group flex flex-col justify-between"
                           >
-                            <span className="font-semibold text-foreground group-hover:text-ink">{chip.label}</span>
-                            <span className="text-caption text-muted-foreground/80 line-clamp-1 mt-0.5">{chip.prompt}</span>
+                            <span className="font-semibold text-ink group-hover:text-ink">{chip.label}</span>
+                            <span className="text-caption text-ink-3/80 line-clamp-1 mt-0.5">{chip.prompt}</span>
                           </button>
                         ))}
                       </div>
@@ -514,17 +514,17 @@ export default function ChatFloating() {
                   <div key={m.id || i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} group/msg`}>
                     <div className="max-w-[88%] space-y-1">
                       {m.attachedFile && (
-                        <div className="text-caption text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border inline-flex items-center gap-1 mb-1">
-                          📎 {m.attachedFile}
+                        <div className="text-caption text-ink-3 bg-surface-2 px-2 py-0.5 rounded border border-line inline-flex items-center gap-1 mb-1">
+                          <Paperclip size={13} strokeWidth={1.75} aria-hidden className="inline-block shrink-0 align-[-2px]" /> {m.attachedFile}
                         </div>
                       )}
                       <div
-                        className={`rounded-panel px-4 py-2.5 text-sm ${
+                        className={`rounded-panel px-4 py-2.5 text-body ${
                           m.role === "user"
                             ? "bg-ink text-white rounded-br-xs"
                             : m.isError
-                            ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-bl-xs border border-rose-500/20 "
-                            : "bg-card text-foreground rounded-bl-xs border border-border "
+                            ? "bg-critical/10 text-critical dark:text-critical rounded-bl-xs border border-critical/30 "
+                            : "bg-surface text-ink rounded-bl-xs border border-line "
                         }`}
                       >
                         <div dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content) }} />
@@ -533,31 +533,31 @@ export default function ChatFloating() {
                         {m.isError && (
                           <button
                             onClick={retryLast}
-                            className="mt-2.5 px-3 py-1 bg-rose-500 text-white hover:bg-rose-600 text-xs font-semibold rounded-lg transition-colors inline-flex items-center gap-1"
+                            className="mt-2.5 px-3 py-1 bg-critical text-white hover:bg-critical text-caption font-semibold rounded-control transition-colors inline-flex items-center gap-1"
                           >
-                            🔄 Retry Connection
+                            <RefreshCw size={13} strokeWidth={1.75} aria-hidden className="inline-block shrink-0 align-[-2px]" /> Retry connection
                           </button>
                         )}
                       </div>
 
                       <div className="flex items-center justify-between px-1">
-                        {m.timestamp && <span className="text-caption text-muted-foreground/60">{m.timestamp}</span>}
+                        {m.timestamp && <span className="text-caption text-ink-3/60">{m.timestamp}</span>}
                         {m.role === "assistant" && !m.isError && (
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => copyToClipboard(m.content, i)}
-                              className="text-caption text-muted-foreground hover:text-foreground transition-colors"
+                              className="text-caption text-ink-3 hover:text-ink transition-colors"
                               title="Copy response"
                             >
-                              {copiedIndex === i ? "✓ Copied" : "📋 Copy"}
+                              {copiedIndex === i ? <><Check size={13} strokeWidth={1.75} aria-hidden className="inline-block shrink-0 align-[-2px]" /> Copied</> : <><Copy size={13} strokeWidth={1.75} aria-hidden className="inline-block shrink-0 align-[-2px]" /> Copy</>}
                             </button>
                             {i === messages.length - 1 && (
                               <button
                                 onClick={retryLast}
-                                className="text-caption text-muted-foreground hover:text-foreground transition-colors"
+                                className="text-caption text-ink-3 hover:text-ink transition-colors"
                                 title="Regenerate response"
                               >
-                                🔄 Regenerate
+                                <RefreshCw size={13} strokeWidth={1.75} aria-hidden className="inline-block shrink-0 align-[-2px]" /> Regenerate
                               </button>
                             )}
                           </div>
@@ -571,15 +571,15 @@ export default function ChatFloating() {
                 {/* Typing Indicator & Streaming Buffer */}
                 {streaming && (
                   <div className="flex justify-start">
-                    <div className="max-w-[88%] rounded-panel rounded-bl-xs px-4 py-2.5 text-sm text-foreground bg-card border border-border">
+                    <div className="max-w-[88%] rounded-panel rounded-bl-xs px-4 py-2.5 text-body text-ink bg-surface border border-line">
                       {streamBuffer ? (
                         <div dangerouslySetInnerHTML={{ __html: renderMarkdown(streamBuffer) }} />
                       ) : (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground py-0.5">
+                        <div className="flex items-center gap-2 text-caption text-ink-3 py-0.5">
                           <span className="flex h-2 w-2 relative">
                                                         <span className="relative inline-flex rounded-full h-2 w-2 bg-ink-3" />
                           </span>
-                          <span className="italic font-medium text-foreground">VSI AI Assistant is typing...</span>
+                          <span className="italic font-medium text-ink">VSI AI Assistant is typing...</span>
                         </div>
                       )}
                     </div>
@@ -589,27 +589,27 @@ export default function ChatFloating() {
 
               {/* Attached File Preview */}
               {attachedFile && (
-                <div className="px-4 py-1.5 bg-muted/60 border-t border-border flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground truncate max-w-[300px]">
-                    📎 Attached: <strong className="text-foreground">{attachedFile}</strong>
+                <div className="px-4 py-1.5 bg-surface-2/60 border-t border-line flex items-center justify-between text-caption">
+                  <span className="text-ink-3 truncate max-w-[300px]">
+                    <Paperclip size={13} strokeWidth={1.75} aria-hidden className="inline-block shrink-0 align-[-2px]" /> Attached: <strong className="text-ink">{attachedFile}</strong>
                   </span>
-                  <button onClick={() => setAttachedFile(null)} className="text-muted-foreground hover:text-foreground font-bold ml-2">
-                    ✕
+                  <button onClick={() => setAttachedFile(null)} className="text-ink-3 hover:text-ink font-semibold ml-2">
+                    <X size={13} strokeWidth={1.75} aria-hidden className="inline-block shrink-0 align-[-2px]" />
                   </button>
                 </div>
               )}
 
               {/* Input Footer */}
-              <div className="border-t border-border px-3 py-3 bg-card">
+              <div className="border-t border-line px-3 py-3 bg-surface">
                 <div className="flex items-end gap-2">
                   <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     type="button"
                     title="Attach file"
-                    className="h-9 w-9 rounded-panel border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors shrink-0"
+                    className="h-9 w-9 rounded-panel border border-line bg-canvas hover:bg-surface-2 text-ink-3 hover:text-ink flex items-center justify-center transition-colors shrink-0"
                   >
-                    📎
+                    <Paperclip size={16} strokeWidth={1.75} aria-hidden />
                   </button>
 
                   <textarea
@@ -624,13 +624,13 @@ export default function ChatFloating() {
                     placeholder={streaming ? "Streaming response…" : "Ask VSI Assistant..."}
                     disabled={streaming}
                     rows={1}
-                    className="flex-1 resize-none rounded-panel border border-border bg-background px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-line-strong focus:ring-2 focus:ring-ink/10 disabled:opacity-50 max-h-28"
+                    className="flex-1 resize-none rounded-panel border border-line bg-canvas px-3.5 py-2 text-body text-ink placeholder:text-ink-3 focus:outline-none focus:border-line-strong focus:ring-2 focus:ring-ink/10 disabled:opacity-50 max-h-28"
                   />
 
                   {streaming ? (
                     <button
                       onClick={stop}
-                      className="h-9 px-3 rounded-panel bg-slate-800 text-white text-xs font-semibold hover:bg-slate-900 transition-colors shrink-0"
+                      className="h-9 px-3 rounded-panel bg-ink text-white text-caption font-semibold hover:bg-ink transition-colors shrink-0"
                     >
                       Stop
                     </button>
@@ -638,13 +638,13 @@ export default function ChatFloating() {
                     <button
                       onClick={() => send()}
                       disabled={!input.trim() && !attachedFile}
-                      className="h-9 px-4 rounded-panel bg-ink text-white text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-colors hover:bg-ink-2 shrink-0 flex items-center gap-1"
+                      className="h-9 px-4 rounded-panel bg-ink text-white text-caption font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-colors hover:bg-ink-2 shrink-0 flex items-center gap-1"
                     >
                       Send
                     </button>
                   )}
                 </div>
-                <p className="text-caption text-muted-foreground mt-1.5 px-1">
+                <p className="text-caption text-ink-3 mt-1.5 px-1">
                   Powered by VSI Search Engine · Context: {label}
                 </p>
               </div>

@@ -9,20 +9,7 @@ import GapMetrics from "@/components/GapMetrics";
 import type { CitationContent } from "@/app/api/citation-content/route";
 import { normaliseDomain } from "@/lib/url-input";
 import { useActiveProject } from "@/components/layout/ProjectProvider";
-import {
-  Search,
-  Link2,
-  Building2,
-  MapPin,
-  Sparkles,
-  CheckCircle2,
-  AlertCircle,
-  XCircle,
-  Loader2,
-  ArrowRight,
-  ChevronDown,
-  TrendingUp,
-} from "lucide-react";
+import { Search, Link2, Building2, MapPin, CheckCircle2, AlertCircle, XCircle, Loader2, ArrowRight, ChevronDown, TrendingUp, MessageSquareText } from "lucide-react";
 
 type CitationMap = Record<string, CitationContent | "loading" | "error">;
 
@@ -112,7 +99,7 @@ export default function LiveSearchCheckView() {
     <div className="space-y-8 pb-16">
 
       {/* ── 1. MAIN SEARCH CARD ── */}
-      <div className="bg-white dark:bg-card rounded-panel border border-border p-6 sm:p-8">
+      <div className="bg-surface dark:bg-surface rounded-panel border border-line p-6 sm:p-8">
 
         <form onSubmit={handleSubmit}>
           {/* Input Grid */}
@@ -120,11 +107,11 @@ export default function LiveSearchCheckView() {
 
             {/* Keyword */}
             <div>
-              <label htmlFor="check-keyword" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                Search <span className="text-rose-500">*</span>
+              <label htmlFor="check-keyword" className="block text-caption font-semibold text-ink-3 mb-1.5">
+                Search <span className="text-critical">*</span>
               </label>
-              <div className="flex items-center gap-2 bg-slate-50 dark:bg-muted/30 border border-border rounded-lg px-3 py-2.5 focus-within:border-line-strong focus-within:bg-white dark:focus-within:bg-card focus-within:ring-2 focus-within:ring-ink/10 transition-all">
-                <Search size={15} className="text-muted-foreground shrink-0" />
+              <div className="flex items-center gap-2 bg-surface-2 dark:bg-surface-2/30 border border-line rounded-control px-3 py-2.5 focus-within:border-line-strong focus-within:bg-surface dark:focus-within:bg-surface focus-within:ring-2 focus-within:ring-ink/10 transition-all">
+                <Search size={15} className="text-ink-3 shrink-0" />
                 <input
                   id="check-keyword"
                   type="text"
@@ -132,18 +119,18 @@ export default function LiveSearchCheckView() {
                   onChange={(e) => setKeyword(e.target.value)}
                   placeholder="e.g. best SEO agency dubai"
                   required
-                  className="flex-1 bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground/50 focus:outline-none min-w-0"
+                  className="flex-1 bg-transparent text-body font-medium text-ink placeholder:text-ink-3/50 focus:outline-none min-w-0"
                 />
               </div>
             </div>
 
             {/* Domain */}
             <div>
-              <label htmlFor="check-domain" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                Your website <span className="text-rose-500">*</span>
+              <label htmlFor="check-domain" className="block text-caption font-semibold text-ink-3 mb-1.5">
+                Your website <span className="text-critical">*</span>
               </label>
-              <div className="flex items-center gap-2 bg-slate-50 dark:bg-muted/30 border border-border rounded-lg px-3 py-2.5 focus-within:border-line-strong focus-within:bg-white dark:focus-within:bg-card focus-within:ring-2 focus-within:ring-ink/10 transition-all">
-                <Link2 size={15} className="text-muted-foreground shrink-0" />
+              <div className="flex items-center gap-2 bg-surface-2 dark:bg-surface-2/30 border border-line rounded-control px-3 py-2.5 focus-within:border-line-strong focus-within:bg-surface dark:focus-within:bg-surface focus-within:ring-2 focus-within:ring-ink/10 transition-all">
+                <Link2 size={15} className="text-ink-3 shrink-0" />
                 <input
                   id="check-domain"
                   type="text"
@@ -151,18 +138,18 @@ export default function LiveSearchCheckView() {
                   onChange={(e) => setDomain(e.target.value)}
                   placeholder="e.g. valgrowlabs.com"
                   required
-                  className="flex-1 bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground/50 focus:outline-none min-w-0"
+                  className="flex-1 bg-transparent text-body font-medium text-ink placeholder:text-ink-3/50 focus:outline-none min-w-0"
                 />
               </div>
             </div>
 
             {/* Brand */}
             <div>
-              <label htmlFor="check-brand" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                Business name <span className="text-rose-500">*</span>
+              <label htmlFor="check-brand" className="block text-caption font-semibold text-ink-3 mb-1.5">
+                Business name <span className="text-critical">*</span>
               </label>
-              <div className="flex items-center gap-2 bg-slate-50 dark:bg-muted/30 border border-border rounded-lg px-3 py-2.5 focus-within:border-line-strong focus-within:bg-white dark:focus-within:bg-card focus-within:ring-2 focus-within:ring-ink/10 transition-all">
-                <Building2 size={15} className="text-muted-foreground shrink-0" />
+              <div className="flex items-center gap-2 bg-surface-2 dark:bg-surface-2/30 border border-line rounded-control px-3 py-2.5 focus-within:border-line-strong focus-within:bg-surface dark:focus-within:bg-surface focus-within:ring-2 focus-within:ring-ink/10 transition-all">
+                <Building2 size={15} className="text-ink-3 shrink-0" />
                 <input
                   id="check-brand"
                   type="text"
@@ -170,30 +157,30 @@ export default function LiveSearchCheckView() {
                   onChange={(e) => setBrand(e.target.value)}
                   placeholder="e.g. Valgrow Labs"
                   required
-                  className="flex-1 bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground/50 focus:outline-none min-w-0"
+                  className="flex-1 bg-transparent text-body font-medium text-ink placeholder:text-ink-3/50 focus:outline-none min-w-0"
                 />
               </div>
             </div>
 
             {/* Location */}
             <div>
-              <label htmlFor="check-location" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                Country <span className="text-rose-500">*</span>
+              <label htmlFor="check-location" className="block text-caption font-semibold text-ink-3 mb-1.5">
+                Country <span className="text-critical">*</span>
               </label>
-              <div className="flex items-center gap-2 bg-slate-50 dark:bg-muted/30 border border-border rounded-lg px-3 py-2.5 focus-within:border-line-strong focus-within:bg-white dark:focus-within:bg-card focus-within:ring-2 focus-within:ring-ink/10 transition-all">
-                <MapPin size={15} className="text-muted-foreground shrink-0" />
+              <div className="flex items-center gap-2 bg-surface-2 dark:bg-surface-2/30 border border-line rounded-control px-3 py-2.5 focus-within:border-line-strong focus-within:bg-surface dark:focus-within:bg-surface focus-within:ring-2 focus-within:ring-ink/10 transition-all">
+                <MapPin size={15} className="text-ink-3 shrink-0" />
                 <div className="flex-1 relative min-w-0">
                   <select
                     id="check-location"
                     value={location}
                     onChange={(e) => setLocation(e.target.value as Location)}
-                    className="w-full bg-transparent text-sm font-medium text-foreground focus:outline-none appearance-none cursor-pointer pr-5"
+                    className="w-full bg-transparent text-body font-medium text-ink focus:outline-none appearance-none cursor-pointer pr-5"
                   >
                     {(Object.entries(LOCATIONS) as [Location, typeof LOCATIONS[Location]][]).map(([key, val]) => (
-                      <option key={key} value={key} className="bg-card text-foreground">{val.label}</option>
+                      <option key={key} value={key} className="bg-surface text-ink">{val.label}</option>
                     ))}
                   </select>
-                  <ChevronDown size={13} className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <ChevronDown size={13} className="absolute right-0 top-1/2 -translate-y-1/2 text-ink-3 pointer-events-none" />
                 </div>
               </div>
             </div>
@@ -201,18 +188,18 @@ export default function LiveSearchCheckView() {
           </div>
 
           {/* Submit Action Row */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6 pt-5 border-t border-border">
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5 font-medium text-foreground">
-                <CheckCircle2 size={14} className="text-emerald-500" />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6 pt-5 border-t border-line">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-caption text-ink-3">
+              <span className="flex items-center gap-1.5 font-medium text-ink">
+                <CheckCircle2 size={14} className="text-positive" />
                 Organic Google SERP
               </span>
-              <span className="flex items-center gap-1.5 font-medium text-foreground">
-                <CheckCircle2 size={14} className="text-emerald-500" />
+              <span className="flex items-center gap-1.5 font-medium text-ink">
+                <CheckCircle2 size={14} className="text-positive" />
                 AI Overview Mentions
               </span>
-              <span className="flex items-center gap-1.5 font-medium text-foreground">
-                <CheckCircle2 size={14} className="text-emerald-500" />
+              <span className="flex items-center gap-1.5 font-medium text-ink">
+                <CheckCircle2 size={14} className="text-positive" />
                 Competitor Citations
               </span>
             </div>
@@ -220,7 +207,7 @@ export default function LiveSearchCheckView() {
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-ink hover:bg-ink-2 text-white text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0 cursor-pointer"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-control bg-ink hover:bg-ink-2 text-white text-body font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0 cursor-pointer"
             >
               {loading ? (
                 <>
@@ -239,7 +226,7 @@ export default function LiveSearchCheckView() {
 
         {/* Error notice */}
         {error && (
-          <div className="mt-4 flex items-start gap-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800/40 rounded-panel px-4 py-3 text-sm text-rose-700 dark:text-rose-400">
+          <div className="mt-4 flex items-start gap-3 bg-critical-soft border border-critical/30 dark:border-critical/30 rounded-panel px-4 py-3 text-body text-critical dark:text-critical">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <p className="font-medium">{error}</p>
           </div>
@@ -255,11 +242,11 @@ export default function LiveSearchCheckView() {
 
       {/* ── 3. LOADING STATE ── */}
       {loading && (
-        <div className="bg-white dark:bg-card border border-border rounded-panel p-12 flex flex-col items-center justify-center gap-4 text-center">
-          <div className="w-12 h-12 rounded-full border-2 border-border border-t-ink animate-spin" />
+        <div className="bg-surface dark:bg-surface border border-line rounded-panel p-12 flex flex-col items-center justify-center gap-4 text-center">
+          <div className="w-12 h-12 rounded-full border-2 border-line border-t-ink animate-spin" />
           <div>
-            <p className="text-sm font-bold text-foreground">Checking Google Search &amp; AI Overviews</p>
-            <p className="text-xs text-muted-foreground mt-1">Connecting to live Google data and scraping AI citations…</p>
+            <p className="text-body font-semibold text-ink">Checking Google Search &amp; AI Overviews</p>
+            <p className="text-caption text-ink-3 mt-1">Connecting to live Google data and scraping AI citations…</p>
           </div>
         </div>
       )}
@@ -274,17 +261,17 @@ export default function LiveSearchCheckView() {
               <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${gapStyle.dot}`} />
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className={`text-sm font-bold ${gapStyle.text}`}>{gap.title}</p>
+                  <p className={`text-body font-semibold ${gapStyle.text}`}>{gap.title}</p>
                   {result.isDemo && (
-                    <span className="text-caption font-semibold px-2 py-0.5 rounded bg-muted text-muted-foreground tracking-wide">
+                    <span className="text-caption font-semibold px-2 py-0.5 rounded bg-surface-2 text-ink-3 tracking-wide">
                       Demo Data
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">{gap.description}</p>
+                <p className="text-caption text-ink-3 mt-0.5">{gap.description}</p>
               </div>
             </div>
-            <span className={`text-xs font-bold px-3.5 py-1.5 rounded-full ${gapStyle.badge}  `}>
+            <span className={`text-caption font-semibold px-3.5 py-1.5 rounded-control ${gapStyle.badge} `}>
               {gap.label.replace(/_/g, " ")}
             </span>
           </div>
@@ -293,31 +280,31 @@ export default function LiveSearchCheckView() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
             {/* Google Ranking Card */}
-            <div className="bg-white dark:bg-card border border-border rounded-panel p-6">
+            <div className="bg-surface dark:bg-surface border border-line rounded-panel p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-muted flex items-center justify-center text-foreground">
+                  <div className="w-8 h-8 rounded-control bg-surface-2 dark:bg-surface-2 flex items-center justify-center text-ink">
                     <TrendingUp size={16} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-foreground">Google Organic SERP</h3>
-                    <p className="text-caption text-muted-foreground">Standard search results</p>
+                    <h3 className="text-body font-semibold text-ink">Google Organic SERP</h3>
+                    <p className="text-caption text-ink-3">Standard search results</p>
                   </div>
                 </div>
-                <span className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">
+                <span className="text-caption text-ink-3 bg-surface-2 px-2 py-0.5 rounded">
                   {location.toUpperCase()}
                 </span>
               </div>
 
               {result.googleRank !== null ? (
-                <div className="flex items-baseline gap-2 mb-4 p-3 bg-slate-50 dark:bg-muted/30 rounded-lg border border-border">
-                  <span className="text-3xl font-semibold text-foreground">#{result.googleRank}</span>
-                  <span className="text-xs text-muted-foreground">for {result.domain}</span>
+                <div className="flex items-baseline gap-2 mb-4 p-3 bg-surface-2 dark:bg-surface-2/30 rounded-control border border-line">
+                  <span className="text-3xl font-semibold text-ink">#{result.googleRank}</span>
+                  <span className="text-caption text-ink-3">for {result.domain}</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2.5 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800/40 mb-4">
-                  <XCircle className="w-4 h-4 text-rose-500 shrink-0" />
-                  <p className="text-xs font-medium text-rose-700 dark:text-rose-400">
+                <div className="flex items-center gap-2.5 p-3 rounded-control bg-critical-soft border border-critical/30 dark:border-critical/30 mb-4">
+                  <XCircle className="w-4 h-4 text-critical shrink-0" />
+                  <p className="text-caption font-medium text-critical dark:text-critical">
                     Not found in top Google results for this query.
                   </p>
                 </div>
@@ -325,27 +312,27 @@ export default function LiveSearchCheckView() {
 
               {result.organicResults.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-bold text-muted-foreground tracking-wide">Top 10 Ranked Results</p>
+                  <p className="text-caption font-semibold text-ink-3 tracking-wide">Top 10 Ranked Results</p>
                   <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
                     {result.organicResults.map((r) => (
                       <div
                         key={r.url}
-                        className={`flex items-center gap-3 rounded-lg px-3 py-2 text-xs border ${
+                        className={`flex items-center gap-3 rounded-control px-3 py-2 text-caption border ${
                           r.isClient
-                            ? "bg-orange-50 dark:bg-orange-950/20 border-orange-300 dark:border-orange-800/60"
-                            : "bg-slate-50 dark:bg-muted/30 border-border"
+                            ? "bg-brand-soft border-brand/40 dark:border-brand/40"
+                            : "bg-surface-2 dark:bg-surface-2/30 border-line"
                         }`}
                       >
-                        <span className={`shrink-0 w-5 h-5 flex items-center justify-center rounded text-caption font-bold ${
-                          r.isClient ? "bg-ink text-white" : "bg-muted text-muted-foreground"
+                        <span className={`shrink-0 w-5 h-5 flex items-center justify-center rounded text-caption font-semibold ${
+                          r.isClient ? "bg-ink text-white" : "bg-surface-2 text-ink-3"
                         }`}>
                           {r.position}
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className={`font-semibold truncate ${r.isClient ? "text-brand-strong" : "text-foreground"}`}>
+                          <p className={`font-semibold truncate ${r.isClient ? "text-brand-strong" : "text-ink"}`}>
                             {r.title}
                           </p>
-                          <p className="text-caption text-muted-foreground truncate font-mono">{r.domain}</p>
+                          <p className="text-caption text-ink-3 truncate">{r.domain}</p>
                         </div>
                       </div>
                     ))}
@@ -355,29 +342,29 @@ export default function LiveSearchCheckView() {
             </div>
 
             {/* AI Visibility Card */}
-            <div className="bg-white dark:bg-card border border-border rounded-panel p-6">
+            <div className="bg-surface dark:bg-surface border border-line rounded-panel p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-950/40 flex items-center justify-center text-brand-strong">
-                    <Sparkles size={16} />
+                  <div className="w-8 h-8 rounded-control bg-brand-soft flex items-center justify-center text-brand-strong">
+                    <MessageSquareText size={16} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-foreground">AI Mode Visibility</h3>
-                    <p className="text-caption text-muted-foreground">Google AI Overview detection</p>
+                    <h3 className="text-body font-semibold text-ink">AI Mode Visibility</h3>
+                    <p className="text-caption text-ink-3">Google AI Overview detection</p>
                   </div>
                 </div>
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                <span className={`text-caption font-semibold px-2.5 py-1 rounded-full ${
                   result.aioPresent
-                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
-                    : "bg-slate-100 text-slate-600 dark:bg-muted dark:text-muted-foreground"
+                    ? "bg-positive-soft text-positive dark:text-positive"
+                    : "bg-surface-2 text-ink-2 dark:bg-surface-2 dark:text-ink-3"
                 }`}>
                   {result.aioPresent ? "AI Overview Triggered" : "No AI Overview"}
                 </span>
               </div>
 
-              <div className="flex items-center gap-2.5 mb-4 p-3 bg-slate-50 dark:bg-muted/30 rounded-lg border border-border">
-                <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${result.aioPresent ? "bg-emerald-500" : "bg-slate-400"}`} />
-                <p className="text-xs font-medium text-foreground">
+              <div className="flex items-center gap-2.5 mb-4 p-3 bg-surface-2 dark:bg-surface-2/30 rounded-control border border-line">
+                <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${result.aioPresent ? "bg-positive" : "bg-ink-3"}`} />
+                <p className="text-caption font-medium text-ink">
                   {result.aioPresent
                     ? "Google generated an AI Overview answer for this search."
                     : "No AI Overview was generated for this search."}
@@ -386,20 +373,20 @@ export default function LiveSearchCheckView() {
 
               {result.aioPresent && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
-                  <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg border font-medium ${
+                  <div className={`flex items-center gap-2 text-caption px-3 py-2 rounded-control border font-medium ${
                     result.brandCited
-                      ? "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-800/40 dark:text-emerald-400"
-                      : "bg-slate-50 border-border text-muted-foreground dark:bg-muted/40"
+                      ? "bg-positive-soft border-positive/30 text-positive dark:border-positive/30 dark:text-positive"
+                      : "bg-surface-2 border-line text-ink-3 dark:bg-surface-2/40"
                   }`}>
                     {result.brandCited ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
                     {result.brandCited
                       ? `Cited source (#${result.clientCitationPosition})`
                       : "Not cited as a source"}
                   </div>
-                  <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg border font-medium ${
+                  <div className={`flex items-center gap-2 text-caption px-3 py-2 rounded-control border font-medium ${
                     result.brandMentioned
-                      ? "bg-orange-50 border-orange-200 text-brand-strong dark:bg-orange-950/20 dark:border-orange-800/40"
-                      : "bg-slate-50 border-border text-muted-foreground dark:bg-muted/40"
+                      ? "bg-brand-soft border-brand/40 text-brand-strong dark:border-brand/40"
+                      : "bg-surface-2 border-line text-ink-3 dark:bg-surface-2/40"
                   }`}>
                     {result.brandMentioned ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
                     {result.brandMentioned ? "Mentioned in AI text" : "Not mentioned in text"}
@@ -408,17 +395,17 @@ export default function LiveSearchCheckView() {
               )}
 
               {result.aioBlocks.length > 0 && (
-                <div className="border-t border-border pt-4">
-                  <p className="text-xs font-bold text-muted-foreground tracking-wide mb-2">AI Answer Preview</p>
-                  <div className="bg-slate-50 dark:bg-muted/30 border border-border rounded-lg p-3.5 space-y-2 max-h-52 overflow-y-auto">
+                <div className="border-t border-line pt-4">
+                  <p className="text-caption font-semibold text-ink-3 tracking-wide mb-2">AI Answer Preview</p>
+                  <div className="bg-surface-2 dark:bg-surface-2/30 border border-line rounded-control p-3.5 space-y-2 max-h-52 overflow-y-auto">
                     {result.aioBlocks.map((block, i) =>
                       block.type === "paragraph" ? (
-                        <p key={i} className="text-xs text-foreground leading-relaxed">{block.snippet}</p>
+                        <p key={i} className="text-caption text-ink leading-relaxed">{block.snippet}</p>
                       ) : block.type === "list" && block.list ? (
                         <ul key={i} className="space-y-1 pl-1">
                           {block.list.map((item, j) => (
-                            <li key={j} className="flex gap-2 text-xs text-foreground leading-relaxed">
-                              <span className="text-brand-strong shrink-0 font-bold">•</span>
+                            <li key={j} className="flex gap-2 text-caption text-ink leading-relaxed">
+                              <span className="text-brand-strong shrink-0 font-semibold">•</span>
                               <span>{item.snippet}</span>
                             </li>
                           ))}
@@ -441,15 +428,15 @@ export default function LiveSearchCheckView() {
 
           {/* AI Mode Citations */}
           {result.aioPresent && result.citations.length > 0 && (
-            <div className="bg-white dark:bg-card border border-border rounded-panel p-6">
+            <div className="bg-surface dark:bg-surface border border-line rounded-panel p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-sm font-bold text-foreground">AI Mode Citations &amp; Competitor Sources</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <h3 className="text-body font-semibold text-ink">AI Mode Citations &amp; Competitor Sources</h3>
+                  <p className="text-caption text-ink-3 mt-0.5">
                     Sources and domains referenced by Google AI Overview for this search query.
                   </p>
                 </div>
-                <span className="text-xs font-medium text-muted-foreground bg-slate-50 dark:bg-muted px-2.5 py-1 rounded-md border border-border">
+                <span className="text-caption font-medium text-ink-3 bg-surface-2 dark:bg-surface-2 px-2.5 py-1 rounded-control border border-line">
                   {result.uniqueCompetitorsCount} competitors · {result.totalCitationsCount} citations
                 </span>
               </div>
