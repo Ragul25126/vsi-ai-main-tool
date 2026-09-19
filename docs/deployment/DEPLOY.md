@@ -1,5 +1,11 @@
 # VSI — Deployment Guide (Coolify)
 
+> **Out of date for the database (2026-09-19).** Do not follow section 2. It lists only four
+> migrations, and it tells you to create `USING (true)` development policies on `clients`,
+> `tracked_keywords` and `search_results`, which removes the separation between organizations.
+> Use [docs/architecture/VSI_SUPABASE_SETUP.md](../architecture/VSI_SUPABASE_SETUP.md) for the
+> database, environment variables and authentication. The Coolify steps below still apply.
+
 ## Prerequisites
 - Coolify instance with Docker support
 - Private Git repository (GitHub / GitLab / Gitea)

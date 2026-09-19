@@ -296,6 +296,45 @@
   .vsi-loop-scan, .vsi-loop-dot, .vsi-loop-row, .vsi-loop-done { animation: none !important; }
 }
 
+/* Login preview (auth/LoginShowcase): one slow 12s loop. The trend lines draw, site health
+   fills, the opportunities arrive, and the first one is picked and ticked off. Resting state
+   is the finished drawing, which is also what people who ask for reduced motion see. */
+@keyframes login-draw-a { 0%, 2% { stroke-dashoffset: 1; opacity: 1; } 16%, 93% { stroke-dashoffset: 0; opacity: 1; } 98%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes login-draw-b { 0%, 8% { stroke-dashoffset: 1; opacity: 1; } 24%, 93% { stroke-dashoffset: 0; opacity: 1; } 98%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes login-after-a { 0%, 15% { opacity: 0; } 21%, 93% { opacity: 1; } 98%, 100% { opacity: 0; } }
+@keyframes login-after-b { 0%, 23% { opacity: 0; } 29%, 93% { opacity: 1; } 98%, 100% { opacity: 0; } }
+@keyframes login-bar-1 { 0%, 18% { transform: scaleX(0); opacity: 1; } 27%, 93% { transform: scaleX(1); opacity: 1; } 98%, 100% { transform: scaleX(1); opacity: 0; } }
+@keyframes login-bar-2 { 0%, 21% { transform: scaleX(0); opacity: 1; } 30%, 93% { transform: scaleX(1); opacity: 1; } 98%, 100% { transform: scaleX(1); opacity: 0; } }
+@keyframes login-bar-3 { 0%, 24% { transform: scaleX(0); opacity: 1; } 33%, 93% { transform: scaleX(1); opacity: 1; } 98%, 100% { transform: scaleX(1); opacity: 0; } }
+@keyframes login-row-1 { 0%, 32% { opacity: 0; transform: translateY(6px); } 37%, 93% { opacity: 1; transform: none; } 98%, 100% { opacity: 0; transform: none; } }
+@keyframes login-row-2 { 0%, 37% { opacity: 0; transform: translateY(6px); } 42%, 93% { opacity: 1; transform: none; } 98%, 100% { opacity: 0; transform: none; } }
+@keyframes login-row-3 { 0%, 42% { opacity: 0; transform: translateY(6px); } 47%, 93% { opacity: 1; transform: none; } 98%, 100% { opacity: 0; transform: none; } }
+@keyframes login-pick { 0%, 56% { opacity: 0; } 62%, 93% { opacity: 1; } 98%, 100% { opacity: 0; } }
+@keyframes login-tick { 0%, 60% { opacity: 0; transform: scale(0.4); } 65% { opacity: 1; transform: scale(1.15); } 68%, 93% { opacity: 1; transform: scale(1); } 98%, 100% { opacity: 0; transform: scale(1); } }
+@keyframes login-dot-out { 0%, 60% { opacity: 1; } 63%, 100% { opacity: 0; } }
+@keyframes login-pulse { 0% { transform: scale(1); opacity: 0.45; } 70%, 100% { transform: scale(3); opacity: 0; } }
+
+.login-loop-draw-a { stroke-dasharray: 1; animation: login-draw-a 12s ease-out infinite; }
+.login-loop-draw-b { stroke-dasharray: 1; animation: login-draw-b 12s ease-out infinite; }
+.login-loop-after-a { animation: login-after-a 12s ease-out infinite; }
+.login-loop-after-b { animation: login-after-b 12s ease-out infinite; }
+.login-loop-bar-1, .login-loop-bar-2, .login-loop-bar-3 { transform-origin: left center; }
+.login-loop-bar-1 { animation: login-bar-1 12s var(--ease-out-soft) infinite; }
+.login-loop-bar-2 { animation: login-bar-2 12s var(--ease-out-soft) infinite; }
+.login-loop-bar-3 { animation: login-bar-3 12s var(--ease-out-soft) infinite; }
+.login-loop-row-1 { animation: login-row-1 12s ease-out infinite; }
+.login-loop-row-2 { animation: login-row-2 12s ease-out infinite; }
+.login-loop-row-3 { animation: login-row-3 12s ease-out infinite; }
+.login-loop-pick { animation: login-pick 12s ease-out infinite; }
+.login-loop-tick { animation: login-tick 12s ease-out infinite; }
+.login-loop-dot-out { opacity: 0; animation: login-dot-out 12s linear infinite; }
+.login-loop-pulse { transform-box: fill-box; transform-origin: center; animation: login-pulse 2.4s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  [class*="login-loop-"] { animation: none !important; }
+  .login-loop-pulse { opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

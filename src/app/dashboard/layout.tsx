@@ -3,6 +3,7 @@ import Topbar from "@/components/Topbar";
 import ChatFloating from "@/components/ChatFloating";
 import PilotBanner from "@/components/PilotBanner";
 import ScrollToTop from "@/components/ScrollToTop";
+import WelcomeToast from "@/components/WelcomeToast";
 import { ProjectProvider } from "@/components/layout/ProjectProvider";
 import { createClient } from "@/lib/supabase/server";
 import { requireAgency, isDummySupabase } from "@/lib/auth";
@@ -43,6 +44,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <ProjectProvider project={projectContext.active}>
             <OnboardingProvider state={onboarding} projectId={projectContext.active?.id ?? null}>
             <ScrollToTop />
+            <WelcomeToast />
             <div className="relative min-h-screen overflow-x-hidden bg-canvas font-sans text-ink md:flex md:h-screen">
               <Sidebar
                 agencyName={agencyName}

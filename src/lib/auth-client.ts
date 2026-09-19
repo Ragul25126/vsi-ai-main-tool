@@ -1,4 +1,5 @@
 import type { UserProfile } from "@/types/login";
+import { WELCOME_COOKIE, WELCOME_COOKIE_MAX_AGE } from "@/lib/auth-config";
 
 export function getClientCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
@@ -54,6 +55,18 @@ export function setClientSession(user: UserProfile) {
   if (user.name) {
     document.cookie = `vsi_user_name=${encodeURIComponent(user.name)}; path=/; max-age=${maxAge}; SameSite=Lax`;
   }
+}
+
+export function markJustSignedIn() {
+  if (typeof document === "undefined") return;
+  document.cookie = `${WELCOME_COOKIE}=1; path=/; max-age=${WELCOME_COOKIE_MAX_AGE}; SameSite=Lax`;
+}
+
+/** True only on the first call after a sign-in; clears the marker so a reload does not greet again. */
+export function consumeJustSignedIn(): boolean {
+  if (!getClientCookie(WELCOME_COOKIE)) return false;
+  document.cookie = `${WELCOME_COOKIE}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+  return true;
 }
 
 export function clearClientSession() {

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-import { isAuthorizedEmail } from "@/lib/auth-config";
+import { isAuthorizedEmail, WELCOME_COOKIE, WELCOME_COOKIE_MAX_AGE } from "@/lib/auth-config";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -64,6 +64,14 @@ export async function GET(request: NextRequest) {
         response.cookies.set("vsi_oauth_payload", encodeURIComponent(JSON.stringify(userProfile)), {
           path: "/",
           maxAge: 300,
+          sameSite: "lax",
+          secure: process.env.NODE_ENV === "production",
+        });
+
+        // Readable by the page on purpose: the dashboard reads it once and clears it.
+        response.cookies.set(WELCOME_COOKIE, "1", {
+          path: "/",
+          maxAge: WELCOME_COOKIE_MAX_AGE,
           sameSite: "lax",
           secure: process.env.NODE_ENV === "production",
         });
