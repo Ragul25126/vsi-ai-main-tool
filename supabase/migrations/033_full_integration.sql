@@ -1,0 +1,65 @@
+-- ============================================================
+-- VSI Migration 033 — Full Supabase Integration & RLS Polish
+-- INTENTIONAL NO-OP. This file contains no executable SQL.
+-- ============================================================
+--
+-- The version number and filename are kept on purpose: the remote migration
+-- history already records 033 as applied, so removing or renumbering the file
+-- would put the local chain and the remote history out of step.
+--
+-- 033 was superseded by migrations 001-032 and 034. The original file
+-- contained redundant changes, and part of it could not run on a fresh
+-- database. It was recorded as applied on the remote without its SQL being
+-- executed, so making it a no-op also makes a replayed chain match the
+-- database that is actually live.
+--
+-- What the original 033 tried to do, and why none of it is kept here:
+--
+-- 1. search_results.ai_engine column and idx_sr_ai_engine
+--    Not used by the application. Every ai_engine reference in the app is the
+--    notifications.ai_engine column created by migration 030.
+--
+-- 2. CREATE TABLE IF NOT EXISTS public.feedback, six ADD COLUMN IF NOT EXISTS
+--    statements, and three feedback indexes
+--    Redundant. Migration 020 creates the table and those indexes, and
+--    migration 034 adds the remaining columns.
+--
+-- 3. ENABLE ROW LEVEL SECURITY on agencies, profiles, clients,
+--    tracked_keywords, search_results, tasks, notifications, messages,
+--    feedback and (conditionally) client_keyword_analyses and invites
+--    Redundant. RLS is already enabled by 001 (base tables), 018 (tasks),
+--    020 (feedback), 030 (notifications), 031 (messages) and 032
+--    (client_keyword_analyses).
+--
+-- 4. Policy tasks_agency_all
+--    Redundant. Migration 018 already defines it. tasks.agency_id is NOT NULL,
+--    so the added "OR agency_id IS NULL" could never match.
+--
+-- 5. Policies feedback_user_insert and feedback_agency_select
+--    These would broaden access compared with the existing policies from
+--    migration 020. feedback_user_insert would allow inserts with a null
+--    user_id, and feedback_agency_select would let any member of an agency
+--    read all of that agency's feedback, where 020 limits reads to the
+--    author's own rows. The application does not need either.
+--
+-- 6. Policy notifications_user_all
+--    Duplicate. Migration 030 already has four policies with the same rule
+--    (auth.uid() = user_id OR user_id IS NULL).
+--
+-- 7. Policy messages_user_access
+--    Broken. It referenced sender_id and receiver_id, which do not exist in
+--    the messages table created by migration 031. That table has user_id,
+--    plus sender and recipient as JSONB. On a fresh database this statement
+--    failed with an undefined-column error and stopped the whole chain. The
+--    application only uses user_id, and migration 031 already defines the
+--    messages policies.
+--
+-- 8. Policy client_keyword_analyses_agency_all
+--    Added nothing. Migration 032 already defines permissive USING (true)
+--    policies, and permissive policies are combined with OR.
+--
+-- Result: 033 intentionally performs no schema changes.
+--
+-- If any part of the above is wanted later, add it as a new migration
+-- (039 or later) after review. Do not restore SQL to this file.
+-- ============================================================

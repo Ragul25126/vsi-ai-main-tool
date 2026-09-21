@@ -37,6 +37,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Supabase CLI local state (project link, cached binary version). Never holds the DB
+# password or an access token — those are passed as flags/env vars, never written to disk.
+supabase/.temp
+.supabase
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

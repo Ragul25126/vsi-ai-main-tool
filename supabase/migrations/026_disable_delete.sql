@@ -21,7 +21,12 @@ create index if not exists idx_agencies_is_disabled on public.agencies(is_disabl
 
 -- Update the admin_list_users RPC (from migration 025) to surface the
 -- disable flag so the UI can render the right button state.
-create or replace function public.admin_list_users()
+-- The return columns are reordered relative to migration 025, and Postgres
+-- cannot change a function's OUT-parameter row type in place, so the old
+-- definition is dropped first.
+drop function if exists public.admin_list_users();
+
+create function public.admin_list_users()
 returns table (
   id uuid,
   email text,
@@ -29,9 +34,9 @@ returns table (
   role text,
   agency_id uuid,
   agency_name text,
+  created_at timestamptz,
   is_disabled boolean,
-  agency_is_disabled boolean,
-  created_at timestamptz
+  agency_is_disabled boolean
 ) language plpgsql security definer set search_path = public, auth as $$
 begin
   if not public.is_super_admin() then
@@ -45,9 +50,9 @@ begin
       p.role,
       p.agency_id,
       a.name as agency_name,
+      p.created_at,
       coalesce(p.is_disabled, false) as is_disabled,
-      coalesce(a.is_disabled, false) as agency_is_disabled,
-      p.created_at
+      coalesce(a.is_disabled, false) as agency_is_disabled
     from public.profiles p
     left join auth.users u on u.id = p.id
     left join public.agencies a on a.id = p.agency_id
