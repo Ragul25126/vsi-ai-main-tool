@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { X, Mail, CheckCircle2, Loader2 } from 'lucide-react';
 import { InputField } from './InputField';
 import { createClient } from '@/lib/supabase/client';
-import { isAuthorizedEmail } from '@/lib/auth-config';
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
@@ -37,13 +36,11 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     setLoading(true);
 
     try {
-      if (isAuthorizedEmail(email)) {
-        const supabase = createClient();
-        const resetUrl = typeof window !== "undefined" ? `${window.location.origin}/auth/reset-password` : undefined;
-        await supabase.auth.resetPasswordForEmail(email.trim(), {
-          redirectTo: resetUrl,
-        });
-      }
+      const supabase = createClient();
+      const resetUrl = typeof window !== "undefined" ? `${window.location.origin}/auth/reset-password` : undefined;
+      await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: resetUrl,
+      });
     } catch {
       // Do not reveal errors to prevent account enumeration
     } finally {

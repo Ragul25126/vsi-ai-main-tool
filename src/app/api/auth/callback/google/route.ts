@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { isAuthorizedEmail, WELCOME_COOKIE, WELCOME_COOKIE_MAX_AGE } from "@/lib/auth-config";
+import { WELCOME_COOKIE, WELCOME_COOKIE_MAX_AGE } from "@/lib/auth-config";
 import { currentCookieSessionAllowed } from "@/lib/auth-rules";
 
 export async function GET(request: NextRequest) {
@@ -82,13 +82,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Security Check: Restrict to authorized ValGrow Labs account only
-    if (!isAuthorizedEmail(googleUser.email)) {
-      const loginUrl = new URL("/login", origin);
-      loginUrl.searchParams.set("error", "unauthorized_account");
-      return NextResponse.redirect(loginUrl);
-    }
-
     // Format user profile
     const nameFromEmail = googleUser.email.split("@")[0];
     const formattedName = googleUser.name || nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1);
@@ -96,9 +89,9 @@ export async function GET(request: NextRequest) {
     const userProfile = {
       name: formattedName,
       email: googleUser.email,
-      role: "Administrator",
-      company: "Valgrow Enterprise",
-      plan: "VSI GEO Platform Pro",
+      role: "Member",
+      company: "",
+      plan: "",
       avatarUrl: googleUser.picture || undefined,
     };
 

@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { isAuthorizedEmail } from "@/lib/auth-config";
 import { currentCookieSessionAllowed } from "@/lib/auth-rules";
 import { PROJECT_COOKIE, UUID_PATTERN } from "@/lib/project-types";
 
@@ -23,9 +22,12 @@ export async function middleware(request: NextRequest) {
     request,
   });
 
-  // Legacy auth links redirect to /login
-  if (pathname === "/auth/login" || pathname === "/auth/register") {
+  // Legacy auth links land on the auth page: sign in, or create an account.
+  if (pathname === "/auth/login") {
     return NextResponse.redirect(new URL("/login", request.url));
+  }
+  if (pathname === "/auth/register") {
+    return NextResponse.redirect(new URL("/login?mode=signup", request.url));
   }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy.supabase.co";
@@ -68,27 +70,12 @@ export async function middleware(request: NextRequest) {
     cookieEmail = cookieEmail.trim();
   }
 
-  // Cookies alone are only trusted in local development without a database.
+  // A signed-in Supabase user is authenticated whatever their email. What they may do is decided
+  // by their profile role and organization (lib/auth, RLS), never by the address.
+  // Cookies alone are only trusted in local development without a database, and there they must
+  // carry an email, since the development session is built from it.
   const cookieSessions = currentCookieSessionAllowed();
-  const resolvedEmail = user?.email || (cookieSessions ? cookieEmail : null);
-  const hasAuthToken = !!user || (cookieSessions && request.cookies.has("vsi_session"));
-  const isAuthorized = hasAuthToken && isAuthorizedEmail(resolvedEmail);
-
-  // If user is logged in with ANY other email (unauthorized user), sign out & redirect to login
-  if (hasAuthToken && resolvedEmail && !isAuthorizedEmail(resolvedEmail)) {
-    try {
-      await supabase.auth.signOut();
-    } catch {
-      // ignore
-    }
-    const redirectUrl = new URL("/login", request.url);
-    const redirectResponse = NextResponse.redirect(redirectUrl);
-    const expired = "path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
-    redirectResponse.headers.append("Set-Cookie", `vsi_session=; ${expired}`);
-    redirectResponse.headers.append("Set-Cookie", `vsi_user_email=; ${expired}`);
-    redirectResponse.headers.append("Set-Cookie", `vsi_user_name=; ${expired}`);
-    return redirectResponse;
-  }
+  const isAuthorized = !!user || (cookieSessions && request.cookies.has("vsi_session") && !!cookieEmail);
 
   // Check if current route is public
   const isPublicPath = PUBLIC_PATHS.some(

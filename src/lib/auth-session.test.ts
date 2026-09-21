@@ -128,3 +128,163 @@ describe("getSession", () => {
     expect(admin instanceof Response).toBe(false);
   });
 });
+
+// Sign-in is open to every Supabase user. Access is decided by the profile role and
+// organization, never by the email address.
+describe("open sign-in (no email allowlist)", () => {
+  const OTHER_EMAIL = "new.person@example.org";
+  const realSupabase = () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://abcd1234.supabase.co");
+    state.cookies = { "sb-abcd1234-auth-token": "x" };
+  };
+
+  beforeEach(() => {
+    state.cookies = {};
+    state.user = null;
+    state.profile = null;
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("gives a session to any Supabase user, as their profile's role", async () => {
+    realSupabase();
+    state.user = { id: "u2", email: OTHER_EMAIL };
+    state.profile = { agency_id: "a2", role: "pilot", full_name: "New Person", is_disabled: false, agencies: { name: "Their Org", is_disabled: false } };
+    const { getSession } = await freshSession();
+    const s = await getSession();
+    expect(s?.email).toBe(OTHER_EMAIL);
+    expect(s?.role).toBe("pilot");
+    expect(s?.agencyId).toBe("a2");
+  });
+
+  it("keeps a new member out of the admin area", async () => {
+    realSupabase();
+    state.user = { id: "u2", email: OTHER_EMAIL };
+    state.profile = { agency_id: "a2", role: "pilot", is_disabled: false, agencies: { name: "Their Org", is_disabled: false } };
+    const { requireSuperAdmin } = await freshSession();
+    await expect(requireSuperAdmin()).rejects.toThrow("REDIRECT /dashboard");
+  });
+
+  it("gives the former admin address no privilege of its own", async () => {
+    realSupabase();
+    state.user = { id: "u1", email: ADMIN_EMAIL };
+    state.profile = { agency_id: "a1", role: "pilot", is_disabled: false, agencies: { name: "Acme", is_disabled: false } };
+    const { getSession, requireSuperAdmin } = await freshSession();
+    expect((await getSession())?.role).toBe("pilot");
+    await expect(requireSuperAdmin()).rejects.toThrow("REDIRECT /dashboard");
+  });
+
+  it("makes someone a super admin only through the profile role", async () => {
+    realSupabase();
+    state.user = { id: "u3", email: OTHER_EMAIL };
+    state.profile = { agency_id: "a3", role: "super_admin", is_disabled: false, agencies: { name: "Platform", is_disabled: false } };
+    const { getSession, requireSuperAdmin } = await freshSession();
+    expect((await getSession())?.role).toBe("super_admin");
+    await expect(requireSuperAdmin()).resolves.toMatchObject({ role: "super_admin" });
+  });
+
+  it("returns no session when nobody is signed in", async () => {
+    realSupabase();
+    state.user = null;
+    const { getSession } = await freshSession();
+    expect(await getSession()).toBeNull();
+  });
+
+  it("gives the local development session to any email, as a member by default", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://your-project.supabase.co");
+    vi.stubEnv("NODE_ENV", "development");
+    state.cookies = { vsi_session: "authenticated", vsi_user_email: encodeURIComponent(OTHER_EMAIL) };
+    const { getSession } = await freshSession();
+    const s = await getSession();
+    expect(s?.email).toBe(OTHER_EMAIL);
+    expect(s?.role).toBe("pilot");
+  });
+
+  it("gives the local development session admin rights only when explicitly opted in", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://your-project.supabase.co");
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("VSI_DEV_SESSION_ROLE", "super_admin");
+    state.cookies = { vsi_session: "authenticated", vsi_user_email: encodeURIComponent(OTHER_EMAIL) };
+    const { getSession } = await freshSession();
+    expect((await getSession())?.role).toBe("super_admin");
+  });
+
+  it("does not trust a development cookie session without an email", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://your-project.supabase.co");
+    vi.stubEnv("NODE_ENV", "development");
+    state.cookies = { vsi_session: "authenticated" };
+    const { getSession } = await freshSession();
+    expect(await getSession()).toBeNull();
+  });
+});
+
+// A newly registered account has a profile (from the sign-up trigger) but no organization yet.
+describe("new account with no organization", () => {
+  const NEW_EMAIL = "fresh.signup@example.org";
+  const realSupabase = () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://abcd1234.supabase.co");
+    state.cookies = { "sb-abcd1234-auth-token": "x" };
+    state.user = { id: "u9", email: NEW_EMAIL };
+  };
+
+  beforeEach(() => {
+    state.cookies = {};
+    state.user = null;
+    state.profile = null;
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("has no organization at all: no id, no name, no invented one", async () => {
+    realSupabase();
+    state.profile = { agency_id: null, role: "pilot", full_name: "Fresh Signup", is_disabled: false, agencies: null };
+    const { getSession } = await freshSession();
+    const s = await getSession();
+    expect(s?.email).toBe(NEW_EMAIL);
+    expect(s?.agencyId).toBeNull();
+    expect(s?.agencyName).toBeNull();
+    expect(JSON.stringify(s)).not.toContain("Valgrow");
+    expect(JSON.stringify(s)).not.toContain("00000000-0000-0000-0000-000000000001");
+  });
+
+  it("stays without an organization when the profile row can't be read", async () => {
+    realSupabase();
+    state.profile = null;
+    const { getSession } = await freshSession();
+    const s = await getSession();
+    expect(s?.agencyId).toBeNull();
+    expect(s?.agencyName).toBeNull();
+    expect(s?.role).toBe("pilot");
+  });
+
+  it("is an ordinary member, never a super admin", async () => {
+    realSupabase();
+    state.profile = { agency_id: null, role: "pilot", is_disabled: false, agencies: null };
+    const { getSession, requireSuperAdmin } = await freshSession();
+    expect((await getSession())?.role).toBe("pilot");
+    await expect(requireSuperAdmin()).rejects.toThrow("REDIRECT /dashboard");
+  });
+
+  it("is sent to onboarding to create an organization, not into the dashboard", async () => {
+    realSupabase();
+    state.profile = { agency_id: null, role: "pilot", is_disabled: false, agencies: null };
+    const { requireAgency } = await freshSession();
+    await expect(requireAgency()).rejects.toThrow("REDIRECT /onboarding");
+  });
+
+  it("gets the real organization once one exists", async () => {
+    realSupabase();
+    state.profile = { agency_id: "org-1", role: "pilot", is_disabled: false, agencies: { name: "Acme Plumbing", is_disabled: false } };
+    const { requireAgency } = await freshSession();
+    await expect(requireAgency()).resolves.toMatchObject({ agencyId: "org-1", agencyName: "Acme Plumbing", role: "pilot" });
+  });
+
+  it("still lets an explicit super admin through, with or without an organization", async () => {
+    realSupabase();
+    state.profile = { agency_id: null, role: "super_admin", is_disabled: false, agencies: null };
+    const { requireSuperAdmin } = await freshSession();
+    await expect(requireSuperAdmin()).resolves.toMatchObject({ role: "super_admin", agencyId: null });
+  });
+});

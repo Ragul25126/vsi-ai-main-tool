@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-import { isAuthorizedEmail, WELCOME_COOKIE, WELCOME_COOKIE_MAX_AGE } from "@/lib/auth-config";
+import { WELCOME_COOKIE, WELCOME_COOKIE_MAX_AGE } from "@/lib/auth-config";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -16,20 +16,15 @@ export async function GET(request: NextRequest) {
       if (!error && data?.session?.user) {
         const user = data.session.user;
 
-        if (!isAuthorizedEmail(user.email)) {
-          await supabase.auth.signOut();
-          return NextResponse.redirect(new URL("/login?error=unauthorized_account", requestUrl.origin));
-        }
-
         const nameFromEmail = (user.email ?? "").split("@")[0];
         const formattedName = user.user_metadata?.full_name || user.user_metadata?.name || (nameFromEmail ? nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1) : "User");
 
         const userProfile = {
           name: formattedName,
           email: user.email ?? "",
-          role: "Administrator",
-          company: "Valgrow Enterprise",
-          plan: "VSI GEO Platform Pro",
+          role: "Member",
+          company: "",
+          plan: "",
           avatarUrl: user.user_metadata?.avatar_url || undefined,
         };
 

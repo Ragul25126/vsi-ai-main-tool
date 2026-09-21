@@ -78,6 +78,15 @@ async function getCookieUser(): Promise<{
 }
 
 /**
+ * Role of the local-development session. It is a fixture with no database behind it, so it gets
+ * the least privilege unless you opt in with VSI_DEV_SESSION_ROLE=super_admin (for example to
+ * open /admin locally). It never depends on the email address.
+ */
+function devSessionRole(): UserRole {
+  return process.env.VSI_DEV_SESSION_ROLE === "super_admin" ? "super_admin" : "pilot";
+}
+
+/**
  * Local-development session built from cookies. Only used when
  * currentCookieSessionAllowed() is true (placeholder Supabase, not production).
  */
@@ -90,9 +99,9 @@ async function dynamicSession(): Promise<SessionContext> {
     userId: "00000000-0000-0000-0000-000000000002",
     email: activeEmail,
     fullName: activeName,
-    role: "super_admin",
+    role: devSessionRole(),
     agencyId: "00000000-0000-0000-0000-000000000001",
-    agencyName: "Valgrow Enterprise",
+    agencyName: "Local development",
     isPilot: false,
     maxKeywords: 999,
     branding: {
@@ -105,11 +114,10 @@ async function dynamicSession(): Promise<SessionContext> {
   };
 }
 
-import { isAuthorizedEmail } from "@/lib/auth-config";
-
 /**
  * Server-side: fetch current authenticated user + their profile + their agency.
- * Returns null if not signed in or not the authorized ValGrow Labs account.
+ * Returns null if nobody is signed in or the account is disabled. Any Supabase user can sign in;
+ * their role comes from their profile row, never from their email address.
  */
 export const getSession = cache(async (): Promise<SessionContext | null> => {
   try {
@@ -124,10 +132,10 @@ export const getSession = cache(async (): Promise<SessionContext | null> => {
     // If cookies API fails, proceed
   }
 
-  // Local development without a database: cookie session for the authorized email only.
+  // Local development without a database: a cookie session, which needs an email to build it from.
   if (currentCookieSessionAllowed()) {
     const cookieUserData = await getCookieUser();
-    if (!isAuthorizedEmail(cookieUserData.email)) {
+    if (!cookieUserData.email) {
       return null;
     }
     return dynamicSession();
@@ -138,7 +146,7 @@ export const getSession = cache(async (): Promise<SessionContext | null> => {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (user && isAuthorizedEmail(user.email)) {
+    if (user) {
       const { data: profile } = await supabase
         .from("profiles")
         .select("agency_id, role, full_name, is_disabled, agencies(name, is_pilot, max_keywords, display_name, logo_url, primary_color, support_email, report_footer, is_disabled)")
@@ -167,8 +175,10 @@ export const getSession = cache(async (): Promise<SessionContext | null> => {
         email:        resolvedEmail,
         fullName:     resolvedName,
         role:         userRole,
-        agencyId:     profile?.agency_id ?? "00000000-0000-0000-0000-000000000001",
-        agencyName:   agency?.name ?? "Valgrow Enterprise",
+        // A user with no organization really has none: null, not a made-up one. requireAgency()
+        // sends them to /onboarding to create it.
+        agencyId:     profile?.agency_id ?? null,
+        agencyName:   agency?.name ?? null,
         isPilot:      agency?.is_pilot ?? true,
         maxKeywords:  agency?.max_keywords ?? 10,
         branding: {
