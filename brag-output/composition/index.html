@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <title>VSI — every screen answers one question</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/audio-energy.js"></script>
+    <style>
+      @font-face { font-family: "Geist"; src: url("assets/fonts/geist-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: block; }
+      @font-face { font-family: "Geist Mono"; src: url("assets/fonts/geist-mono-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: block; }
+
+      /* VSI design tokens (src/app/globals.css) */
+      :root {
+        --canvas: #f6f7f9; --surface: #ffffff; --surface-2: #f1f3f6; --ink: #14171f; --ink-2: #4a5160; --ink-3: #5d6472;
+        --line: #e3e6eb; --line-strong: #cdd2da; --brand: #b07f22; --brand-strong: #8a6414; --brand-soft: #fbf4e2; --brand-dark: #d4a445;
+        --positive: #1e7d46; --positive-soft: #eaf5ee; --attention: #b4360a; --attention-soft: #fff1e8;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--ink); font-family: "Geist", ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+      .scene { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+      .abs { position: absolute; }
+
+      /* masked words: each rises out of its own line */
+      .w { display: inline-block; overflow: hidden; vertical-align: top; padding: 0 0.05em 0.16em; margin: 0 -0.05em -0.16em; }
+      .wi { display: inline-block; opacity: 0; }
+
+      /* ---------- Scene 1: three questions, on ink ---------- */
+      #s1 { background: var(--ink); z-index: 1; }
+      #s1dots { position: absolute; left: 0; top: 0; width: 1920px; height: 1180px; background-image: radial-gradient(#2b303a 2.2px, transparent 2.2px); background-size: 48px 48px; opacity: 0.7; }
+      .q { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #edeff3; text-align: center; }
+      .ql { display: flex; justify-content: center; gap: 0.26em; }
+      .q-sm { font-size: 124px; font-weight: 500; letter-spacing: -0.04em; }
+      .q-lg { font-size: 168px; font-weight: 600; letter-spacing: -0.045em; line-height: 1.04; }
+      .ai { position: relative; color: var(--brand-dark); }
+      #ul { position: absolute; left: 0; bottom: 0.02em; width: 100%; height: 10px; background: var(--brand-dark); border-radius: 5px; transform-origin: left center; transform: scaleX(0); }
+
+      /* ---------- Light layer, revealed by the gold scan ---------- */
+      #light { position: absolute; left: 0; top: 0; width: 1920px; height: 0; overflow: hidden; z-index: 2; }
+      #lbg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: var(--canvas); }
+      #ltint { position: absolute; inset: 0; background: rgba(251, 244, 226, 0.5); }
+      #ldots { position: absolute; left: 0; top: 0; width: 1920px; height: 1180px; background-image: radial-gradient(#d7dbe3 2.2px, transparent 2.2px); background-size: 48px 48px; opacity: 0.75; }
+      #warm { position: absolute; inset: 0; opacity: 0.6; background: radial-gradient(58% 54% at 90% 2%, rgba(240, 204, 108, 0.62), rgba(251, 244, 226, 0) 72%); }
+      #arcs { position: absolute; right: -300px; top: -300px; width: 700px; height: 700px; }
+      #scan { position: absolute; left: 0; top: 0; width: 1920px; height: 240px; z-index: 3; background: linear-gradient(to bottom, rgba(240, 204, 108, 0), rgba(240, 204, 108, 0.5)); border-bottom: 5px solid #f0cc6c; box-shadow: 0 10px 44px 8px rgba(240, 204, 108, 0.7); }
+
+      /* ---------- Lockup ---------- */
+      .lockup { position: absolute; left: 0; width: 1920px; display: flex; align-items: center; justify-content: center; gap: 38px; opacity: 0; }
+      .logow { position: relative; width: 140px; height: 140px; }
+      .logo { position: absolute; inset: 0; border-radius: 32px; background: #fff url("assets/vg-logo.png") center / cover no-repeat; box-shadow: 0 0 0 2px var(--line), 0 24px 50px -20px rgba(20, 23, 31, 0.3); }
+      .ring { position: absolute; inset: 0; border-radius: 32px; border: 4px solid var(--brand); opacity: 0; }
+      .vsi { font-size: 96px; font-weight: 650; letter-spacing: -0.03em; color: var(--ink); line-height: 1; }
+      .desc { margin-top: 12px; font-size: 29px; font-weight: 500; letter-spacing: 0.16em; color: var(--ink-3); text-transform: uppercase; }
+
+      /* ---------- Scene 2: reveal ---------- */
+      #s2 { z-index: 4; }
+      #head2 { position: absolute; left: 0; top: 545px; width: 1920px; padding: 0 230px; text-align: center; font-size: 86px; font-weight: 600; letter-spacing: -0.04em; line-height: 1.1; color: var(--ink); }
+
+      /* ---------- Scene 3: the product window ---------- */
+      #s3 { z-index: 5; }
+      #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+      #win { position: absolute; left: 210px; top: 130px; width: 1500px; height: 820px; background: #fff; border: 2px solid var(--line); border-radius: 30px; overflow: hidden; opacity: 0; box-shadow: 0 70px 130px -44px rgba(20, 23, 31, 0.38), 0 10px 28px rgba(20, 23, 31, 0.08); }
+      .tb { position: absolute; left: 0; top: 0; width: 1500px; height: 56px; border-bottom: 2px solid var(--line); background: #fbfbfc; display: flex; align-items: center; padding: 0 24px; gap: 10px; }
+      .tb i { display: block; width: 14px; height: 14px; border-radius: 50%; background: #dfe2e8; }
+      .tb .chip { margin-left: auto; font-family: "Geist Mono", ui-monospace, monospace; font-size: 15px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); border: 2px solid var(--line); border-radius: 14px; padding: 5px 12px; }
+      .side { position: absolute; left: 0; top: 56px; width: 288px; height: 764px; border-right: 2px solid var(--line); background: #fff; }
+      .brand { position: absolute; left: 26px; top: 26px; display: flex; align-items: center; gap: 14px; }
+      .b-logo { width: 48px; height: 48px; border-radius: 12px; background: #fff url("assets/vg-logo.png") center / cover no-repeat; box-shadow: 0 0 0 2px var(--line); }
+      .b-vsi { font-size: 26px; font-weight: 650; letter-spacing: -0.02em; color: var(--ink); line-height: 1.1; }
+      .b-desc { font-size: 12px; font-weight: 500; letter-spacing: 0.14em; color: var(--ink-3); text-transform: uppercase; }
+      #nav { position: absolute; left: 14px; top: 160px; width: 260px; }
+      .ni { position: relative; z-index: 1; height: 52px; margin-bottom: 6px; display: flex; align-items: center; gap: 14px; padding: 0 16px; font-size: 22px; font-weight: 500; color: var(--ink-2); opacity: 0; }
+      .ni svg { width: 24px; height: 24px; flex: none; }
+      #navhl { position: absolute; left: 14px; top: 160px; width: 260px; height: 52px; border-radius: 12px; background: var(--surface-2); opacity: 0; z-index: 0; }
+      #navhl i { position: absolute; left: 0; top: 10px; width: 5px; height: 32px; border-radius: 3px; background: var(--brand); }
+
+      .panel { position: absolute; left: 288px; top: 56px; width: 1212px; height: 764px; opacity: 0; }
+      .ph { position: absolute; left: 56px; top: 44px; }
+      .pe { font-family: "Geist Mono", ui-monospace, monospace; font-size: 20px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--brand-strong); }
+      .pq { margin-top: 12px; font-size: 60px; font-weight: 600; letter-spacing: -0.035em; color: var(--ink); line-height: 1.05; white-space: nowrap; }
+      .card { position: absolute; background: #fff; border: 2px solid var(--line); border-radius: 22px; box-shadow: 0 26px 60px -30px rgba(20, 23, 31, 0.22); }
+      .pill { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: 22px; font-family: "Geist Mono", ui-monospace, monospace; font-size: 19px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+      .pill.pass { background: var(--positive-soft); color: var(--positive); }
+      .pill.warn { background: var(--attention-soft); color: var(--attention); }
+      .pill.todo { background: var(--surface-2); color: var(--ink-3); }
+      .pill.src { background: #eaf1fd; color: #1a4fb0; }
+      .pill svg.pi { width: 20px; height: 20px; }
+
+      /* P1 — site audit */
+      .plabel { font-size: 26px; font-weight: 500; color: var(--ink-2); }
+      .track { height: 14px; border-radius: 7px; background: var(--surface-2); overflow: hidden; }
+      #p1fill { width: 0; height: 14px; border-radius: 7px; background: var(--brand); }
+      .row2 { position: absolute; left: 56px; width: 1100px; height: 84px; display: flex; align-items: center; gap: 22px; padding: 0 28px; background: #fff; border: 2px solid var(--line); border-radius: 18px; opacity: 0; box-shadow: 0 20px 50px -30px rgba(20, 23, 31, 0.2); }
+      .ic { position: relative; width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--line-strong); flex: none; }
+      .icfill { position: absolute; inset: -3px; border-radius: 50%; transform: scale(0); }
+      .icfill.ok { background: var(--positive); }
+      .icfill.warn { background: #d9531e; }
+      .icg { position: absolute; left: 50%; top: 50%; width: 26px; height: 26px; margin: -13px 0 0 -13px; color: #fff; opacity: 0; }
+      .rl { font-size: 34px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); }
+      .row2 .pill { margin-left: auto; opacity: 0; }
+
+      /* P2 — search visibility */
+      .clabel { position: absolute; left: 30px; top: 26px; font-family: "Geist Mono", ui-monospace, monospace; font-size: 18px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); z-index: 2; }
+      #p2mask { position: absolute; left: 0; top: 0; width: 0; height: 416px; overflow: hidden; border-radius: 20px 0 0 20px; }
+      #p2ring { position: absolute; left: 602px; top: 46px; width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--positive); opacity: 0; }
+      .srow { position: absolute; left: 736px; width: 420px; height: 128px; padding: 22px 26px; background: #fff; border: 2px solid var(--line); border-radius: 20px; opacity: 0; box-shadow: 0 20px 50px -30px rgba(20, 23, 31, 0.2); }
+      .term { font-size: 32px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); margin-bottom: 16px; }
+
+      /* P3 — AI visibility */
+      .acard { left: 56px; width: 1100px; height: 214px; padding: 24px 30px; opacity: 0; }
+      .ahead { display: flex; align-items: center; justify-content: space-between; }
+      .alabel { display: flex; align-items: center; gap: 12px; font-family: "Geist Mono", ui-monospace, monospace; font-size: 18px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+      .alabel svg { width: 26px; height: 26px; color: var(--brand-strong); }
+      .apills { display: flex; gap: 12px; }
+      .apills .pill { opacity: 0; }
+      .atext { margin-top: 22px; font-size: 38px; line-height: 1.3; letter-spacing: -0.02em; color: var(--ink); }
+      .wi.hl { color: var(--brand-strong); background: var(--brand-soft); padding: 0 10px; border-radius: 10px; }
+      .wi.co { color: var(--attention); background: var(--attention-soft); padding: 0 10px; border-radius: 10px; }
+
+      /* P4 — competitors */
+      .crow { position: absolute; left: 56px; width: 1100px; height: 96px; display: flex; align-items: center; background: #fff; border: 2px solid var(--line); border-radius: 18px; padding: 0 28px; opacity: 0; box-shadow: 0 20px 50px -30px rgba(20, 23, 31, 0.2); }
+      .cl { width: 260px; font-size: 30px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink-2); }
+      .cl.you { color: var(--ink); font-weight: 650; }
+      .bartrack { width: 520px; height: 44px; }
+      .bar { height: 44px; width: 0; border-radius: 12px; background: var(--line-strong); }
+      .bar.you { background: var(--brand); }
+      .crow .pill { margin-left: 36px; opacity: 0; }
+
+      /* P5 — next actions */
+      .arow { position: absolute; left: 56px; width: 1100px; height: 100px; display: flex; align-items: center; gap: 28px; padding: 0 34px; background: #fff; border: 2px solid var(--line); border-radius: 20px; opacity: 0; box-shadow: 0 22px 54px -30px rgba(20, 23, 31, 0.22); }
+      .arow > * { position: relative; z-index: 1; }
+      .arow .tint { position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 0; border-radius: 18px; background: var(--positive-soft); opacity: 0; }
+      .cb { position: relative; width: 46px; height: 46px; border-radius: 50%; border: 3px solid var(--line-strong); flex: none; }
+      .cbfill { position: absolute; inset: -3px; border-radius: 50%; background: var(--positive); transform: scale(0); }
+      .cbring { position: absolute; inset: -3px; border-radius: 50%; border: 4px solid var(--positive); opacity: 0; }
+      .cbcheck { position: absolute; left: 50%; top: 50%; width: 28px; height: 28px; margin: -14px 0 0 -14px; color: #fff; opacity: 0; }
+      .rt { font-size: 40px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); }
+      .pillwrap { margin-left: auto; position: relative; width: 230px; height: 44px; }
+      .pillwrap .pill { position: absolute; right: 0; top: 0; }
+      #p1ver { opacity: 0; }
+      #recheck { position: absolute; left: 0; top: 580px; width: 1212px; display: flex; align-items: center; justify-content: center; gap: 16px; opacity: 0; font-size: 36px; font-weight: 500; letter-spacing: -0.015em; color: var(--ink-2); }
+      #recheck svg { width: 36px; height: 36px; color: var(--positive); }
+      #cursor { position: absolute; left: 0; top: 0; width: 56px; height: 56px; opacity: 0; transform-origin: 9px 9px; z-index: 30; filter: drop-shadow(0 6px 10px rgba(20, 23, 31, 0.28)); }
+
+      /* ---------- Scene 4: outro ---------- */
+      #s4 { z-index: 6; }
+      #tag4 { position: absolute; left: 0; top: 545px; width: 1920px; padding: 0 190px; text-align: center; font-size: 90px; font-weight: 600; letter-spacing: -0.04em; line-height: 1.1; color: var(--ink); }
+      #tag4 .wi.em { color: var(--brand-strong); }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-4az9" id="root" data-composition-id="main" data-start="0" data-duration="24.83" data-width="1920" data-height="1080">
+
+      <!-- Scene 1 — three questions, on ink (0.00-5.80) -->
+      <section data-hf-id="hf-xpze" id="s1" class="clip scene" data-start="0" data-duration="5.8" data-track-index="1">
+        <div data-hf-id="hf-tzup" id="s1dots"></div>
+        <div data-hf-id="hf-jri1" id="q1" class="q q-sm"><div data-hf-id="hf-egvr" class="ql"><span data-hf-id="hf-fr20" class="w"><span data-hf-id="hf-f6j5" class="wi">Is</span></span> <span data-hf-id="hf-xths" class="w"><span data-hf-id="hf-quqv" class="wi">my</span></span> <span data-hf-id="hf-wmkp" class="w"><span data-hf-id="hf-dm26" class="wi">website</span></span> <span data-hf-id="hf-x0vq" class="w"><span data-hf-id="hf-79df" class="wi">healthy?</span></span></div></div>
+        <div data-hf-id="hf-npm2" id="q2" class="q q-sm"><div data-hf-id="hf-pibb" class="ql"><span data-hf-id="hf-vtyn" class="w"><span data-hf-id="hf-hwgh" class="wi">Can</span></span> <span data-hf-id="hf-w89o" class="w"><span data-hf-id="hf-m2yi" class="wi">people</span></span> <span data-hf-id="hf-v1cl" class="w"><span data-hf-id="hf-3lqm" class="wi">find</span></span> <span data-hf-id="hf-vfnm" class="w"><span data-hf-id="hf-veis" class="wi">me?</span></span></div></div>
+        <div data-hf-id="hf-97lo" id="q3" class="q q-lg">
+          <div data-hf-id="hf-p40a" class="ql"><span data-hf-id="hf-u8qj" class="w"><span data-hf-id="hf-0ycw" class="wi">Do</span></span><span data-hf-id="hf-un1k" class="w"><span data-hf-id="hf-lhbn" class="wi ai">AI<i data-hf-id="hf-5hla" id="ul"></i></span></span><span data-hf-id="hf-ikf4" class="w"><span data-hf-id="hf-p9op" class="wi">systems</span></span></div>
+          <div data-hf-id="hf-opp9" class="ql"><span data-hf-id="hf-i643" class="w"><span data-hf-id="hf-39c9" class="wi">mention</span></span> <span data-hf-id="hf-hrt2" class="w"><span data-hf-id="hf-owvw" class="wi">me?</span></span></div>
+        </div>
+      </section>
+
+      <!-- Light layer: revealed top to bottom by the gold scan (4.64-5.74) -->
+      <div data-hf-id="hf-5l2m" id="light" class="clip" data-start="4.64" data-duration="20.19" data-track-index="0">
+        <div data-hf-id="hf-ag3q" id="lbg">
+          <div data-hf-id="hf-pvl4" id="ltint"></div>
+          <div data-hf-id="hf-gnx3" id="ldots"></div>
+          <div data-hf-id="hf-3vla" id="warm"></div>
+          <svg data-hf-id="hf-l4hh" id="arcs" viewBox="0 0 700 700" fill="none" aria-hidden="true">
+            <circle data-hf-id="hf-a41l" cx="350" cy="350" r="349" stroke="#b07f22" stroke-width="1.5" opacity="0.4" />
+            <circle data-hf-id="hf-pzlb" cx="350" cy="350" r="262" stroke="#b07f22" stroke-width="1.5" opacity="0.22" />
+          </svg>
+        </div>
+      </div>
+      <div data-hf-id="hf-ih07" id="scan" class="clip" data-start="4.64" data-duration="1.3" data-track-index="0"></div>
+
+      <!-- Scene 2 — reveal (5.74-9.59) -->
+      <section data-hf-id="hf-5ehj" id="s2" class="clip scene" data-start="5.74" data-duration="3.85" data-track-index="2">
+        <div data-hf-id="hf-u9tp" id="lock2" class="lockup" style="top:300px">
+          <div data-hf-id="hf-55u8" class="logow"><div data-hf-id="hf-0qcu" class="ring"></div><div data-hf-id="hf-glha" class="ring r2"></div><div data-hf-id="hf-e319" class="logo"></div></div>
+          <div data-hf-id="hf-yeow"><div data-hf-id="hf-1cxo" class="vsi">VSI</div><div data-hf-id="hf-tumu" class="desc">Search Intelligence</div></div>
+        </div>
+        <h1 data-hf-id="hf-4wvh" id="head2"><span data-hf-id="hf-hdi1" class="w"><span data-hf-id="hf-ds6n" class="wi">Understand</span></span> <span data-hf-id="hf-gz70" class="w"><span data-hf-id="hf-tztt" class="wi">how</span></span> <span data-hf-id="hf-gkvz" class="w"><span data-hf-id="hf-nvqe" class="wi">your</span></span> <span data-hf-id="hf-g6ky" class="w"><span data-hf-id="hf-bisy" class="wi">website</span></span> <span data-hf-id="hf-fs9x" class="w"><span data-hf-id="hf-td3l" class="wi">appears</span></span> <span data-hf-id="hf-fdyw" class="w"><span data-hf-id="hf-oxzc" class="wi">across</span></span> <span data-hf-id="hf-eznv" class="w"><span data-hf-id="hf-823h" class="wi">search</span></span> <span data-hf-id="hf-606z" class="w"><span data-hf-id="hf-lp6y" class="wi">and</span></span> <span data-hf-id="hf-6ei0" class="w"><span data-hf-id="hf-2bi7" class="wi">AI.</span></span></h1>
+      </section>
+
+      <!-- Scene 3 — the product: every screen answers one question (9.55-21.10) -->
+      <section data-hf-id="hf-3vwa" id="s3" class="clip scene" data-start="9.55" data-duration="11.55" data-track-index="3">
+        <div data-hf-id="hf-1rt5" id="stage">
+          <div data-hf-id="hf-7on1" id="win">
+            <div data-hf-id="hf-ash2" class="tb"><i data-hf-id="hf-wt6k"></i><i data-hf-id="hf-zeb8"></i><i data-hf-id="hf-y7e5"></i><span data-hf-id="hf-2le5" class="chip">Example data</span></div>
+            <div data-hf-id="hf-cww1" class="side">
+              <div data-hf-id="hf-oojr" class="brand"><div data-hf-id="hf-n6oi" class="b-logo"></div><div data-hf-id="hf-y7yw"><div data-hf-id="hf-ny4f" class="b-vsi">VSI</div><div data-hf-id="hf-artj" class="b-desc">Search Intelligence</div></div></div>
+            </div>
+            <div data-hf-id="hf-w684" id="navhl"><i data-hf-id="hf-ylp6"></i></div>
+            <div data-hf-id="hf-tihs" id="nav"><div data-hf-id="hf-hy4s" class="ni"><svg data-hf-id="hf-vzgd" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect data-hf-id="hf-jbys" width="7" height="7" x="3" y="3" rx="1" /><rect data-hf-id="hf-4pxk" width="7" height="7" x="14" y="3" rx="1" /><rect data-hf-id="hf-0oia" width="7" height="7" x="14" y="14" rx="1" /><rect data-hf-id="hf-uzwe" width="7" height="7" x="3" y="14" rx="1" /></svg>Overview</div><div data-hf-id="hf-q5l3" class="ni"><svg data-hf-id="hf-d1ld" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-49ze" d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path data-hf-id="hf-yfzu" d="m9 12 2 2 4-4" /></svg>Site Audit</div><div data-hf-id="hf-n08p" class="ni"><svg data-hf-id="hf-e8ig" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-ff33" d="M16 7h6v6" /><path data-hf-id="hf-nafn" d="m22 7-8.5 8.5-5-5L2 17" /></svg>Search Visibility</div><div data-hf-id="hf-kpw3" class="ni"><svg data-hf-id="hf-du7f" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-bsww" d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z" /><path data-hf-id="hf-2r7z" d="M7 11h10" /><path data-hf-id="hf-yiku" d="M7 15h6" /><path data-hf-id="hf-kvz5" d="M7 7h8" /></svg>AI Visibility</div><div data-hf-id="hf-gqim" class="ni"><svg data-hf-id="hf-buoa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-frh1" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><path data-hf-id="hf-pnso" d="M16 3.128a4 4 0 0 1 0 7.744" /><path data-hf-id="hf-p3fz" d="M22 21v-2a4 4 0 0 0-3-3.87" /><circle data-hf-id="hf-nb88" cx="9" cy="7" r="4" /></svg>Competitors</div><div data-hf-id="hf-rmg5" class="ni"><svg data-hf-id="hf-bgd9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-esvi" d="M13 5h8" /><path data-hf-id="hf-ezhg" d="M13 12h8" /><path data-hf-id="hf-eci7" d="M13 19h8" /><path data-hf-id="hf-ob2t" d="m3 17 2 2 4-4" /><path data-hf-id="hf-lyie" d="m3 7 2 2 4-4" /></svg>Next Actions</div><div data-hf-id="hf-e1rn" class="ni"><svg data-hf-id="hf-cnac" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-u62i" d="M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344" /><path data-hf-id="hf-nw0a" d="m9 11 3 3L22 4" /></svg>Tasks</div><div data-hf-id="hf-r2ey" class="ni"><svg data-hf-id="hf-c8zb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-dbxf" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path data-hf-id="hf-oor7" d="M14 2v5a1 1 0 0 0 1 1h5" /><path data-hf-id="hf-59kx" d="M10 9H8" /><path data-hf-id="hf-eoqm" d="M16 13H8" /><path data-hf-id="hf-bfay" d="M16 17H8" /></svg>Reports</div></div>
+
+            <!-- P1: Site Audit -->
+            <div data-hf-id="hf-3z5l" id="p1" class="panel">
+              <div data-hf-id="hf-i8mw" class="ph"><div data-hf-id="hf-2v19" class="pe">Site Audit</div><div data-hf-id="hf-7446" class="pq">Is my website healthy?</div></div>
+              <div data-hf-id="hf-tbcd" class="abs plabel" style="left:56px;top:196px">Checking your pages</div>
+              <div data-hf-id="hf-nb5d" class="abs track" style="left:56px;top:238px;width:1100px"><div data-hf-id="hf-kv33" id="p1fill"></div></div>
+          <div data-hf-id="hf-lsjj" id="a1" class="row2" style="top:284px">
+            <div data-hf-id="hf-w92w" class="ic"><div data-hf-id="hf-c3mj" class="icfill ok" id="a1f"></div><svg data-hf-id="hf-p27y" class="icg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-2q26" d="M20 6 9 17l-5-5" /></svg></div>
+            <div data-hf-id="hf-4km1" class="rl">Secure connection</div>
+            <span data-hf-id="hf-12i9" class="pill pass" id="a1p">Passed</span>
+          </div>
+          <div data-hf-id="hf-18tn" id="a2" class="row2" style="top:382px">
+            <div data-hf-id="hf-yz80" class="ic"><div data-hf-id="hf-hbz6" class="icfill ok" id="a2f"></div><svg data-hf-id="hf-8in6" class="icg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-l5ki" d="M20 6 9 17l-5-5" /></svg></div>
+            <div data-hf-id="hf-dte2" class="rl">Mobile layout</div>
+            <span data-hf-id="hf-xe30" class="pill pass" id="a2p">Passed</span>
+          </div>
+          <div data-hf-id="hf-o0rz" id="a3" class="row2" style="top:480px">
+            <div data-hf-id="hf-xsax" class="ic"><div data-hf-id="hf-q9gh" class="icfill ok" id="a3f"></div><svg data-hf-id="hf-8wy7" class="icg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-ljvj" d="M20 6 9 17l-5-5" /></svg></div>
+            <div data-hf-id="hf-5wkw" class="rl">Page titles</div>
+            <span data-hf-id="hf-5kt7" class="pill pass" id="a3p">Passed</span>
+          </div>
+          <div data-hf-id="hf-y2lg" id="a4" class="row2" style="top:578px">
+            <div data-hf-id="hf-y6ly" class="ic"><div data-hf-id="hf-5tqy" class="icfill warn" id="a4f"></div><svg data-hf-id="hf-9b98" class="icg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-jk69" d="M12 6v7" /><path data-hf-id="hf-p3i6" d="M12 18h.01" /></svg></div>
+            <div data-hf-id="hf-gw2a" class="rl">Broken links</div>
+            <span data-hf-id="hf-4dse" class="pill warn" id="a4p">Needs attention</span>
+          </div>
+            </div>
+
+            <!-- P2: Search Visibility -->
+            <div data-hf-id="hf-a4ve" id="p2" class="panel">
+              <div data-hf-id="hf-3axc" class="ph"><div data-hf-id="hf-i6yf" class="pe">Search Visibility</div><div data-hf-id="hf-481w" class="pq">Can people find me?</div></div>
+              <div data-hf-id="hf-6zfj" id="p2chart" class="card" style="left:56px;top:196px;width:640px;height:420px">
+                <div data-hf-id="hf-0r0i" class="clabel">Ranking changes</div>
+                <div data-hf-id="hf-uwsz" id="p2mask"><svg data-hf-id="hf-2mx1" width="640" height="416" viewBox="0 0 640 416" fill="none" aria-hidden="true">
+                  <path data-hf-id="hf-cb6f" d="M0 110H640M0 210H640M0 310H640" stroke="#e3e6eb" stroke-width="2" stroke-dasharray="6 8" />
+                  <path data-hf-id="hf-0oxx" d="M24 350 C90 340 130 300 190 310 S290 250 340 242 S430 180 480 160 S570 100 616 66 L616 416 L24 416 Z" fill="#eaf5ee" />
+                  <path data-hf-id="hf-v2e9" d="M24 350 C90 340 130 300 190 310 S290 250 340 242 S430 180 480 160 S570 100 616 66" stroke="#1e7d46" stroke-width="6" stroke-linecap="round" fill="none" />
+                  <circle data-hf-id="hf-do8g" cx="616" cy="66" r="9" fill="#1e7d46" />
+                </svg></div>
+                <div data-hf-id="hf-v5ld" id="p2ring"></div>
+              </div>
+          <div data-hf-id="hf-7h38" id="s1r" class="srow" style="top:196px">
+            <div data-hf-id="hf-hyuj" class="term">best plumber</div>
+            <span data-hf-id="hf-dsfn" class="pill pass"><svg data-hf-id="hf-e0no" class="pi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-czg6" d="m5 12 7-7 7 7" /><path data-hf-id="hf-oeiv" d="M12 19V5" /></svg>Improved</span>
+          </div>
+          <div data-hf-id="hf-kaa0" id="s2r" class="srow" style="top:342px">
+            <div data-hf-id="hf-vle0" class="term">emergency plumber</div>
+            <span data-hf-id="hf-e36b" class="pill pass"><svg data-hf-id="hf-s7vw" class="pi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-6c4a" d="m5 12 7-7 7 7" /><path data-hf-id="hf-au1z" d="M12 19V5" /></svg>Improved</span>
+          </div>
+          <div data-hf-id="hf-u5qq" id="s3r" class="srow" style="top:488px">
+            <div data-hf-id="hf-uy9h" class="term">plumber prices</div>
+            <span data-hf-id="hf-k9ty" class="pill warn"><svg data-hf-id="hf-r0yt" class="pi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-um4s" d="M12 5v14" /><path data-hf-id="hf-4zix" d="m19 12-7 7-7-7" /></svg>Dropped</span>
+          </div>
+            </div>
+
+            <!-- P3: AI Visibility -->
+            <div data-hf-id="hf-e2zf" id="p3" class="panel">
+              <div data-hf-id="hf-2409" class="ph"><div data-hf-id="hf-74tx" class="pe">AI Visibility</div><div data-hf-id="hf-8k1t" class="pq">Do AI systems mention me?</div></div>
+              <div data-hf-id="hf-tway" id="p3a" class="card acard" style="top:196px">
+                <div data-hf-id="hf-leqr" class="ahead"><div data-hf-id="hf-yob7" class="alabel"><svg data-hf-id="hf-gmcm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-j7yw" d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z" /><path data-hf-id="hf-xwfj" d="M7 11h10" /><path data-hf-id="hf-vc7m" d="M7 15h6" /><path data-hf-id="hf-xtkl" d="M7 7h8" /></svg>AI answer · best plumber</div><div data-hf-id="hf-z6mr" class="apills"><span data-hf-id="hf-k2ic" class="pill pass" id="p3ap">Mentioned</span><span data-hf-id="hf-mzig" class="pill src" id="p3ac"><svg data-hf-id="hf-823p" class="pi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-qfus" d="M15 3h6v6" /><path data-hf-id="hf-o0dx" d="M10 14 21 3" /><path data-hf-id="hf-2osv" d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg>Cited</span></div></div>
+                <div data-hf-id="hf-h0qy" class="atext" id="p3at"><span data-hf-id="hf-57kx" class="w"><span data-hf-id="hf-cbvz" class="wi hl">Example</span></span> <span data-hf-id="hf-5lvy" class="w"><span data-hf-id="hf-ba3f" class="wi hl">Plumbing</span></span> <span data-hf-id="hf-4eyv" class="w"><span data-hf-id="hf-dg4x" class="wi">is</span></span> <span data-hf-id="hf-4t9w" class="w"><span data-hf-id="hf-g2dc" class="wi">a</span></span> <span data-hf-id="hf-3mct" class="w"><span data-hf-id="hf-gub1" class="wi">well-reviewed</span></span> <span data-hf-id="hf-40nu" class="w"><span data-hf-id="hf-n3k2" class="wi">choice</span></span> <span data-hf-id="hf-96n7" class="w"><span data-hf-id="hf-nl50" class="wi">for</span></span> <span data-hf-id="hf-9ky8" class="w"><span data-hf-id="hf-l4j9" class="wi">fast,</span></span> <span data-hf-id="hf-k3qq" class="w"><span data-hf-id="hf-t0o3" class="wi">upfront</span></span> <span data-hf-id="hf-jpfp" class="w"><span data-hf-id="hf-9zcd" class="wi">pricing.</span></span></div>
+              </div>
+              <div data-hf-id="hf-y4wa" id="p3b" class="card acard" style="top:432px">
+                <div data-hf-id="hf-ok4j" class="ahead"><div data-hf-id="hf-zeml" class="alabel"><svg data-hf-id="hf-g81l" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-i11t" d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z" /><path data-hf-id="hf-xi4i" d="M7 11h10" /><path data-hf-id="hf-vqin" d="M7 15h6" /><path data-hf-id="hf-z0ho" d="M7 7h8" /></svg>AI answer · plumber prices</div><div data-hf-id="hf-u08j" class="apills"><span data-hf-id="hf-u6bj" class="pill warn" id="p3bp">Competitor instead</span></div></div>
+                <div data-hf-id="hf-5o3b" class="atext" id="p3bt"><span data-hf-id="hf-kwcs" class="w"><span data-hf-id="hf-lr73" class="wi co">Rival</span></span> <span data-hf-id="hf-ki1r" class="w"><span data-hf-id="hf-1cn5" class="wi co">Plumbing</span></span> <span data-hf-id="hf-loyu" class="w"><span data-hf-id="hf-4ih4" class="wi">publishes</span></span> <span data-hf-id="hf-lant" class="w"><span data-hf-id="hf-eqae" class="wi">clear</span></span> <span data-hf-id="hf-mhkw" class="w"><span data-hf-id="hf-hzm7" class="wi">prices</span></span> <span data-hf-id="hf-m39v" class="w"><span data-hf-id="hf-bbb0" class="wi">for</span></span> <span data-hf-id="hf-gxai" class="w"><span data-hf-id="hf-ndiw" class="wi">common</span></span> <span data-hf-id="hf-gizh" class="w"><span data-hf-id="hf-eirh" class="wi">jobs.</span></span></div>
+              </div>
+            </div>
+
+            <!-- P4: Competitors -->
+            <div data-hf-id="hf-qlhw" id="p4" class="panel">
+              <div data-hf-id="hf-2iba" class="ph"><div data-hf-id="hf-fc0w" class="pe">Competitors</div><div data-hf-id="hf-preb" class="pq">Where are competitors appearing?</div></div>
+          <div data-hf-id="hf-vrjo" id="c1" class="crow" style="top:196px">
+            <div data-hf-id="hf-zx5b" class="cl you">You</div>
+            <div data-hf-id="hf-577o" class="bartrack"><div data-hf-id="hf-ilwa" class="bar you" id="c1b"></div></div>
+          </div>
+          <div data-hf-id="hf-snuk" id="c2" class="crow" style="top:308px">
+            <div data-hf-id="hf-1wlf" class="cl">Competitor one</div>
+            <div data-hf-id="hf-9kho" class="bartrack"><div data-hf-id="hf-chmc" class="bar" id="c2b"></div></div><span data-hf-id="hf-6ybd" class="pill warn" id="c2p">Content opportunity</span>
+          </div>
+          <div data-hf-id="hf-2bdg" id="c3" class="crow" style="top:420px">
+            <div data-hf-id="hf-4sod" class="cl">Competitor two</div>
+            <div data-hf-id="hf-8dkl" class="bartrack"><div data-hf-id="hf-cup7" class="bar" id="c3b"></div></div>
+          </div>
+          <div data-hf-id="hf-n073" id="c4" class="crow" style="top:532px">
+            <div data-hf-id="hf-5zg7" class="cl">Competitor three</div>
+            <div data-hf-id="hf-8rvm" class="bartrack"><div data-hf-id="hf-67xa" class="bar" id="c4b"></div></div>
+          </div>
+            </div>
+
+            <!-- P5: Next Actions -->
+            <div data-hf-id="hf-rd5p" id="p5" class="panel">
+              <div data-hf-id="hf-1be7" class="ph"><div data-hf-id="hf-52aj" class="pe">Next Actions</div><div data-hf-id="hf-37vy" class="pq">Know what to work on next.</div></div>
+          <div data-hf-id="hf-jhy5" id="r1" class="arow" style="top:196px"><div data-hf-id="hf-0rmd" class="tint" id="r1tint"></div>
+            <div data-hf-id="hf-d8rn" class="cb"><div data-hf-id="hf-cs8u" class="cbring" id="cbring"></div><div data-hf-id="hf-es0t" class="cbfill" id="cb1fill"></div><svg data-hf-id="hf-k8g0" class="cbcheck" id="cb1check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-ly6k" d="M20 6 9 17l-5-5" /></svg></div>
+            <div data-hf-id="hf-7xxw" class="rt">Fix website issues</div>
+            <div data-hf-id="hf-puyx" class="pillwrap"><span data-hf-id="hf-8033" class="pill todo" id="p1todo">To do</span><span data-hf-id="hf-rep7" class="pill pass" id="p1ver"><svg data-hf-id="hf-rf9u" class="pi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-mchl" d="M20 6 9 17l-5-5" /></svg>Verified</span></div>
+          </div>
+          <div data-hf-id="hf-7hua" id="r2" class="arow" style="top:314px">
+            <div data-hf-id="hf-i36r" class="cb"></div>
+            <div data-hf-id="hf-tebg" class="rt">Improve important pages</div>
+            <div data-hf-id="hf-1bzx" class="pillwrap"><span data-hf-id="hf-uafe" class="pill todo">To do</span></div>
+          </div>
+          <div data-hf-id="hf-rsx4" id="r3" class="arow" style="top:432px">
+            <div data-hf-id="hf-hovq" class="cb"></div>
+            <div data-hf-id="hf-b7ym" class="rt">Strengthen AI visibility</div>
+            <div data-hf-id="hf-2ix0" class="pillwrap"><span data-hf-id="hf-ts7i" class="pill todo">To do</span></div>
+          </div>
+              <div data-hf-id="hf-9rqx" id="recheck"><svg data-hf-id="hf-5mer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-i1j2" d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path data-hf-id="hf-pseq" d="M21 3v5h-5" /><path data-hf-id="hf-56nx" d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path data-hf-id="hf-8lg6" d="M8 16H3v5" /></svg>VSI checks again.</div>
+            </div>
+
+            <svg data-hf-id="hf-kz6g" id="cursor" viewBox="0 0 24 24" aria-hidden="true"><path data-hf-id="hf-lb9c" d="M4.037 4.688a.495.495 0 0 1 .651-.651l16 6.5a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063z" fill="#14171f" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round" /></svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- Scene 4 — outro (21.02-24.83) -->
+      <section data-hf-id="hf-hs74" id="s4" class="clip scene" data-start="21.02" data-duration="3.81" data-track-index="4">
+        <div data-hf-id="hf-h9tp" id="lock4" class="lockup" style="top:290px">
+          <div data-hf-id="hf-1sq0" class="logow"><div data-hf-id="hf-ul4i" class="ring"></div><div data-hf-id="hf-azky" class="ring r2"></div><div data-hf-id="hf-rugh" class="logo"></div></div>
+          <div data-hf-id="hf-x11t"><div data-hf-id="hf-wvuc" class="vsi">VSI</div><div data-hf-id="hf-jfp6" class="desc">Search Intelligence</div></div>
+        </div>
+        <h2 data-hf-id="hf-7x9o" id="tag4"><span data-hf-id="hf-7jil" class="w"><span data-hf-id="hf-9bpq" class="wi">Turn</span></span> <span data-hf-id="hf-7xtm" class="w"><span data-hf-id="hf-86nl" class="wi">search</span></span> <span data-hf-id="hf-8c4n" class="w"><span data-hf-id="hf-tk7i" class="wi">and</span></span> <span data-hf-id="hf-8qfo" class="w"><span data-hf-id="hf-ld3f" class="wi">AI</span></span> <span data-hf-id="hf-94qp" class="w"><span data-hf-id="hf-im09" class="wi">visibility</span></span><br data-hf-id="hf-x5px"><span data-hf-id="hf-9j1q" class="w"><span data-hf-id="hf-hlsn" class="wi">into</span></span> <span data-hf-id="hf-9xcr" class="w"><span data-hf-id="hf-odx5" class="wi em">real</span></span> <span data-hf-id="hf-abns" class="w"><span data-hf-id="hf-kbhb" class="wi em">business</span></span> <span data-hf-id="hf-apyt" class="w"><span data-hf-id="hf-xab8" class="wi em">growth.</span></span></h2>
+      </section>
+
+      <!-- Audio: music bed + sparse, soft, motion-matched accents -->
+      <audio data-hf-id="hf-x6bz" id="bed" data-start="0" data-duration="24.83" data-track-index="10" data-volume="0.36" src="assets/music/bed-vol12.mp3"></audio>
+      <audio data-hf-id="hf-l0km" id="sfx-q1" data-start="0.25" data-duration="0.06" data-track-index="11" data-volume="0.5" src="assets/sfx/ui/rollover2.ogg"></audio>
+      <audio data-hf-id="hf-paiv" id="sfx-q2" data-start="1.89" data-duration="0.06" data-track-index="12" data-volume="0.5" src="assets/sfx/ui/rollover2.ogg"></audio>
+      <audio data-hf-id="hf-2xhz" id="sfx-q3" data-start="3.54" data-duration="0.06" data-track-index="13" data-volume="0.5" src="assets/sfx/ui/rollover2.ogg"></audio>
+      <audio data-hf-id="hf-ju18" id="sfx-scan" data-start="4.6" data-duration="0.6" data-track-index="14" data-volume="0.4" src="assets/sfx/casino/card-slide-1.ogg"></audio>
+      <audio data-hf-id="hf-u9xx" id="sfx-cut" data-start="5.7" data-duration="0.19" data-track-index="15" data-volume="0.55" src="assets/sfx/impact/impactSoft_medium_001.ogg"></audio>
+      <audio data-hf-id="hf-svfq" id="sfx-mark" data-start="6.27" data-duration="0.13" data-track-index="16" data-volume="0.5" src="assets/sfx/interface/bong_001.ogg"></audio>
+      <audio data-hf-id="hf-8u76" id="sfx-markb" data-start="6.27" data-duration="0.3" data-track-index="17" data-volume="0.28" src="assets/sfx/impact/impactBell_heavy_004.ogg"></audio>
+      <audio data-hf-id="hf-cmab" id="sfx-win" data-start="9.5" data-duration="0.12" data-track-index="18" data-volume="0.4" src="assets/sfx/interface/drop_001.ogg"></audio>
+      <audio data-hf-id="hf-zo61" id="sfx-p1" data-start="10.09" data-duration="0.12" data-track-index="19" data-volume="0.32" src="assets/sfx/impact/impactSoft_medium_000.ogg"></audio>
+      <audio data-hf-id="hf-49qj" id="sfx-t1" data-start="10.66" data-duration="0.06" data-track-index="20" data-volume="0.4" src="assets/sfx/ui/click2.ogg"></audio>
+      <audio data-hf-id="hf-thn1" id="sfx-t2" data-start="10.93" data-duration="0.06" data-track-index="21" data-volume="0.4" src="assets/sfx/ui/click2.ogg"></audio>
+      <audio data-hf-id="hf-eeq4" id="sfx-t3" data-start="11.2" data-duration="0.06" data-track-index="22" data-volume="0.4" src="assets/sfx/ui/click2.ogg"></audio>
+      <audio data-hf-id="hf-xs0x" id="sfx-p2" data-start="12.27" data-duration="0.14" data-track-index="23" data-volume="0.32" src="assets/sfx/impact/impactSoft_medium_002.ogg"></audio>
+      <audio data-hf-id="hf-p73n" id="sfx-p3" data-start="14.45" data-duration="0.15" data-track-index="24" data-volume="0.32" src="assets/sfx/impact/impactSoft_medium_003.ogg"></audio>
+      <audio data-hf-id="hf-mp7w" id="sfx-men" data-start="15.54" data-duration="0.13" data-track-index="25" data-volume="0.35" src="assets/sfx/interface/bong_001.ogg"></audio>
+      <audio data-hf-id="hf-be6x" id="sfx-p4" data-start="16.64" data-duration="0.12" data-track-index="26" data-volume="0.32" src="assets/sfx/impact/impactSoft_medium_000.ogg"></audio>
+      <audio data-hf-id="hf-rsa5" id="sfx-bars" data-start="16.78" data-duration="0.6" data-track-index="27" data-volume="0.28" src="assets/sfx/casino/card-slide-1.ogg"></audio>
+      <audio data-hf-id="hf-0wcw" id="sfx-p5" data-start="18.26" data-duration="0.19" data-track-index="28" data-volume="0.32" src="assets/sfx/impact/impactSoft_medium_001.ogg"></audio>
+      <audio data-hf-id="hf-dwcb" id="sfx-click" data-start="19.36" data-duration="0.02" data-track-index="29" data-volume="0.8" src="assets/sfx/interface/click_002.ogg"></audio>
+      <audio data-hf-id="hf-coge" id="sfx-ok" data-start="19.92" data-duration="1.48" data-track-index="30" data-volume="0.42" src="assets/sfx/impact/impactBell_heavy_000.ogg"></audio>
+      <audio data-hf-id="hf-vgzj" id="sfx-wout" data-start="20.68" data-duration="0.6" data-track-index="31" data-volume="0.28" src="assets/sfx/casino/card-slide-1.ogg"></audio>
+      <audio data-hf-id="hf-ehis" id="sfx-tag" data-start="21.54" data-duration="0.66" data-track-index="32" data-volume="0.34" src="assets/sfx/impact/impactBell_heavy_003.ogg"></audio>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      var all = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+
+      // Fade + rise in. Explicit start values keep every seek deterministic.
+      var IN = function (sel, t, d, y, scale) {
+        return tl.fromTo(sel, scale ? { opacity: 0, y: y, scale: scale } : { opacity: 0, y: y },
+          { opacity: 1, y: 0, scale: 1, duration: d, ease: "power3.out" }, t);
+      };
+      var OUT = function (sel, t, d, y) {
+        return tl.fromTo(sel, { opacity: 1, y: 0 }, { opacity: 0, y: y === undefined ? -14 : y, duration: d, ease: "power2.in", immediateRender: false }, t);
+      };
+      // Masked words rise into place one after another; a plain loop with explicit times, no stagger magic.
+      var WORDS = function (sel, t, step, y, d) {
+        all(sel + " .wi").forEach(function (el, i) {
+          tl.fromTo(el, { y: y, opacity: 0 }, { y: 0, opacity: 1, duration: d, ease: "power4.out" }, t + i * step);
+        });
+      };
+      var WORDS_OUT = function (sel, t, step, y, d) {
+        all(sel + " .wi").forEach(function (el, i) {
+          tl.fromTo(el, { y: 0, opacity: 1 }, { y: y, opacity: 0, duration: d, ease: "power3.in", immediateRender: false }, t + i * step);
+        });
+      };
+      var POP = function (sel, t, d, from) {
+        return tl.fromTo(sel, { opacity: 0, scale: from || 0.4 }, { opacity: 1, scale: 1, duration: d || 0.3, ease: "back.out(2.2)" }, t);
+      };
+      var RING = function (sel, t, to, d, o) {
+        return tl.fromTo(sel, { opacity: o || 0.55, scale: 1 }, { opacity: 0, scale: to || 2.4, duration: d || 0.9, ease: "power2.out", immediateRender: false }, t);
+      };
+      var PIN = function (sel, t) { tl.fromTo(sel, { opacity: 0, x: 70 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, t); };
+      var POUT = function (sel, t) { tl.fromTo(sel, { opacity: 1, x: 0 }, { opacity: 0, x: -60, duration: 0.2, ease: "power2.in", immediateRender: false }, t - 0.2); };
+      var NAVTO = function (idx, t) { tl.to("#navhl", { y: idx * 58, duration: 0.4, ease: "power3.inOut" }, t); };
+
+      // ================= Scene 1: three questions on ink (0.00-5.80) =================
+      // The dotted grid drifts slowly, so the dark frame is alive before anything speaks.
+      tl.fromTo("#s1dots", { y: 0 }, { y: -96, duration: 5.8, ease: "none" }, 0);
+      // beat-grid: question 1 at 0.27s, question 2 at 1.91s, question 3 at 3.56s (three beats apart)
+      WORDS("#q1", 0.27, 0.09, 150, 0.6);
+      WORDS_OUT("#q1", 1.42, 0.05, -150, 0.4);
+      WORDS("#q2", 1.91, 0.09, 150, 0.6);
+      WORDS_OUT("#q2", 3.06, 0.05, -150, 0.4);
+      WORDS("#q3", 3.56, 0.09, 200, 0.65);
+      tl.fromTo("#q3", { scale: 1 }, { scale: 1.06, duration: 1.5, ease: "power1.inOut" }, 3.56);
+      // beat-locked: the gold underline lands under "AI" at 4.09s
+      tl.fromTo("#ul", { scaleX: 0 }, { scaleX: 1, duration: 0.55, ease: "power3.out" }, 4.09);
+
+      // ================= The scan: a gold line sweeps the dark away (4.64-5.74) =================
+      // beat-locked: the sweep completes on the strong cue at 5.74s
+      tl.fromTo("#light", { height: 0 }, { height: 1080, duration: 1.1, ease: "power2.inOut" }, 4.64);
+      tl.fromTo("#scan", { y: -240 }, { y: 840, duration: 1.1, ease: "power2.inOut" }, 4.64);
+      tl.fromTo("#scan", { opacity: 1 }, { opacity: 0, duration: 0.2, ease: "power1.in", immediateRender: false }, 5.72);
+      // light dots drift for the whole light section
+      tl.fromTo("#ldots", { y: 0 }, { y: -96, duration: 19.2, ease: "none" }, 5.6);
+
+      // ================= Scene 2: reveal (5.74-9.59) =================
+      // beat-locked: the mark lands on the strong cue at 6.29s, with two rings
+      tl.fromTo("#lock2", { opacity: 0, y: 26, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "power3.out" }, 6.29);
+      RING("#lock2 .ring:not(.r2)", 6.29, 2.6, 1.0, 0.55);
+      RING("#lock2 .r2", 6.44, 2.6, 1.0, 0.4);
+      // beat-grid: the headline builds word by word from 6.83s, landing its last word near 7.93s
+      WORDS("#head2", 6.83, 0.09, 120, 0.6);
+      OUT("#lock2", 9.25, 0.3, -20);
+      WORDS_OUT("#head2", 9.2, 0.02, -110, 0.32);
+
+      // ================= Scene 3: the product window (9.55-21.10) =================
+      // beat-locked: the window arrives on the strong cue at 9.55s
+      tl.fromTo("#win", { opacity: 0, y: 80, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.75, ease: "power3.out" }, 9.55);
+      // a slow push-in across the whole tour
+      tl.fromTo("#stage", { scale: 1.1 }, { scale: 1.24, duration: 11.4, ease: "none" }, 9.55);
+      all(".ni").forEach(function (el, i) { tl.fromTo(el, { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, 9.75 + i * 0.05); });
+      tl.set("#navhl", { y: 58 }, 0);
+      tl.fromTo("#navhl", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, 10.0);
+
+      // ---- P1 Site Audit: 10.11-12.29 (strong cue 10.11) ----
+      PIN("#p1", 10.11);
+      tl.fromTo("#p1fill", { width: 0 }, { width: 1100, duration: 1.7, ease: "power2.inOut" }, 10.3);
+      // beat-grid: check rows land every half beat; each one resolves 0.3s later
+      [["a1", 10.38], ["a2", 10.65], ["a3", 10.92], ["a4", 11.2]].forEach(function (r) {
+        IN("#" + r[0], r[1], 0.4, 24);
+        tl.fromTo("#" + r[0] + "f", { scale: 0 }, { scale: 1, duration: 0.3, ease: "back.out(2)" }, r[1] + 0.28);
+        tl.fromTo("#" + r[0] + " .icg", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.25, ease: "back.out(2.4)" }, r[1] + 0.33);
+        tl.fromTo("#" + r[0] + "p", { opacity: 0, x: 16 }, { opacity: 1, x: 0, duration: 0.3, ease: "power3.out" }, r[1] + 0.3);
+      });
+      POUT("#p1", 12.29);
+
+      // ---- P2 Search Visibility: 12.29-14.47 ----
+      NAVTO(2, 12.29);
+      PIN("#p2", 12.29);
+      tl.fromTo("#p2chart", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 12.4);
+      tl.fromTo("#p2mask", { width: 0 }, { width: 640, duration: 1.25, ease: "power2.inOut" }, 12.6);
+      RING("#p2ring", 13.85, 2.6, 0.8, 0.7);
+      // beat-grid: search rows at 12.84 (strong cue), 13.38, 13.93
+      IN("#s1r", 12.84, 0.45, 26);
+      IN("#s2r", 13.38, 0.45, 26);
+      IN("#s3r", 13.93, 0.45, 26);
+      POUT("#p2", 14.47);
+
+      // ---- P3 AI Visibility: 14.47-16.66 (strong cue 14.47) ----
+      NAVTO(3, 14.47);
+      PIN("#p3", 14.47);
+      IN("#p3a", 14.6, 0.45, 30);
+      WORDS("#p3at", 14.85, 0.055, 44, 0.4);
+      // beat-locked: "Mentioned" pops on the strong cue at 15.56s
+      POP("#p3ap", 15.56, 0.3, 0.7);
+      POP("#p3ac", 15.72, 0.3, 0.7);
+      IN("#p3b", 15.02, 0.45, 30);
+      WORDS("#p3bt", 15.35, 0.05, 44, 0.4);
+      POP("#p3bp", 16.1, 0.3, 0.7);
+      POUT("#p3", 16.66);
+
+      // ---- P4 Competitors: 16.66-18.28 (strong cue 16.66) ----
+      NAVTO(4, 16.66);
+      PIN("#p4", 16.66);
+      [["c1", 300, 16.8], ["c2", 480, 16.95], ["c3", 340, 17.1], ["c4", 220, 17.25]].forEach(function (r) {
+        IN("#" + r[0], r[2], 0.4, 24);
+        tl.fromTo("#" + r[0] + "b", { width: 0 }, { width: r[1], duration: 0.7, ease: "power3.out" }, r[2] + 0.1);
+      });
+      POP("#c2p", 17.6, 0.3, 0.8);
+      POUT("#p4", 18.28);
+
+      // ---- P5 Next Actions: 18.28-20.9 ----
+      NAVTO(5, 18.28);
+      PIN("#p5", 18.28);
+      IN("#r1", 18.45, 0.45, 28);
+      IN("#r2", 18.7, 0.45, 28);
+      IN("#r3", 18.95, 0.45, 28);
+      // a simulated cursor travels in and presses the first checkbox on the beat at 19.37s
+      tl.fromTo("#cursor", { opacity: 0, x: 1150, y: 700 }, { opacity: 1, x: 820, y: 520, duration: 0.34, ease: "power2.out" }, 18.28);
+      tl.to("#cursor", { x: 392, y: 293, duration: 0.75, ease: "power2.inOut" }, 18.62);
+      tl.fromTo("#cursor", { scale: 1 }, { scale: 0.86, duration: 0.08, ease: "power2.out", immediateRender: false }, 19.37);
+      tl.to("#cursor", { scale: 1, duration: 0.18, ease: "power2.out" }, 19.45);
+      tl.to("#cursor", { opacity: 0, duration: 0.3, ease: "power2.in" }, 19.9);
+      // the press: the action completes
+      tl.fromTo("#cb1fill", { scale: 0 }, { scale: 1, duration: 0.24, ease: "back.out(2)" }, 19.37);
+      tl.fromTo("#cb1check", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.22, ease: "back.out(2.4)" }, 19.43);
+      tl.fromTo("#r1tint", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, 19.37);
+      RING("#cbring", 19.37, 2.6, 0.7, 0.6);
+      tl.fromTo("#p1todo", { opacity: 1 }, { opacity: 0, duration: 0.16, ease: "power2.in", immediateRender: false }, 19.37);
+      // beat-locked: "Verified" lands on the strongest cue in the track, 19.93s
+      tl.fromTo("#p1ver", { opacity: 0, y: 8, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "back.out(1.8)" }, 19.93);
+      IN("#recheck", 19.93, 0.5, 16);
+      // the window steps back
+      tl.fromTo("#win", { opacity: 1, y: 0, scale: 1 }, { opacity: 0, y: 40, scale: 0.92, duration: 0.3, ease: "power2.in", immediateRender: false }, 20.72);
+
+      // ================= Scene 4: outro (21.02-24.83) =================
+      tl.fromTo("#lock4", { opacity: 0, y: 26, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "power3.out" }, 21.02);
+      RING("#lock4 .ring:not(.r2)", 21.02, 2.6, 1.0, 0.5);
+      // beat-locked: the tagline builds from the strong cue at 21.56s
+      WORDS("#tag4", 21.56, 0.09, 130, 0.6);
+      RING("#lock4 .r2", 21.56, 2.8, 1.1, 0.4);
+      // everything eases to the empty canvas as the music fades out
+      tl.fromTo(["#lock4", "#tag4"], { opacity: 1 }, { opacity: 0, duration: 0.8, ease: "power1.inOut", immediateRender: false }, 24.0);
+
+      // ---- Audio-reactive glow: the warm light breathes with the music (subtle, 0.5-0.92). ----
+      (window.__ENERGY || []).forEach(function (e, i) {
+        var t = i / 20;
+        if (t < 4.7 || t > 24.78) return;
+        tl.to("#warm", { opacity: 0.5 + 0.42 * e, duration: 0.05, ease: "none" }, t);
+      });
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

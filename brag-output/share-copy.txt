@@ -1,0 +1,2 @@
+Is my website healthy? Can people find me? Do AI systems mention me? Every screen in VSI answers one of them, then tells you what to work on next.
+Built with Next.js and Supabase.
