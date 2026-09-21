@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { requireAgency, isDummySupabase } from "@/lib/auth";
+import { isDummySupabase } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { getProjectContext } from "@/lib/project-context";
+import { requireProjectContext } from "@/lib/project-context";
 import { displayDomain } from "@/lib/project-types";
 import { formatDate } from "@/lib/format";
 import { PageContainer, PageHeader } from "@/components/ui/Page";
@@ -42,8 +42,7 @@ async function loadCounts(projectIds: string[]): Promise<Map<string, Counts>> {
 }
 
 export default async function ProjectsPage() {
-  const session = await requireAgency();
-  const { projects, active, error } = await getProjectContext(session);
+  const { projects, active, error } = await requireProjectContext();
   const counts = await loadCounts(projects.map((p) => p.id));
 
   return (

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { requireAgency, isDummySupabase } from "@/lib/auth";
+import { isDummySupabase } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { getProjectContext } from "@/lib/project-context";
+import { requireProjectContext } from "@/lib/project-context";
 import { displayDomain, type ProjectSummary } from "@/lib/project-types";
 import { loadVisibility } from "@/lib/visibility-load";
 import { geoFindings } from "@/lib/geo-findings";
@@ -37,8 +37,7 @@ async function loadSerpSnapshots(project: ProjectSummary): Promise<SerpSnapshot[
 }
 
 export default async function CompetitorsPage() {
-  const session = await requireAgency();
-  const { active, error } = await getProjectContext(session);
+  const { active, error } = await requireProjectContext();
   if (!active && !error) return <Intro name="competitors" />;
   if (!active) {
     return <CompetitorsView data={{ project: null, state: error ? "error" : "no_project", errorMessage: error ?? undefined, rows: [], gaps: [], platforms: [], namedByChatGPT: [], you: null, finding: null, setup: { searches: 0, checked: false }, tracked: [], trackedState: "ok", ownWebsite: null }} />;

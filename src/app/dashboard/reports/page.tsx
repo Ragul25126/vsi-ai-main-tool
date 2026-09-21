@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { requireAgency } from "@/lib/auth";
-import { getProjectContext } from "@/lib/project-context";
+import { requireProjectContext } from "@/lib/project-context";
 import { PageContainer, PageHeader } from "@/components/ui/Page";
 import { Notice } from "@/components/ui/Status";
 import { Intro } from "@/components/intro/intros";
@@ -11,8 +10,7 @@ export const dynamic = "force-dynamic";
 
 /** Reports for the active project, or the Reports introduction when there is none. */
 export default async function ReportsPage() {
-  const session = await requireAgency();
-  const { active, error } = await getProjectContext(session);
+  const { active, error } = await requireProjectContext();
   if (active) redirect(`/dashboard/clients/${active.id}/reports`);
   if (!error) return <Intro name="reports" />;
   return (

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { requireAgency } from "@/lib/auth";
-import { getProjectContext } from "@/lib/project-context";
+import { requireProjectContext } from "@/lib/project-context";
 import { displayDomain } from "@/lib/project-types";
 import { loadProjectOverview, findingTaskKey } from "@/lib/project-summary";
 import { formatShortDate } from "@/lib/format";
@@ -19,8 +18,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   }
 
   const setupNotices = typeof params.setup === "string" ? params.setup.split(",").filter(Boolean) : [];
-  const session = await requireAgency();
-  const { active, error } = await getProjectContext(session);
+  const { active, error } = await requireProjectContext();
 
   const empty: OverviewData = {
     project: null,

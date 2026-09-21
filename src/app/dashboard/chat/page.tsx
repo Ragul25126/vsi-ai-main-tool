@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { requireAgency } from "@/lib/auth";
-import { getProjectContext } from "@/lib/project-context";
+import { requireProjectContext } from "@/lib/project-context";
 import { loadProjectOverview } from "@/lib/project-summary";
 import { formatDate } from "@/lib/format";
 import { PageContainer, PageHeader, Section } from "@/components/ui/Page";
@@ -13,8 +12,7 @@ export const metadata: Metadata = { title: "AI Chat" };
 export const dynamic = "force-dynamic";
 
 export default async function AIChatPage() {
-  const session = await requireAgency();
-  const { active, error } = await getProjectContext(session);
+  const { active, error } = await requireProjectContext();
   if (!active && !error) return <Intro name="chat" />;
 
   const header = (

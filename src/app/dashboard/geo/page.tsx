@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { requireAgency } from "@/lib/auth";
-import { getProjectContext } from "@/lib/project-context";
+import { requireProjectContext } from "@/lib/project-context";
 import { displayDomain } from "@/lib/project-types";
 import { loadGeo } from "@/lib/geo-load";
 import { geoFindings, pageClarityFinding } from "@/lib/geo-findings";
@@ -14,8 +13,7 @@ export const metadata: Metadata = { title: "AI Visibility" };
 export const dynamic = "force-dynamic";
 
 export default async function GeoPage() {
-  const session = await requireAgency();
-  const { active, error } = await getProjectContext(session);
+  const { active, error } = await requireProjectContext();
 
   if (!active && !error) return <Intro name="ai" />;
   if (!active) {

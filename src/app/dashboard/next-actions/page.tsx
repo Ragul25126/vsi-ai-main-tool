@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { requireAgency } from "@/lib/auth";
-import { getProjectContext } from "@/lib/project-context";
+import { requireProjectContext } from "@/lib/project-context";
 import { displayDomain } from "@/lib/project-types";
 import { findingTaskKey, loadProjectOverview } from "@/lib/project-summary";
 import { Intro } from "@/components/intro/intros";
@@ -11,8 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function NextActionsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { open } = await searchParams;
-  const session = await requireAgency();
-  const { active, error } = await getProjectContext(session);
+  const { active, error } = await requireProjectContext();
 
   if (!active && !error) return <Intro name="actions" />;
   if (!active) {

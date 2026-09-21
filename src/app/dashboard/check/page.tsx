@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { requireAgency } from "@/lib/auth";
-import { getProjectContext } from "@/lib/project-context";
+import { requireProjectContext } from "@/lib/project-context";
 import { displayDomain } from "@/lib/project-types";
 import { loadPageComparisons, loadSiteAudits } from "@/lib/site-audit/load";
 import { formatDate, formatDateTime, formatShortDate } from "@/lib/format";
@@ -14,8 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function CheckPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { tab } = await searchParams;
-  const session = await requireAgency();
-  const { active, error } = await getProjectContext(session);
+  const { active, error } = await requireProjectContext();
 
   if (tab === "quick-check") {
     return (

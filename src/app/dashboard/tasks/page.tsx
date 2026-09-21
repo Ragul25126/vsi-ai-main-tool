@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { requireAgency, isDummySupabase } from "@/lib/auth";
+import { isDummySupabase } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { getProjectContext } from "@/lib/project-context";
+import { requireProjectContext } from "@/lib/project-context";
 import { displayDomain } from "@/lib/project-types";
 import { parseTaskSource } from "@/lib/task-payload";
 import { formatDate } from "@/lib/format";
@@ -31,8 +31,7 @@ type TaskRow = {
 };
 
 export default async function TasksPage() {
-  const session = await requireAgency();
-  const { active, error } = await getProjectContext(session);
+  const { active, error } = await requireProjectContext();
 
   if (!active && !error) return <Intro name="tasks" />;
   if (!active) {

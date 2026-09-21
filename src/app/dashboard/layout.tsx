@@ -7,7 +7,7 @@ import WelcomeToast from "@/components/WelcomeToast";
 import { ProjectProvider } from "@/components/layout/ProjectProvider";
 import { createClient } from "@/lib/supabase/server";
 import { requireAgency, isDummySupabase } from "@/lib/auth";
-import { getProjectContext } from "@/lib/project-context";
+import { getProjectContext, startProjectLoad } from "@/lib/project-context";
 import { loadOnboardingState } from "@/lib/onboarding-load";
 import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 
@@ -23,14 +23,20 @@ async function loadAgencyLimits(agencyId: string) {
 }
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  // The projects read needs only the request's own credentials, so it runs while the session is looked up.
+  startProjectLoad();
   const session = await requireAgency();
   const isSuperAdmin = session.role === "super_admin";
 
-  const [projectContext, agency] = await Promise.all([getProjectContext(session), loadAgencyLimits(session.agencyId)]);
+  // The organization's project limit and the first-use guidance are independent of each other, so they run together.
+  const limits = loadAgencyLimits(session.agencyId);
+  limits.catch(() => {}); // a failure is still raised where it is awaited below; this only avoids an unhandled rejection if an earlier step throws first
+  const projectContext = await getProjectContext(session);
   // First-use guidance comes from real project state. If the project list failed to load, show no guidance.
   const onboarding = projectContext.error
     ? { hasProject: true, known: false, searches: 0, competitors: null, auditDone: false, auditRunning: false }
     : await loadOnboardingState(projectContext.active);
+  const agency = await limits;
 
   const maxClients = agency?.max_clients;
   const atClientCap = !isSuperAdmin && typeof maxClients === "number" && projectContext.projects.length >= maxClients;

@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ExternalLink, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { requireAgency, isDummySupabase } from "@/lib/auth";
+import { isDummySupabase } from "@/lib/auth";
+import { requireProjectContext } from "@/lib/project-context";
 import { displayDomain } from "@/lib/project-types";
 import { loadSetupStatus } from "@/lib/setup-status";
 import { formatDateTime, plural } from "@/lib/format";
@@ -36,12 +37,21 @@ type ReportRow = {
 
 export default async function ClientReportsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await requireAgency();
+  const { session, projects, error: projectsError } = await requireProjectContext();
   if (isDummySupabase()) notFound();
   const supabase = await createClient();
 
   const isSuperAdmin = session.role === "super_admin";
   const clientQ = supabase.from("clients").select("id, name, website").eq("id", id);
+  // The project's id, name and website are already in the project list the layout loads (the same rows the
+  // database allows this user to see), so they are not read a second time. If that list couldn't be loaded,
+  // read the row directly, as before.
+  const listed = projects.find((p) => p.id === id);
+  const findClient = async (): Promise<{ id: string; name: string; website: string | null } | null> => {
+    if (!projectsError) return listed ? { id: listed.id, name: listed.name, website: listed.website } : null;
+    const { data } = await (isSuperAdmin ? clientQ : clientQ.eq("agency_id", session.agencyId)).maybeSingle();
+    return (data as { id: string; name: string; website: string | null } | null) ?? null;
+  };
   const reportsQ = supabase
     .from("reports")
     .select("id, type, share_token, generated_at, expires_at, tracked_keywords(keyword)")
@@ -50,8 +60,8 @@ export default async function ClientReportsPage({ params }: { params: Promise<{ 
     .limit(50);
   // None of these reads needs another's result, so they run together. The reports read carries
   // its own organization filter, and nothing renders unless the project is found.
-  const [{ data: client }, { data: reports, error }, status] = await Promise.all([
-    (isSuperAdmin ? clientQ : clientQ.eq("agency_id", session.agencyId)).maybeSingle(),
+  const [client, { data: reports, error }, status] = await Promise.all([
+    findClient(),
     isSuperAdmin ? reportsQ : reportsQ.eq("agency_id", session.agencyId),
     loadSetupStatus(id),
   ]);
