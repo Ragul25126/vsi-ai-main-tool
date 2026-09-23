@@ -14,7 +14,15 @@ export type CheckId =
   | "answer_content"
   | "image_alt"
   | "sitemap"
-  | "mobile_viewport";
+  | "mobile_viewport"
+  | "topic_coverage"
+  | "geo_compatibility";
+
+export interface SeoSetupInput {
+  trackedKeywords?: string[];
+  targetCountry?: string | null;
+  targetLanguage?: string | null;
+}
 
 /** Facts extracted from one fetched page. */
 export interface PageFacts {
@@ -35,7 +43,16 @@ export interface PageFacts {
   imagesMissingAlt: number;
   internalLinks: string[];
   wordCount: number;
+  /** Observable semantic & technical facts */
+  htmlLang: string | null;
+  canonical: string | null;
+  hreflangs: Array<{ lang: string; href: string }>;
+  h1Texts: string[];
+  headingTexts: string[];
+  bodyTextSample: string;
+  responseTimeMs: number;
 }
+
 
 export interface RobotsFacts {
   found: boolean;

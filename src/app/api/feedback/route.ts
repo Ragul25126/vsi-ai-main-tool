@@ -36,12 +36,15 @@ function ratingToCategory(rating: number): Category {
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await requireAgency();
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ ok: false, error: "Not authenticated" }, { status: 401 });
+    }
     const { data, error } = await supabase
       .from("feedback")
       .select("*")
-      .eq("user_id", session.userId)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -58,9 +61,26 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     let session: { agencyId: string; userId: string } | null = null;
-    try { session = await requireAgency(); } catch { /* allow anonymous feedback */ }
+    try { session = await requireAgency(); } catch { /* allow users without agency */ }
     const supabase = await createClient();
-    const body     = (await req.json()) as Payload;
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = session?.userId ?? user?.id ?? null;
+
+    let profileAgencyId = session?.agencyId ?? null;
+    if (!profileAgencyId && userId) {
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("agency_id")
+          .eq("id", userId)
+          .maybeSingle();
+        profileAgencyId = profile?.agency_id ?? null;
+      } catch {
+        // Continue
+      }
+    }
+
+    const body     = (await req.json()) as Payload & { subject?: string };
     const isNew    = typeof body.rating === "number";
 
     if (isNew) {
@@ -87,11 +107,11 @@ export async function POST(req: NextRequest) {
       };
 
       const insertPayload = {
-        agency_id:    session?.agencyId ?? null,
-        user_id:      session?.userId ?? null,
+        agency_id:    profileAgencyId,
+        user_id:      userId,
         category:     ratingToCategory(rating),
         rating:       String(rating),
-        subject:      comment.length > 80 ? comment.slice(0, 80) + "..." : comment,
+        subject:      body.subject || (comment.length > 80 ? comment.slice(0, 80) + "..." : comment),
         message:      comment,
         attachment_url: body.attachment_name ?? null,
         page_url:     (body.page ?? body.page_url ?? "").slice(0, 500) || null,
@@ -136,11 +156,11 @@ export async function POST(req: NextRequest) {
 
     const ua = req.headers.get("user-agent")?.slice(0, 500) ?? null;
     const legacyPayload = {
-      agency_id:    session?.agencyId ?? null,
-      user_id:      session?.userId ?? null,
+      agency_id:    profileAgencyId,
+      user_id:      userId,
       category,
       rating:       null,
-      subject:      null,
+      subject:      body.subject || null,
       message,
       attachment_url: null,
       page_url:     body.page_url?.slice(0, 500) ?? null,

@@ -33,7 +33,7 @@ function extractJSON(text: string): string {
   return match ? match[0] : stripped;
 }
 
-async function callOpenRouter(
+export async function callOpenRouter(
   model: string,
   systemPrompt: string,
   userPrompt: string,

@@ -1,4 +1,4 @@
-export type Location = "ae" | "us" | "uk" | "in" | "lk";
+export type Location = "ae" | "us" | "uk" | "in" | "lk" | "sg";
 export type ServiceType = "seo" | "geo" | "seo_geo";
 export type TrackType = "seo" | "geo" | "both";
 
@@ -56,6 +56,7 @@ export const COUNTRIES = [
   "United Kingdom",
   "India",
   "Sri Lanka",
+  "Singapore",
   "Other",
 ] as const;
 
@@ -88,6 +89,12 @@ export const LOCATIONS: Record<Location, { label: string; gl: string; location: 
     label: "Sri Lanka",
     gl: "lk",
     location: "Sri Lanka",
+    hl: "en",
+  },
+  sg: {
+    label: "Singapore",
+    gl: "sg",
+    location: "Singapore",
     hl: "en",
   },
 };

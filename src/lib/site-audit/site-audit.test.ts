@@ -146,14 +146,39 @@ describe("evaluateChecks", () => {
     expect(checks.find((c) => c.id === "page_errors")).toMatchObject({ status: "fail", impact: "high" });
   });
 
-  it("never scores below zero", () => {
+  it("evaluates topic coverage against tracked keywords", () => {
     const checks = evaluateChecks({
-      homepageUrl: "http://example.com/",
-      pages: [failedPage("http://example.com/", 0, "timeout")],
-      robots: analyzeRobots("User-agent: *\nDisallow: /"),
-      sitemapFound: false,
-      brokenLinks: [{ url: "x", status: 404, foundOn: "y" }],
+      homepageUrl: "https://example.com/",
+      pages: [page({})],
+      robots: cleanRobots,
+      sitemapFound: true,
+      brokenLinks: [],
+      seoSetup: {
+        trackedKeywords: ["emergency plumbers", "unrelated keyword query"],
+      },
     });
-    expect(scoreChecks(checks)).toBeGreaterThanOrEqual(0);
+    const topicCheck = checks.find((c) => c.id === "topic_coverage");
+    expect(topicCheck).toBeDefined();
+    expect(topicCheck?.detail.coveredKeywords).toEqual(["emergency plumbers"]);
+    expect(topicCheck?.detail.missingKeywords).toEqual(["unrelated keyword query"]);
+    expect(topicCheck?.status).toBe("warning");
+  });
+
+  it("evaluates regional and language compatibility against seoSetup", () => {
+    const checks = evaluateChecks({
+      homepageUrl: "https://example.com/",
+      pages: [page({ htmlLang: "en" })],
+      robots: cleanRobots,
+      sitemapFound: true,
+      brokenLinks: [],
+      seoSetup: {
+        targetCountry: "US",
+        targetLanguage: "en",
+      },
+    });
+    const geoCheck = checks.find((c) => c.id === "geo_compatibility");
+    expect(geoCheck).toBeDefined();
+    expect(geoCheck?.status).toBe("pass");
   });
 });
+

@@ -1,4 +1,4 @@
-import type { BrokenLink, CheckResult, CheckStatus, Impact, PageFacts, RobotsFacts } from "./types";
+import type { BrokenLink, CheckResult, CheckStatus, Impact, PageFacts, RobotsFacts, SeoSetupInput } from "./types";
 
 const AFFECTED_CAP = 25;
 const BUSINESS_TYPE = /(Organization|Corporation|Business|Store|Restaurant|ProfessionalService|LegalService|MedicalClinic|Agency)$/;
@@ -11,6 +11,7 @@ interface EvaluateInput {
   brokenLinks: BrokenLink[];
   /** Internal links that were verified (for the broken-link check). */
   linksChecked?: number;
+  seoSetup?: SeoSetupInput;
 }
 
 function result(
@@ -24,7 +25,8 @@ function result(
   return { id, impact, status, count: affected.length, total, affected: affected.slice(0, AFFECTED_CAP), detail };
 }
 
-export function evaluateChecks({ homepageUrl, pages, robots, sitemapFound, brokenLinks, linksChecked = 0 }: EvaluateInput): CheckResult[] {
+export function evaluateChecks({ homepageUrl, pages, robots, sitemapFound, brokenLinks, linksChecked = 0, seoSetup }: EvaluateInput): CheckResult[] {
+
   const loaded = pages.filter((p) => p.isHtml && p.status < 400 && !p.fetchError);
   const n = loaded.length;
   const home = pages[0];
@@ -179,8 +181,116 @@ export function evaluateChecks({ homepageUrl, pages, robots, sitemapFound, broke
     result("mobile_viewport", "medium", noViewport.length > 0 ? "warning" : "pass", noViewport.map((p) => p.url), n),
   );
 
+  // Target topic coverage (against user's tracked keywords)
+  const trackedKeywords = (seoSetup?.trackedKeywords || []).map((k) => k.trim().toLowerCase()).filter(Boolean);
+  if (trackedKeywords.length > 0) {
+    const covered: string[] = [];
+    const missing: string[] = [];
+
+    for (const kw of trackedKeywords) {
+      const kwWords = kw.split(/\s+/).filter(Boolean);
+      const isCovered = loaded.some((p) => {
+        const textToSearch = [
+          p.title || "",
+          p.metaDescription || "",
+          ...(p.h1Texts || []),
+          ...(p.headingTexts || []),
+          p.bodyTextSample || "",
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        return textToSearch.includes(kw) || (kwWords.length > 1 && kwWords.every((w) => textToSearch.includes(w)));
+      });
+
+      if (isCovered) {
+        covered.push(kw);
+      } else {
+        missing.push(kw);
+      }
+    }
+
+    const coveragePct = Math.round((covered.length / trackedKeywords.length) * 100);
+    const status: CheckStatus = coveragePct >= 70 ? "pass" : coveragePct >= 40 ? "warning" : "fail";
+    checks.push(
+      result("topic_coverage", "medium", status, missing, trackedKeywords.length, {
+        coveragePercent: `${coveragePct}%`,
+        coveredCount: covered.length,
+        missingCount: missing.length,
+        coveredKeywords: covered,
+        missingKeywords: missing,
+      }),
+    );
+  } else {
+    checks.push(
+      result("topic_coverage", "low", "pass", [], 0, {
+        note: "Add tracked keywords to evaluate content topic coverage.",
+      }),
+    );
+  }
+
+  // Regional and language compatibility
+  const targetCountry = (seoSetup?.targetCountry || "").trim().toUpperCase();
+  const targetLang = (seoSetup?.targetLanguage || "").trim().toLowerCase();
+  const homeLang = (home?.htmlLang || "").trim().toLowerCase();
+  const allHreflangs = loaded.flatMap((p) => p.hreflangs || []);
+
+  if (targetLang || targetCountry) {
+    const langMatches = !targetLang || (homeLang && (homeLang.startsWith(targetLang) || targetLang.startsWith(homeLang)));
+    const hasTargetHreflang = !targetCountry && !targetLang
+      ? true
+      : allHreflangs.some((h) => {
+          const l = h.lang.toLowerCase();
+          return (targetLang && l.includes(targetLang)) || (targetCountry && l.includes(targetCountry.toLowerCase()));
+        });
+
+    let geoStatus: CheckStatus = "pass";
+    const issues: string[] = [];
+
+    if (!homeLang) {
+      geoStatus = "warning";
+      issues.push("Missing HTML lang declaration on homepage");
+    } else if (targetLang && !langMatches && !hasTargetHreflang) {
+      geoStatus = "warning";
+      issues.push(`Homepage language (${homeLang}) does not match target language (${targetLang})`);
+    }
+
+    checks.push(
+      result(
+        "geo_compatibility",
+        "medium",
+        geoStatus,
+        geoStatus === "pass" ? [] : [homepageUrl],
+        1,
+        {
+          declaredLang: homeLang || "none",
+          targetLanguage: targetLang || "any",
+          targetCountry: targetCountry || "any",
+          hreflangTagsFound: allHreflangs.length,
+          issues: issues.length ? issues.join("; ") : "Matches target setup",
+        },
+      ),
+    );
+  } else {
+    checks.push(
+      result(
+        "geo_compatibility",
+        "low",
+        "pass",
+        [],
+        1,
+        {
+          declaredLang: homeLang || "not specified",
+          note: "No regional target configured in project settings.",
+        },
+      ),
+    );
+  }
+
+
   return checks;
 }
+
 
 const PENALTY: Record<Exclude<CheckStatus, "pass">, Record<Impact, number>> = {
   fail: { high: 15, medium: 8, low: 4 },

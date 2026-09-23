@@ -4,7 +4,7 @@ import { safeFetch, UnsafeUrlError, type SafeFetchResult } from "@/lib/net/safe-
 import { failedPage, parsePage, parseSitemap } from "./parse";
 import { analyzeRobots } from "./robots";
 import { evaluateChecks, scoreChecks } from "./checks";
-import type { AuditOutcome, BrokenLink, PageFacts } from "./types";
+import type { AuditOutcome, BrokenLink, PageFacts, SeoSetupInput } from "./types";
 
 export class SiteAuditError extends Error {
   constructor(message: string) {
@@ -18,15 +18,21 @@ const MAX_LINKS_TO_VERIFY = 60;
 /** Statuses that mean "restricted", not "broken". */
 const NOT_BROKEN = new Set([401, 403, 405, 429]);
 
-async function tryFetch(url: string, opts?: Parameters<typeof safeFetch>[1]): Promise<SafeFetchResult | { error: string }> {
+type FetchOutcome = (SafeFetchResult & { responseTimeMs: number }) | { error: string; responseTimeMs: number };
+
+async function tryFetch(url: string, opts?: Parameters<typeof safeFetch>[1]): Promise<FetchOutcome> {
+  const start = Date.now();
   try {
-    return await safeFetch(url, opts);
+    const res = await safeFetch(url, opts);
+    return { ...res, responseTimeMs: Date.now() - start };
   } catch (e) {
-    if (e instanceof UnsafeUrlError) return { error: e.message };
+    const responseTimeMs = Date.now() - start;
+    if (e instanceof UnsafeUrlError) return { error: e.message, responseTimeMs };
     const name = e instanceof Error ? e.name : "";
-    return { error: name === "TimeoutError" ? "Timed out" : "Couldn't connect" };
+    return { error: name === "TimeoutError" ? "Timed out" : "Couldn't connect", responseTimeMs };
   }
 }
+
 
 async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);
@@ -79,7 +85,7 @@ async function loadSitemapUrls(origin: string, declared: string[], siteHost: str
  * back to homepage links), robots.txt, sitemap, and the internal links found
  * on those pages. Every request goes through safeFetch (public hosts only).
  */
-export async function runSiteAudit(domainInput: string): Promise<AuditOutcome> {
+export async function runSiteAudit(domainInput: string, seoSetup?: SeoSetupInput): Promise<AuditOutcome> {
   const normalised = normaliseDomain(domainInput);
   if (!normalised) throw new SiteAuditError("The project's website address isn't valid. Update it in project settings.");
   const siteHost = normalised.domain;
@@ -96,7 +102,7 @@ export async function runSiteAudit(domainInput: string): Promise<AuditOutcome> {
 
   const homeFacts: PageFacts =
     home.ok && /html/i.test(home.contentType)
-      ? parsePage(home.body, homepageUrl, home.status, host)
+      ? parsePage(home.body, homepageUrl, home.status, host, home.responseTimeMs)
       : failedPage(homepageUrl, home.status, null);
 
   const robotsRes = await tryFetch(`${origin}/robots.txt`, { timeoutMs: 8000, maxBytes: 500_000 });
@@ -121,7 +127,7 @@ export async function runSiteAudit(domainInput: string): Promise<AuditOutcome> {
     const res = await tryFetch(url);
     if ("error" in res) return failedPage(url, 0, res.error);
     if (!res.ok || !/html/i.test(res.contentType)) return failedPage(res.url, res.status, null);
-    return parsePage(res.body, res.url, res.status, host);
+    return parsePage(res.body, res.url, res.status, host, res.responseTimeMs);
   });
   const pages = [homeFacts, ...others];
 
@@ -150,7 +156,15 @@ export async function runSiteAudit(domainInput: string): Promise<AuditOutcome> {
   }
   // Scanned pages that fail are reported by the page_errors check instead.
 
-  const checks = evaluateChecks({ homepageUrl, pages, robots, sitemapFound: sitemap.found, brokenLinks, linksChecked: verified.length });
+  const checks = evaluateChecks({
+    homepageUrl,
+    pages,
+    robots,
+    sitemapFound: sitemap.found,
+    brokenLinks,
+    linksChecked: verified.length,
+    seoSetup,
+  });
   return {
     domain: siteHost,
     homepageUrl,
@@ -162,3 +176,4 @@ export async function runSiteAudit(domainInput: string): Promise<AuditOutcome> {
     checks,
   };
 }
+

@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { MessageSquare, Send, CheckCircle2, Star, ThumbsUp, Filter, Search, Clock } from "lucide-react";
+import { MessageSquare, Send, CheckCircle2, Star, ThumbsUp, Filter, Search, Clock, AlertCircle, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { checkSupabaseConfig, classifyFeedbackError } from "@/lib/feedback";
 
 interface FeedbackItem {
  id: string;
@@ -49,20 +50,17 @@ const initialFeedback: FeedbackItem[] = [
 ];
 
 export default function FeedbackPage() {
- const [feedbackList, setFeedbackList] = useState<FeedbackItem[]>(initialFeedback);
- const [subject, setSubject] = useState("");
- const [message, setMessage] = useState("");
- const [category, setCategory] = useState<FeedbackItem["category"]>("Feature Request");
- const [submitted, setSubmitted] = useState(false);
- const [myFeedback, setMyFeedback] = useState<FeedbackItem[]>([]);
+  const [feedbackList, setFeedbackList] = useState<FeedbackItem[]>(initialFeedback);
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [category, setCategory] = useState<FeedbackItem["category"]>("Feature Request");
+  const [submitted, setSubmitted] = useState(false);
+  const [myFeedback, setMyFeedback] = useState<FeedbackItem[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [authLoading, setAuthLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
-
-  const isDummy = () => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-    return url.includes("dummy") || url.includes("your-project.supabase.co") || url.includes("localhost:54321") || url === "";
-  };
 
   const mapDatabaseCategory = (cat: string): "Feature Request" | "Bug Report" | "UX Improvement" => {
     if (cat === "bug") return "Bug Report";
@@ -70,20 +68,7 @@ export default function FeedbackPage() {
     return "UX Improvement";
   };
 
-  const checkSupabaseConfig = () => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || url.includes("dummy") || url.includes("your-project.supabase.co")) {
-      throw new Error("Supabase is not configured. Please define NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.");
-    }
-    if (!key || key.includes("anon_key_here")) {
-      throw new Error("Supabase Anon Key is missing or invalid. Please configure NEXT_PUBLIC_SUPABASE_ANON_KEY.");
-    }
-  };
-
   const fetchMyFeedback = async () => {
-    if (authLoading) return;
-
     try {
       checkSupabaseConfig();
       const supabase = createClient();
@@ -97,13 +82,13 @@ export default function FeedbackPage() {
         .order("created_at", { ascending: false });
 
       if (error) {
-        throw new Error(error.message);
+        throw error;
       }
 
       if (data && Array.isArray(data)) {
         const mapped: FeedbackItem[] = data.map((item: any) => {
           const cat = mapDatabaseCategory(item.category);
-          const subj = item.context_data?.subject || "Feedback Submission";
+          const subj = item.subject || item.context_data?.subject || "Feedback Submission";
           const statusMap = (stat: string): FeedbackItem["status"] => {
             if (stat === "done" || stat === "Resolved") return "Resolved";
             if (stat === "triaged" || stat === "in_progress" || stat === "In Review") return "In Review";
@@ -114,7 +99,7 @@ export default function FeedbackPage() {
             category: cat,
             subject: subj,
             message: item.message,
-            author: "you@agency.com",
+            author: currentUser.email || "you@agency.com",
             createdAt: item.created_at ? item.created_at.split("T")[0] : new Date().toISOString().split("T")[0],
             status: statusMap(item.status),
             upvotes: 1,
@@ -124,11 +109,6 @@ export default function FeedbackPage() {
       }
     } catch (e: any) {
       console.warn("Failed to fetch feedback from Supabase directly:", e);
-      const msg = e instanceof Error && e.message === "fetch failed"
-        ? "Database connection failed: The database server is unreachable. Please verify NEXT_PUBLIC_SUPABASE_URL."
-        : e.message || String(e);
-      // Log to console for dev validation
-      console.error("My Feedback load error:", msg);
     }
   };
 
@@ -155,52 +135,44 @@ export default function FeedbackPage() {
 
   const handleSubmitFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
+
     if (!subject.trim() || !message.trim()) return;
 
     if (authLoading) {
-      alert("Authentication is still loading. Please try again in a moment.");
+      setErrorMessage("Authentication error: Session is still loading. Please wait a moment.");
       return;
     }
-
-    const newItem: FeedbackItem = {
-      id: `fb-${Date.now()}`,
-      category,
-      subject: subject.trim(),
-      message: message.trim(),
-      author: "you@agency.com",
-      createdAt: new Date().toISOString().split("T")[0],
-      status: "Open",
-      upvotes: 1,
-    };
-
-    // Keep existing community list update
-    setFeedbackList([newItem, ...feedbackList]);
 
     const apiCategory = 
       category === "Bug Report" ? "bug" : 
       category === "Feature Request" ? "idea" : "general";
 
+    setIsSubmitting(true);
+
     try {
       checkSupabaseConfig();
       const supabase = createClient();
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (!currentUser) {
+      const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !currentUser) {
         throw new Error("No authenticated session found. Please sign in again.");
       }
 
-      // Fetch user's profile to get agency_id
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("agency_id")
-        .eq("id", currentUser.id)
-        .single();
-
-      if (profileError) {
-        throw new Error(`Profile fetch failed: ${profileError.message}`);
+      // Fetch user's profile to get agency_id if available (gracefully optional)
+      let agencyId: string | null = null;
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("agency_id")
+          .eq("id", currentUser.id)
+          .maybeSingle();
+        agencyId = profile?.agency_id ?? null;
+      } catch {
+        // Continue even if profile doesn't have agency_id yet
       }
 
       const insertPayload = {
-        agency_id: profile?.agency_id ?? null,
+        agency_id: agencyId,
         user_id: currentUser.id,
         category: apiCategory,
         rating: null,
@@ -217,6 +189,9 @@ export default function FeedbackPage() {
         status: "new",
       };
 
+      let insertedId: string | null = null;
+
+      // 1. Direct Supabase insert via client
       const { data: insertedData, error: insertError } = await supabase
         .from("feedback")
         .insert(insertPayload)
@@ -224,38 +199,55 @@ export default function FeedbackPage() {
         .single();
 
       if (insertError) {
-        throw new Error(insertError.message);
+        // Fallback to server route /api/feedback
+        console.warn("Direct Supabase insert failed, trying /api/feedback fallback:", insertError.message);
+        const res = await fetch("/api/feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            category: apiCategory,
+            subject: subject.trim(),
+            message: message.trim(),
+            page_url: "/dashboard/feedback",
+            context_data: insertPayload.context_data,
+          }),
+        });
+        const apiRes = await res.json().catch(() => ({}));
+        if (!res.ok || !apiRes.ok) {
+          throw insertError;
+        }
+        insertedId = apiRes.id;
+      } else {
+        insertedId = insertedData?.id;
       }
 
-      const insertedId = insertedData?.id;
       const insertedItem: FeedbackItem = {
         id: insertedId || `fb-${Date.now()}`,
         category,
         subject: subject.trim(),
         message: message.trim(),
-        author: "you@agency.com",
+        author: currentUser.email || "you@agency.com",
         createdAt: new Date().toISOString().split("T")[0],
         status: "Open",
         upvotes: 1,
       };
 
-      // Immediately add the inserted record to list
+      // Add to list and clear form
+      setFeedbackList((prev) => [insertedItem, ...prev]);
       setMyFeedback((prev) => [insertedItem, ...prev]);
-
-      // Clear form and show success
       setSubject("");
       setMessage("");
       setSubmitted(true);
-      setTimeout(() => setSubmitted(false), 4000);
+      setTimeout(() => setSubmitted(false), 5000);
 
-      // Re-fetch to confirm/sync
+      // Re-fetch to sync
       await fetchMyFeedback();
     } catch (err: any) {
-      console.error("Feedback direct DB insert failed:", err);
-      const msg = err instanceof Error && err.message === "fetch failed"
-        ? "Database connection failed: The database server is unreachable. Please verify NEXT_PUBLIC_SUPABASE_URL is correct and the database is active."
-        : err.message || String(err);
-      alert(`Error submitting feedback: ${msg}`);
+      console.error("Feedback submission error:", err);
+      const classified = classifyFeedbackError(err);
+      setErrorMessage(classified.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -278,7 +270,14 @@ export default function FeedbackPage() {
  {submitted && (
  <div role="status" className="flex items-center gap-2 rounded-panel bg-positive-soft p-3.5 text-support font-medium text-positive">
  <CheckCircle2 size={16} />
- <span>Thank you! Your feedback has been submitted to the product team.</span>
+ <span>Feedback submitted successfully.</span>
+ </div>
+ )}
+
+ {errorMessage && (
+ <div role="alert" className="flex items-start gap-2 rounded-panel bg-critical/10 border border-critical/20 p-3.5 text-support font-medium text-critical">
+ <AlertCircle size={16} className="mt-0.5 shrink-0" />
+ <span>{errorMessage}</span>
  </div>
  )}
 
@@ -333,10 +332,11 @@ export default function FeedbackPage() {
 
  <button
  type="submit"
- className="w-full flex items-center justify-center gap-2 rounded-control bg-ink hover:bg-ink-2 text-white px-4 py-2.5 text-caption font-semibold transition-colors"
+ disabled={isSubmitting}
+ className="w-full flex items-center justify-center gap-2 rounded-control bg-ink hover:bg-ink-2 text-white px-4 py-2.5 text-caption font-semibold transition-colors disabled:opacity-50"
  >
- <Send size={14} />
- <span>Send feedback</span>
+ {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+ <span>{isSubmitting ? "Sending..." : "Send feedback"}</span>
  </button>
  </form>
  </div>

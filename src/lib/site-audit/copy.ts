@@ -163,6 +163,36 @@ export const CHECK_COPY: Record<CheckId, CheckCopy> = {
     taskGroup: "Technical",
     owner: "Developer",
   },
+  topic_coverage: {
+    area: "search",
+    problem: (c) =>
+      c.count > 0
+        ? `Your website content misses ${c.count} of your tracked search ${c.count === 1 ? "topic" : "topics"}`
+        : "Your website content has low coverage of your tracked search topics",
+    healthy: "Your website covers your tracked search topics",
+    why: "Search engines and AI assistants rank and cite websites that directly cover the specific topics and phrases customers search for.",
+    todo: (c) =>
+      c.affected.length > 0
+        ? `Include your tracked search phrases (${c.affected.slice(0, 3).join(", ")}) naturally in your page titles, headings, and introductory text.`
+        : "Review your target search phrases and ensure they are addressed on your key pages.",
+    technical: "Target topic & tracked keyword content coverage",
+    taskGroup: "Content",
+    owner: "Writer",
+  },
+  geo_compatibility: {
+    area: "search",
+    problem: (c) =>
+      c.detail.issues
+        ? `Target regional setting: ${String(c.detail.issues)}`
+        : "Your website language or regional targeting could be improved",
+    healthy: "Your website is properly configured for your target region and language",
+    why: "Search engines and AI assistants use language and regional signals to deliver relevant results to local users.",
+    todo: () =>
+      "Ensure your website has an HTML lang attribute matching your target market, and hreflang tags if you serve multiple countries.",
+    technical: "HTML lang & regional hreflang targeting",
+    taskGroup: "Technical",
+    owner: "Developer",
+  },
 };
 
 export function checkHeadline(c: CheckResult): string {
@@ -210,5 +240,12 @@ export function checkEvidence(c: CheckResult): string {
       return `${c.detail.pagesWithAnswers ?? 0} of the ${c.total} pages we checked have a questions-and-answers section.`;
     case "sitemap":
       return c.status === "pass" ? "We found your sitemap." : "We looked for /sitemap.xml and for a sitemap listed in robots.txt.";
+    case "topic_coverage":
+      return c.detail.coveragePercent
+        ? `${c.detail.coveredCount ?? 0} of ${c.total} tracked topics (${c.detail.coveragePercent}) found in your website content.`
+        : "No tracked keywords configured to evaluate topic coverage.";
+    case "geo_compatibility":
+      return `HTML lang declared: ${String(c.detail.declaredLang || "none")}, target: ${String(c.detail.targetLanguage || "any")}/${String(c.detail.targetCountry || "any")}.`;
   }
 }
+

@@ -93,6 +93,7 @@ export function generateAIKeywordsAndQueries(
     uk: { city: "London", country: "UK", region: "United Kingdom" },
     in: { city: "Mumbai", country: "India", region: "India" },
     lk: { city: "Colombo", country: "Sri Lanka", region: "Sri Lanka" },
+    sg: { city: "Singapore", country: "Singapore", region: "Singapore" },
   };
 
   const locInfo = locLabels[location] || locLabels.ae;

@@ -39,8 +39,18 @@ export function toInternalUrl(href: string, pageUrl: string, siteHost: string): 
   return u.toString();
 }
 
-export function parsePage(html: string, url: string, status: number, siteHost: string): PageFacts {
+export function parsePage(html: string, url: string, status: number, siteHost: string, responseTimeMs = 0): PageFacts {
   const root = parse(html, { comment: false, blockTextElements: { script: true, style: true, noscript: false, pre: true } });
+
+  const htmlLang = root.querySelector("html")?.getAttribute("lang")?.trim() || null;
+  const canonical = root.querySelector('link[rel="canonical"]')?.getAttribute("href")?.trim() || null;
+
+  const hreflangs: Array<{ lang: string; href: string }> = [];
+  root.querySelectorAll('link[rel="alternate"][hreflang]').forEach((link) => {
+    const lang = link.getAttribute("hreflang")?.trim();
+    const href = link.getAttribute("href")?.trim();
+    if (lang && href) hreflangs.push({ lang, href });
+  });
 
   const title = root.querySelector("title")?.text.trim() || null;
   const metaDescription = root.querySelector('meta[name="description"]')?.getAttribute("content")?.trim() || null;
@@ -48,7 +58,11 @@ export function parsePage(html: string, url: string, status: number, siteHost: s
   const hasViewport = !!root.querySelector('meta[name="viewport"]');
 
   const headings = root.querySelectorAll("h1, h2, h3, h4");
-  const h1Count = root.querySelectorAll("h1").length;
+  const h1Elements = root.querySelectorAll("h1");
+  const h1Count = h1Elements.length;
+  const h1Texts = h1Elements.map((h) => h.text.trim()).filter(Boolean);
+  const headingTexts = headings.map((h) => h.text.trim()).filter(Boolean).slice(0, 30);
+
   const questionHeadings = headings.filter((h) => {
     const text = h.text.trim();
     return text.endsWith("?") || QUESTION_START.test(text);
@@ -71,6 +85,7 @@ export function parsePage(html: string, url: string, status: number, siteHost: s
 
   const bodyText = root.querySelector("body")?.structuredText ?? "";
   const wordCount = bodyText.split(/\s+/).filter(Boolean).length;
+  const bodyTextSample = bodyText.slice(0, 3000);
 
   return {
     url,
@@ -89,6 +104,13 @@ export function parsePage(html: string, url: string, status: number, siteHost: s
     imagesMissingAlt,
     internalLinks: [...links].slice(0, 150),
     wordCount,
+    htmlLang,
+    canonical,
+    hreflangs,
+    h1Texts,
+    headingTexts,
+    bodyTextSample,
+    responseTimeMs,
   };
 }
 
@@ -110,8 +132,16 @@ export function failedPage(url: string, status: number, fetchError: string | nul
     imagesMissingAlt: 0,
     internalLinks: [],
     wordCount: 0,
+    htmlLang: null,
+    canonical: null,
+    hreflangs: [],
+    h1Texts: [],
+    headingTexts: [],
+    bodyTextSample: "",
+    responseTimeMs: 0,
   };
 }
+
 
 /** <loc> entries from a sitemap or sitemap index. */
 export function parseSitemap(xml: string): { urls: string[]; childSitemaps: string[] } {

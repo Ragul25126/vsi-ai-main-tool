@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { CheckCircle2, Circle, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Circle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type SetupItemState = "done" | "todo" | "running";
+export type SetupItemState = "done" | "todo" | "running" | "failed";
 
 export interface SetupItem {
   state: SetupItemState;
@@ -25,10 +25,13 @@ export function SetupChecklist({ items, className }: { items: SetupItem[]; class
             <CheckCircle2 size={18} strokeWidth={1.75} className="shrink-0 text-positive" aria-label="Done" />
           ) : item.state === "running" ? (
             <Loader2 size={18} strokeWidth={1.75} className="shrink-0 animate-spin text-info" aria-label="In progress" />
+          ) : item.state === "failed" ? (
+            <AlertCircle size={18} strokeWidth={1.75} className="shrink-0 text-critical" aria-label="Failed" />
           ) : (
             <Circle size={18} strokeWidth={1.75} className="shrink-0 text-line-strong" aria-label="Not done yet" />
           )}
           <span className={cn("min-w-0 flex-1 text-body", item.state === "done" ? "text-ink" : "font-medium text-ink")}>{item.label}</span>
+
           {item.detail && <span className="text-support text-ink-3">{item.detail}</span>}
           {item.href && item.state !== "done" && (
             <Link href={item.href} className="text-support font-medium text-ink underline-offset-4 hover:underline">

@@ -51,8 +51,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       problems: audit?.completed ? audit.completed.checks.filter((c) => c.status !== "pass").length : 0,
       checkedAt: audit?.completed?.completed_at ?? null,
       running: !!audit?.running,
-      error: o.audit.state === "error" ? o.audit.message : o.audit.state === "setup_required" ? "Site Audit needs a one-time setup" : null,
+      error:
+        o.audit.state === "error"
+          ? o.audit.message
+          : o.audit.state === "setup_required"
+          ? "Site Audit needs a one-time setup"
+          : !audit?.completed && audit?.lastFailed
+          ? audit.lastFailed.error_message || "Audit failed"
+          : null,
     },
+
     search: {
       tracked: search?.tracked ?? 0,
       top10: search?.top10 ?? 0,

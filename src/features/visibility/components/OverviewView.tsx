@@ -90,7 +90,10 @@ export default function OverviewView({ data }: { data: OverviewData }) {
       ? { state: "done", label: "Site audit", detail: data.website.score !== null ? `Score ${data.website.score} / 100` : "Done" }
       : data.website.running
         ? { state: "running", label: "Site audit", detail: "Running now" }
-        : { state: "todo", label: "Site audit", detail: "Not run yet", href: "/dashboard/check", hrefLabel: "Run site audit" },
+        : data.website.error
+          ? { state: "failed", label: "Site audit", detail: data.website.error, href: "/dashboard/check", hrefLabel: "Retry" }
+          : { state: "todo", label: "Site audit", detail: "Not run yet", href: "/dashboard/check", hrefLabel: "Run site audit" },
+
     searchChecked
       ? { state: "done", label: "Search visibility", detail: `Checked ${formatDate(data.search.checkedAt)}` }
       : { state: "todo", label: "Search visibility", detail: "Not checked yet" },

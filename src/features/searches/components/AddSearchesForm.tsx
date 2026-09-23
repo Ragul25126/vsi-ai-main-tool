@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import type { Location } from "@/types/search";
-import { createClient } from "@/lib/supabase/client";
+import { addSearches } from "@/lib/keyword-client";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Notice } from "@/components/ui/Status";
 import { useSearchSuggestions, type SearchItem } from "../search-suggestions";
@@ -32,23 +32,17 @@ export function AddSearchesForm({
     if (searches.length === 0) return;
     setSaving(true);
     setError(null);
-    const { error: insErr } = await createClient()
-      .from("tracked_keywords")
-      .upsert(
-        searches.map((s) => ({
-          client_id: project.id,
-          agency_id: project.agencyId,
-          keyword: s.keyword,
-          domain: project.domain,
-          brand: project.brand,
-          track_type: s.trackType,
-          location: project.location,
-        })),
-        { onConflict: "client_id,keyword,domain,location", ignoreDuplicates: true },
-      );
-    if (insErr) {
+    const result = await addSearches(
+      project.id,
+      searches.map((s) => ({
+        keyword: s.keyword,
+        trackType: s.trackType,
+        location: project.location,
+      }))
+    );
+    if (!result.ok) {
       setSaving(false);
-      setError("We couldn't save these searches. Please try again.");
+      setError(result.message);
       return;
     }
     // The next step for new searches is a first check, which the Overview offers.

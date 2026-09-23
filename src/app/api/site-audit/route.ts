@@ -30,11 +30,26 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = await createClient();
-  let clientQuery = supabase.from("clients").select("id, agency_id, website").eq("id", clientId);
+  let clientQuery = supabase
+    .from("clients")
+    .select("id, agency_id, website, country, default_location, language")
+    .eq("id", clientId);
   if (session.role !== "super_admin") clientQuery = clientQuery.eq("agency_id", session.agencyId);
   const { data: client } = await clientQuery.maybeSingle();
   if (!client) return error(404, "not_found", "That project isn't available.");
   if (!client.website) return error(400, "missing_website", "Add your website address in project settings first.");
+
+  const { data: kwRows } = await supabase
+    .from("tracked_keywords")
+    .select("keyword")
+    .eq("client_id", clientId)
+    .eq("is_active", true);
+
+  const seoSetup = {
+    trackedKeywords: (kwRows || []).map((k) => k.keyword),
+    targetCountry: client.country || client.default_location,
+    targetLanguage: (client as { language?: string | null }).language || null,
+  };
 
   await supabase
     .from("site_audits")
@@ -72,7 +87,8 @@ export async function POST(req: NextRequest) {
   after(async () => {
     const supa = await createClient();
     try {
-      const outcome = await runSiteAudit(website);
+      const outcome = await runSiteAudit(website, seoSetup);
+
       await supa
         .from("site_audits")
         .update({
