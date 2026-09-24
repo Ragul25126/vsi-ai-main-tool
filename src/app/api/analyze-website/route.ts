@@ -46,11 +46,22 @@ function extractBrandFromDomain(domain: string): string {
   return domain;
 }
 
+function detectDomainLocation(domain: string): { location: string; locationCode: Location } {
+  const d = domain.toLowerCase().trim();
+  if (d.endsWith(".in") || d.endsWith(".co.in")) return { location: "India", locationCode: "in" };
+  if (d.endsWith(".uk") || d.endsWith(".co.uk")) return { location: "United Kingdom", locationCode: "uk" };
+  if (d.endsWith(".ae") || d.endsWith(".co.ae")) return { location: "UAE", locationCode: "ae" };
+  if (d.endsWith(".sg") || d.endsWith(".com.sg")) return { location: "Singapore", locationCode: "sg" };
+  if (d.endsWith(".lk")) return { location: "Sri Lanka", locationCode: "lk" };
+  return { location: "United States", locationCode: "us" };
+}
+
 /** Fallback extraction using domain and HTML heuristics */
 function generateFallbackData(domain: string, title?: string, description?: string, h1s?: string[]): ExtractedWebsiteData {
   const brand = extractBrandFromDomain(domain);
   const cleanTitle = title?.trim() || `${brand} Official Website`;
   const cleanDesc = description?.trim() || `${brand} provides products and services online.`;
+  const locInfo = detectDomainLocation(domain);
 
   return {
     brandName: brand,
@@ -59,8 +70,8 @@ function generateFallbackData(domain: string, title?: string, description?: stri
     websiteTitle: cleanTitle,
     metaDescription: cleanDesc,
     language: "English",
-    location: "United States",
-    locationCode: "us",
+    location: locInfo.location,
+    locationCode: locInfo.locationCode,
     suggestedTopics: [
       `${brand} Products`,
       "Online Shopping",
@@ -80,8 +91,8 @@ function generateFallbackData(domain: string, title?: string, description?: stri
     aboutBusiness: cleanDesc,
     targetCustomers: ["Online shoppers", "Individual consumers", "Small businesses"],
     suggestedCompetitors: [
-      { domain: `competitor-${domain}`, name: `Top Competitor 1`, market: "United States", selected: true },
-      { domain: `leading-market-${domain}`, name: `Market Leader 2`, market: "United States", selected: true },
+      { domain: `competitor-${domain}`, name: `Top Competitor 1`, market: locInfo.location, selected: true },
+      { domain: `leading-market-${domain}`, name: `Market Leader 2`, market: locInfo.location, selected: true },
     ],
     geoTopics: [
       `What are the best products from ${brand}?`,

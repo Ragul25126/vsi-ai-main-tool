@@ -15,7 +15,7 @@ import type { Location } from "@/types/search";
 import { WebsiteUrlStep } from "@/components/project-creation/WebsiteUrlStep";
 import { AnalysisProgress } from "@/components/project-creation/AnalysisProgress";
 import { BusinessSummary, type BusinessData } from "@/components/project-creation/BusinessSummary";
-import { CompetitorSelection, type CompetitorItem } from "@/components/project-creation/CompetitorSelection";
+import { CompetitorSelection, detectMarketFromDomain, type CompetitorItem } from "@/components/project-creation/CompetitorSelection";
 import { AnalysisSetup, type KeywordSetupItem } from "@/components/project-creation/AnalysisSetup";
 import { StepFooter } from "@/components/project-creation/StepFooter";
 import { AnalysisStartModal } from "@/components/project-creation/AnalysisStartModal";
@@ -80,6 +80,7 @@ export default function NewProjectPage() {
       }
 
       const extracted: ExtractedWebsiteData = json.data;
+      const targetLocation = extracted.location || "United States";
 
       // Populate wizard states
       setBusinessData({
@@ -89,7 +90,7 @@ export default function NewProjectPage() {
         websiteTitle: extracted.websiteTitle,
         metaDescription: extracted.metaDescription,
         language: extracted.language,
-        location: extracted.location,
+        location: targetLocation,
         locationCode: extracted.locationCode,
         suggestedTopics: extracted.suggestedTopics,
         sitemapUrl: extracted.sitemapUrl,
@@ -98,7 +99,12 @@ export default function NewProjectPage() {
         targetCustomers: extracted.targetCustomers,
       });
 
-      setCompetitors(extracted.suggestedCompetitors || []);
+      const mappedCompetitors = (extracted.suggestedCompetitors || []).map((c) => ({
+        ...c,
+        market: detectMarketFromDomain(c.domain, targetLocation),
+      }));
+
+      setCompetitors(mappedCompetitors);
       setKeywords(extracted.suggestedKeywords || []);
       setGeoTopics(extracted.geoTopics || []);
 
@@ -321,6 +327,7 @@ export default function NewProjectPage() {
           <CompetitorSelection
             initialCompetitors={competitors}
             userDomain={businessData.domain}
+            defaultMarket={businessData.location || "United States"}
             onChange={(updatedComps) => setCompetitors(updatedComps)}
           />
           <StepFooter

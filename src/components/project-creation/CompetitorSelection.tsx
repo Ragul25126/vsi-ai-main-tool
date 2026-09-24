@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { Shield, Plus, Trash2, Check, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { validateCompetitorDomain } from "@/lib/project-competitors";
@@ -12,9 +12,25 @@ export interface CompetitorItem {
   selected: boolean;
 }
 
+export function detectMarketFromDomain(domain: string, fallbackMarket: string = "United States"): string {
+  const d = domain.toLowerCase().trim();
+  if (d.endsWith(".in") || d.endsWith(".co.in")) return "India";
+  if (d.endsWith(".uk") || d.endsWith(".co.uk")) return "United Kingdom";
+  if (d.endsWith(".ca")) return "Canada";
+  if (d.endsWith(".au") || d.endsWith(".com.au")) return "Australia";
+  if (d.endsWith(".de")) return "Germany";
+  if (d.endsWith(".fr")) return "France";
+  if (d.endsWith(".sg") || d.endsWith(".com.sg")) return "Singapore";
+  if (d.endsWith(".lk")) return "Sri Lanka";
+  if (d.endsWith(".ae") || d.endsWith(".co.ae")) return "UAE";
+  if (d.endsWith(".us")) return "United States";
+  return fallbackMarket || "United States";
+}
+
 interface CompetitorSelectionProps {
   initialCompetitors: CompetitorItem[];
   userDomain: string;
+  defaultMarket?: string;
   maxPlanCompetitors?: number;
   onChange: (competitors: CompetitorItem[]) => void;
 }
@@ -22,12 +38,29 @@ interface CompetitorSelectionProps {
 export function CompetitorSelection({
   initialCompetitors,
   userDomain,
+  defaultMarket = "United States",
   maxPlanCompetitors = 10,
   onChange,
 }: CompetitorSelectionProps) {
-  const [items, setItems] = useState<CompetitorItem[]>(initialCompetitors);
+  const [items, setItems] = useState<CompetitorItem[]>(() =>
+    initialCompetitors.map((c) => ({
+      ...c,
+      market: detectMarketFromDomain(c.domain, defaultMarket),
+    }))
+  );
   const [manualInput, setManualInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  // Sync market of competitors whenever defaultMarket or initialCompetitors change
+  useEffect(() => {
+    setItems((prevItems) => {
+      const source = prevItems.length > 0 ? prevItems : initialCompetitors;
+      return source.map((item) => ({
+        ...item,
+        market: detectMarketFromDomain(item.domain, defaultMarket),
+      }));
+    });
+  }, [defaultMarket, initialCompetitors]);
 
   const selectedCount = items.filter((i) => i.selected).length;
 
@@ -71,10 +104,12 @@ export function CompetitorSelection({
       return;
     }
 
+    const market = detectMarketFromDomain(check.domain, defaultMarket);
+
     const newItem: CompetitorItem = {
       domain: check.domain,
       name: check.domain,
-      market: "Custom",
+      market: market,
       selected: true,
     };
 
