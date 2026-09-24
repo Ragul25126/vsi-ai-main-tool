@@ -123,6 +123,8 @@ export interface EngineSummary {
   linked: number;
   /** False when the engine doesn't report brand names (AI Overviews). */
   tracksNames: boolean;
+  /** This engine's visibility per check date, oldest first. Only dates where it gave answers. */
+  trend: { date: string; value: number }[];
 }
 
 export interface CompetitorPresence {
@@ -198,6 +200,7 @@ export function computeGeo(allRows: GeoRow[], { domain, enabled }: ComputeGeoOpt
     named: 0,
     linked: 0,
     tracksNames: e.id !== "ai_overviews",
+    trend: [],
   }));
   const engineById = Object.fromEntries(engines.map((e) => [e.id, e])) as Record<EngineId, EngineSummary>;
 
@@ -291,14 +294,32 @@ export function computeGeo(allRows: GeoRow[], { domain, enabled }: ComputeGeoOpt
     list.push(row);
     byDate.set(day, list);
   }
-  const trend = [...byDate.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([date, rows]) => {
-      const v = visibilityOf(latestPerSearch(rows));
+  const days = [...byDate.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, rows]) => ({ date, rows: latestPerSearch(rows) }));
+  const trend = days
+    .map(({ date, rows }) => {
+      const v = visibilityOf(rows);
       return v.answered > 0 ? { date, value: Math.round((v.appears / v.answered) * 100) } : null;
     })
     .filter((p): p is { date: string; value: number } => p !== null)
     .slice(-12);
+
+  // The same trend per engine, so each AI service shows its own change over time.
+  for (const e of engines) {
+    e.trend = days
+      .map(({ date, rows }) => {
+        let answeredHere = 0;
+        let appearsHere = 0;
+        for (const row of rows) {
+          const r = engineResult(row, e.id);
+          if (!r?.answered) continue;
+          answeredHere++;
+          if (r.appears) appearsHere++;
+        }
+        return answeredHere > 0 ? { date, value: Math.round((appearsHere / answeredHere) * 100) } : null;
+      })
+      .filter((p): p is { date: string; value: number } => p !== null)
+      .slice(-12);
+  }
 
   return {
     searchesTracked: latest.length,
@@ -332,6 +353,43 @@ export function geoConclusion(s: GeoSummary): string {
   if (top && top.answers > s.citations) return `${lead} ${top.domain} is linked more often than you.`;
   if (s.appears === s.answered) return `${lead} That's every AI answer for the searches you track.`;
   return `${lead} There's room to appear in ${s.answered - s.appears} more.`;
+}
+
+/**
+ * Share of answered searches where an AI answer links to at least one
+ * competitor (well-known platforms like Reddit are not competitors). 0–100,
+ * or null with no answers.
+ */
+export function competitorPresence(s: GeoSummary): number | null {
+  if (s.answered === 0) return null;
+  const rivals = new Set(s.competitors.map((c) => c.domain));
+  const withRival = s.searches.filter((x) => x.answered && x.competitorsLinked.some((d) => rivals.has(d))).length;
+  return Math.round((withRival / s.answered) * 100);
+}
+
+export interface AnswerBreakdown {
+  /** Every engine answer VSI has for your searches (latest check each). */
+  total: number;
+  namedAndLinked: number;
+  namedOnly: number;
+  linkedOnly: number;
+  neither: number;
+}
+
+/** How the AI answers treat you: named, linked, both or neither. One count per engine answer. */
+export function answerBreakdown(s: GeoSummary): AnswerBreakdown {
+  const out: AnswerBreakdown = { total: 0, namedAndLinked: 0, namedOnly: 0, linkedOnly: 0, neither: 0 };
+  for (const search of s.searches) {
+    for (const state of Object.values(search.states)) {
+      if (state === "no_answer" || state === "not_checked") continue;
+      out.total++;
+      if (state === "named_and_linked") out.namedAndLinked++;
+      else if (state === "named") out.namedOnly++;
+      else if (state === "linked") out.linkedOnly++;
+      else out.neither++;
+    }
+  }
+  return out;
 }
 
 export interface EvidenceSegment {

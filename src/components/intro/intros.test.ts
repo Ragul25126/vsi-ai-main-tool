@@ -36,11 +36,9 @@ describe("first-use intros", () => {
     }
   });
 
-  it("uses AI Visibility as the name and GEO only as the category", () => {
+  it("uses AI Visibility as the name and never GEO in visible copy", () => {
     expect(INTROS.ai.page).toBe("AI Visibility");
-    expect(INTROS.ai.category).toContain("GEO");
-    const others = Object.entries(INTROS).filter(([k]) => k !== "ai");
-    for (const [key, c] of others) expect(strings(c).join(" "), key).not.toMatch(/\bGEO\b/);
+    for (const [key, c] of Object.entries(INTROS)) expect(strings(c).join(" "), key).not.toMatch(/\bGEO\b|Generative Engine/);
   });
 
   it("claims only the AI engines the product really checks", () => {

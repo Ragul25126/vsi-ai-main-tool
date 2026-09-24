@@ -24,6 +24,7 @@ export default async function GeoPage() {
   const project = { id: active.id, name: active.name, domain: displayDomain(active.website) };
   const [load, comparisons, competitors] = await Promise.all([loadGeo(active), loadPageComparisons(active.id), loadProjectCompetitors(active.id)]);
   const tracked = competitors.competitors.map((c) => c.domain);
+  const trackedCompetitors = competitors.competitors.map((c) => ({ domain: c.domain, name: c.name }));
 
   if (load.state === "error") {
     return <GeoView data={{ project, state: "error", errorMessage: load.message, findings: [], evidence: [], trend: [] }} />;
@@ -42,7 +43,7 @@ export default async function GeoPage() {
     lastChecked: load.summary.lastCheckedAt ? formatDateTime(load.summary.lastCheckedAt) : null,
     staleDays: age !== null && age > 14 ? age : null,
     findings,
-    trackedCompetitors: tracked,
+    trackedCompetitors,
     evidence: load.evidence.map((e) => ({ ...e, checkedAt: formatDate(e.checkedAt) })),
     trend: load.summary.trend.map((t) => ({ label: formatShortDate(t.date), value: t.value })),
   };

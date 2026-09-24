@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { computeGeo, engineResult, geoConclusion, highlightBrand, latestPerSearch, type GeoRow } from "./geo";
+import { answerBreakdown, competitorPresence, computeGeo, engineResult, geoConclusion, highlightBrand, latestPerSearch, type GeoRow } from "./geo";
+import { compareCompetitors } from "./geo-compare";
 import { geoFindings } from "./geo-findings";
 
 const ALL_ON = { google_ai_mode: true, chatgpt: true, ai_overviews: false };
@@ -127,6 +128,24 @@ describe("computeGeo", () => {
     ]);
   });
 
+  it("builds each engine's own trend from the dates it answered", () => {
+    expect(s.engines.find((e) => e.id === "google_ai_mode")!.trend).toEqual([
+      { date: "2026-09-01", value: 100 },
+      { date: "2026-09-10", value: 50 },
+    ]);
+    expect(s.engines.find((e) => e.id === "chatgpt")!.trend).toEqual([{ date: "2026-09-10", value: 100 }]);
+    expect(s.engines.find((e) => e.id === "ai_overviews")!.trend).toEqual([]);
+  });
+
+  it("splits engine answers into named, linked, both and neither", () => {
+    expect(answerBreakdown(s)).toEqual({ total: 3, namedAndLinked: 1, namedOnly: 1, linkedOnly: 0, neither: 1 });
+  });
+
+  it("measures competitor presence over answered searches, ignoring platforms", () => {
+    expect(competitorPresence(s)).toBe(67);
+    expect(competitorPresence(computeGeo([row({})], { domain: "example.com", enabled: ALL_ON }))).toBeNull();
+  });
+
   it("returns a null visibility when nothing was answered", () => {
     const empty = computeGeo([row({})], { domain: "example.com", enabled: ALL_ON });
     expect(empty.visibility).toBeNull();
@@ -189,5 +208,35 @@ describe("highlightBrand", () => {
       { text: "(b+c)", you: true },
       { text: " d", you: false },
     ]);
+  });
+});
+
+describe("compareCompetitors", () => {
+  const s = computeGeo(
+    [
+      row({ tracked_keyword_id: "k1", keyword: "a", aio_present: true, mentioned_in_text: true, client_cited: true, cited_domains: ["example.com", "rival.com"] }),
+      row({ tracked_keyword_id: "k2", keyword: "b", aio_present: true, mentioned_in_text: false, client_cited: false, cited_domains: ["rival.com", "www.reddit.com", "other.io"] }),
+      row({ tracked_keyword_id: "k3", keyword: "c", aio_present: false, chatgpt_checked: true, chatgpt_brand_mentioned: true, chatgpt_competitors: ["Rival Plumbing"] }),
+    ],
+    { domain: "example.com", enabled: ALL_ON },
+  );
+
+  it("counts you and a tracked competitor the same way", () => {
+    const cols = compareCompetitors(s, { projectName: "Example", domain: "example.com", tracked: [{ domain: "https://www.rival.com/", name: "Rival Plumbing" }] });
+    expect(cols[0]).toMatchObject({ source: "you", citations: 1, searchesLinked: 1, coverage: 33, chatgptNamed: 1 });
+    expect(cols[1]).toMatchObject({ source: "tracked", name: "Rival Plumbing", domain: "rival.com", citations: 2, searchesLinked: 2, coverage: 67, chatgptNamed: 1 });
+    expect(cols[2]).toMatchObject({ source: "found", domain: "other.io", citations: 1, chatgptNamed: 0 });
+    expect(cols.some((c) => c.domain === "reddit.com")).toBe(false);
+  });
+
+  it("shows zero for a tracked competitor AI never linked, and no ChatGPT count when ChatGPT wasn't checked", () => {
+    const noChat = computeGeo([row({ aio_present: true, client_cited: true, cited_domains: ["example.com"] })], { domain: "example.com", enabled: ALL_ON });
+    const cols = compareCompetitors(noChat, { projectName: "Example", domain: "example.com", tracked: [{ domain: "absent.com", name: null }] });
+    expect(cols[1]).toMatchObject({ citations: 0, searchesLinked: 0, coverage: 0, chatgptNamed: null });
+  });
+
+  it("never invents competitors", () => {
+    const alone = computeGeo([row({ aio_present: true, client_cited: true, cited_domains: ["example.com"] })], { domain: "example.com", enabled: ALL_ON });
+    expect(compareCompetitors(alone, { projectName: "Example", domain: "example.com", tracked: [] })).toHaveLength(1);
   });
 });

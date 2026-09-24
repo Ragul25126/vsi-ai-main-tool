@@ -263,6 +263,19 @@
   animation: trend-draw 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Example AI answer (intro/AnswerAnatomy): your brand and your link fill in
+   gold once, left to right. Reduced motion shows them filled. */
+@keyframes anatomy-mark {
+  to { background-size: 100% 100%; }
+}
+.anatomy-mark {
+  background: linear-gradient(var(--brand-soft), var(--brand-soft)) no-repeat left center / 0% 100%;
+  animation: anatomy-mark 700ms cubic-bezier(0.22, 1, 0.36, 1) var(--d, 300ms) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .anatomy-mark { animation: none; background-size: 100% 100%; }
+}
+
 /* Overview scene (illustrations/OverviewScene): one slow 9s loop that shows
    VSI working. Resting state is the finished drawing, which is also what
    people who ask for reduced motion see. */

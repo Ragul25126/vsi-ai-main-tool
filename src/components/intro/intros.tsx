@@ -25,7 +25,6 @@ import {
 import { COMING_SOON_ENGINES, ENGINES } from "@/lib/geo";
 import {
   ActionsScene,
-  AnswerScene,
   AuditAreaArt,
   AuditFlowScene,
   BoardScene,
@@ -36,6 +35,7 @@ import {
 } from "@/components/illustrations";
 import { FeatureIntro, SectionHeading, type Capability, type FlowStep } from "./FeatureIntro";
 import { ExampleAudit } from "./SiteAuditIntro";
+import { AnswerAnatomy } from "./AnswerAnatomy";
 import { CHAT_QUESTIONS, type StoryKey } from "./story";
 
 export type IntroKey = Exclude<StoryKey, never>;
@@ -112,9 +112,8 @@ export const INTROS: Record<IntroKey, IntroContent> = {
   },
   ai: {
     page: "AI Visibility",
-    category: "Generative Engine Optimization (GEO)",
-    headline: "See whether AI systems mention your business.",
-    description: "Understand how your business appears in AI-generated answers, and where competitors are mentioned instead.",
+    headline: "See how your website appears in AI answers.",
+    description: "Track mentions, citations, competitors, and visibility across AI search experiences.",
     capabilities: {
       title: "What you'll discover",
       items: [
@@ -124,8 +123,8 @@ export const INTROS: Record<IntroKey, IntroContent> = {
         { Icon: Lightbulb, title: "Opportunities", text: "Find searches where your business could be more visible." },
       ],
     },
-    flow: { title: "From your searches to real AI answers", text: "VSI asks AI systems the questions your customers ask, and shows you who they mention." },
-    steps: ["Choose important searches", "VSI checks AI answers", "Compare your visibility", "Find ways to improve"],
+    flow: { title: "From your searches to real AI answers", text: "VSI asks AI services the questions your customers ask, and shows you who they mention." },
+    steps: ["Add searches", "VSI checks AI answers", "Measure mentions and citations", "Act on opportunities"],
     stepsNote: "Search and AI checks run together, and only when you start them.",
   },
   competitors: {
@@ -214,7 +213,7 @@ export const INTROS: Record<IntroKey, IntroContent> = {
 const ILLUSTRATIONS: Record<IntroKey, () => ReactNode> = {
   audit: () => <AuditFlowScene />,
   search: () => <SearchScene />,
-  ai: () => <AnswerScene />,
+  ai: () => <AnswerAnatomy framed={false} />,
   competitors: () => <CompareScene />,
   actions: () => <ActionsScene />,
   tasks: () => <BoardScene />,
