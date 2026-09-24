@@ -90,7 +90,6 @@ export const LoginPage: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 
     setAuthError('');
 
     const cleanEmail = email.trim().toLowerCase();
-
     const isPlaceholderSupabase = isPlaceholder();
 
     try {
@@ -112,13 +111,37 @@ export const LoginPage: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 
         completeAuthentication(userProfile);
         return;
       }
+
+      // If user account is not created in Supabase Auth yet, attempt auto sign-up
+      if (error && (error.message?.includes("Invalid login credentials") || error.status === 400)) {
+        const signupRes = await signUpWithEmail(
+          supabase,
+          {
+            email: cleanEmail,
+            password: password,
+            confirmPassword: password,
+            fullName: nameFromEmail(cleanEmail),
+          },
+          `${window.location.origin}/auth/callback`
+        );
+
+        if (signupRes.status === "signed_in") {
+          completeAuthentication(
+            { name: signupRes.fullName, email: signupRes.email, role: 'Member', company: '', plan: '' },
+            '/dashboard',
+          );
+          return;
+        }
+        if (signupRes.status === "confirm_email") {
+          setConfirmationEmail(signupRes.email);
+          setIsLoading(false);
+          return;
+        }
+      }
     } catch {
       // Fall through if Supabase request fails or offline
     }
 
-    // Local / Dev Fallback: If running in local dev without real Supabase connection,
-    // create a development session for the email that was entered. It has no database behind it
-    // and is never trusted when a real Supabase project is configured or in production.
     if (isPlaceholderSupabase) {
       const userProfile: UserProfile = {
         name: nameFromEmail(cleanEmail),

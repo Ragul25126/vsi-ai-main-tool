@@ -9,6 +9,7 @@ import { Notice } from "@/components/ui/Status";
 import { cn } from "@/lib/utils";
 import { addCompetitors } from "@/lib/competitor-client";
 import { addSearches } from "@/lib/keyword-client";
+import { createWorkspace } from "@/lib/workspace";
 import type { Location } from "@/types/search";
 
 import { WebsiteUrlStep } from "@/components/project-creation/WebsiteUrlStep";
@@ -135,25 +136,47 @@ export default function NewProjectPage() {
 
     try {
       const supabase = createClient();
+
+      const {
+        data: { user },
+        error: authErr,
+      } = await supabase.auth.getUser();
+
+      if (!user || authErr) {
+        throw new Error("Your session has ended. Please sign in again to add your website.");
+      }
+
       let agencyId: string | null = null;
-
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profile } = await supabase.from("profiles").select("agency_id").eq("id", user.id).single();
-          agencyId = (profile?.agency_id as string | undefined) ?? null;
-        }
+        const { data: profile } = await supabase.from("profiles").select("agency_id").eq("id", user.id).single();
+        agencyId = (profile?.agency_id as string | undefined) ?? null;
       } catch {
-        // Handled below
+        agencyId = null;
       }
 
+      const brand = businessData.brandName.trim() || businessData.domain || "My Organization";
+
+      // If user profile does not have an agency_id assigned, attempt auto-creation
       if (!agencyId) {
-        throw new Error("Your session has ended. Sign in again to add your website.");
-      }
+        const wsResult = await createWorkspace(supabase, { name: brand });
+        if (wsResult.status === "created" || wsResult.status === "already_set_up") {
+          const { data: updatedProfile } = await supabase.from("profiles").select("agency_id").eq("id", user.id).single();
+          agencyId = (updatedProfile?.agency_id as string | undefined) ?? null;
+        }
 
-      const brand = businessData.brandName.trim() || businessData.domain;
+        if (!agencyId) {
+          // Fallback: check if any existing agency can be linked
+          const { data: existingAgency } = await supabase.from("agencies").select("id").limit(1).maybeSingle();
+          if (existingAgency?.id) {
+            agencyId = existingAgency.id;
+            await supabase.from("profiles").update({ agency_id: agencyId }).eq("id", user.id);
+          }
+        }
+
+        if (!agencyId) {
+          throw new Error("We couldn't set up your organization workspace. Please refresh or sign in again.");
+        }
+      }
 
       // 1. Create client project
       const { data: client, error: clientErr } = await supabase

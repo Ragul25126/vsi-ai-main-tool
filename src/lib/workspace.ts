@@ -59,16 +59,20 @@ export type WorkspaceResult =
   | { status: "error"; message: string };
 
 const UNAVAILABLE_MESSAGE =
-  "Creating a workspace without an invite isn't switched on for this environment yet. Enter the invite code you were given, or ask your VSI contact.";
+  "Database setup incomplete. The required RPC function (create_own_organization / complete_onboarding) is missing from your Supabase database. Please run Supabase migration 039_self_service_workspace.sql in your Supabase SQL Editor.";
 
 type RpcError = { message?: string; code?: string };
 
 /** Turns the database's error into something a person can act on. Never returns the raw database text. */
 function describeError(error: RpcError): WorkspaceResult {
   const msg = error.message ?? "";
+
+  if (error.code === "PGRST202" || /could not find the function|function .* does not exist/i.test(msg)) {
+    return { status: "unavailable", message: UNAVAILABLE_MESSAGE };
+  }
   if (/already set up/i.test(msg)) return { status: "already_set_up" };
   if (/not signed in/i.test(msg) || error.code === "PGRST301") {
-    return { status: "error", message: "Your session has expired. Sign in again to continue." };
+    return { status: "error", message: "Please sign in before creating a workspace." };
   }
   if (/disabled/i.test(msg)) return { status: "error", message: "This account is disabled. Contact support." };
   if (/profile not found/i.test(msg)) {
@@ -77,11 +81,16 @@ function describeError(error: RpcError): WorkspaceResult {
   if (/80 characters/i.test(msg)) return { status: "error", message: `The name can be at most ${MAX_ORGANIZATION_NAME_LENGTH} characters.` };
   if (/invalid characters/i.test(msg)) return { status: "error", message: "The name contains characters that aren't allowed." };
   if (/name is required/i.test(msg)) return { status: "error", message: "Enter a name for your organization." };
-  if (/slug|duplicate|unique/i.test(msg)) return { status: "error", message: "Could not create the organization. Try a different name." };
-  return { status: "error", message: "Account setup failed. Please try again." };
+  if (/invite/i.test(msg)) {
+    return { status: "error", message: "Invalid or expired invite code." };
+  }
+  if (error.code === "23505" || /duplicate key|unique constraint|slug is already in use|address is already in use/i.test(msg)) {
+    return { status: "error", message: "Could not create the organization. Organization name or address is already in use. Try a different name." };
+  }
+  return { status: "error", message: msg || "Account setup failed. Please try again." };
 }
 
-const isSlugClash = (error: RpcError) => error.code === "23505" || /slug is already in use/i.test(error.message ?? "");
+const isSlugClash = (error: RpcError) => error.code === "23505" || /slug is already in use|address is already in use/i.test(error.message ?? "");
 
 export async function createWorkspace(client: WorkspaceClient, input: { name: string; inviteCode?: string | null }): Promise<WorkspaceResult> {
   const nameError = validateOrganizationName(input.name);
@@ -98,16 +107,7 @@ export async function createWorkspace(client: WorkspaceClient, input: { name: st
       return { status: "error", message: "Account setup failed. Please try again." };
     }
     if (!res.error) return { status: "created", path: "invite" };
-    const msg = res.error.message ?? "";
-    if (/already set up/i.test(msg)) return { status: "already_set_up" };
-    return {
-      status: "error",
-      message: /invite/i.test(msg)
-        ? "This invite code is invalid or has already been used. Each invite is single-use."
-        : /duplicate|unique|slug/i.test(msg)
-          ? "Could not create the organization. Try a different name."
-          : "Account setup failed. Please contact support.",
-    };
+    return describeError(res.error);
   }
 
   for (let attempt = 1; attempt <= SELF_SERVICE_ATTEMPTS; attempt++) {
@@ -120,13 +120,11 @@ export async function createWorkspace(client: WorkspaceClient, input: { name: st
     if (!res.error) return { status: "created", path: "self_service" };
 
     const error = res.error;
-    // PostgREST answers PGRST202 when the function is not in the schema cache (migration 039 not applied).
     if (error.code === "PGRST202" || /could not find the function|function .* does not exist/i.test(error.message ?? "")) {
-      return { status: "unavailable", message: UNAVAILABLE_MESSAGE };
+      return describeError(error);
     }
-    // The slug is only a random-suffixed address, so a clash is retried with a new one.
     if (isSlugClash(error) && attempt < SELF_SERVICE_ATTEMPTS) continue;
     return describeError(error);
   }
-  return { status: "error", message: "Could not create the organization. Try a different name." };
+  return { status: "error", message: "Could not create the organization. Organization name or address is already in use. Try a different name." };
 }

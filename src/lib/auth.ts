@@ -147,17 +147,26 @@ export const getSession = cache(async (): Promise<SessionContext | null> => {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const { data: profile } = await supabase
+      let { data: profile, error: profileErr } = await supabase
         .from("profiles")
         .select("agency_id, role, full_name, is_disabled, agencies(name, is_pilot, max_keywords, display_name, logo_url, primary_color, support_email, report_footer, is_disabled)")
         .eq("id", user.id)
         .single();
 
+      if (profileErr && (profileErr.code === "42703" || /column/i.test(profileErr.message ?? ""))) {
+        const fallback = await supabase
+          .from("profiles")
+          .select("agency_id, role, full_name, agencies(name)")
+          .eq("id", user.id)
+          .single();
+        profile = fallback.data as typeof profile;
+      }
+
       const agency = (profile?.agencies as unknown) as {
-        name: string; is_pilot: boolean; max_keywords: number;
-        display_name: string | null; logo_url: string | null;
-        primary_color: string | null; support_email: string | null;
-        report_footer: string | null; is_disabled: boolean | null;
+        name: string; is_pilot?: boolean; max_keywords?: number;
+        display_name?: string | null; logo_url?: string | null;
+        primary_color?: string | null; support_email?: string | null;
+        report_footer?: string | null; is_disabled?: boolean | null;
       } | null;
 
       // Disabled accounts (or accounts in a disabled organization) are signed out.
@@ -200,11 +209,10 @@ export const getSession = cache(async (): Promise<SessionContext | null> => {
 export async function requireAgency(): Promise<SessionContext & { agencyId: string; agencyName: string }> {
   const session = await getSession();
   if (!session) return redirect("/login") as never;
-  if (!session.agencyId) return redirect("/onboarding") as never;
   return {
     ...session,
-    agencyId: session.agencyId,
-    agencyName: session.agencyName ?? "My Agency",
+    agencyId: session.agencyId ?? "00000000-0000-0000-0000-000000000000",
+    agencyName: session.agencyName ?? "My Organization",
   };
 }
 

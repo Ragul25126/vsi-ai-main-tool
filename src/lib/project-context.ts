@@ -36,10 +36,35 @@ type ClientRow = {
 const loadVisibleClients = cache(async () => {
   if (isDummySupabase()) return { rows: [] as ClientRow[], error: null as { code?: string } | null };
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let data: any = null;
+  let error: { code?: string; message?: string } | null = null;
+
+  const main = await supabase
     .from("clients")
     .select("id, name, website, brand_name, service_type, default_location, agency_id, agencies(name, display_name)")
     .order("created_at", { ascending: true });
+  data = main.data;
+  error = main.error;
+
+  if (error && (error.code === "42703" || /display_name|column/i.test(error.message ?? ""))) {
+    const fallback = await supabase
+      .from("clients")
+      .select("id, name, website, brand_name, service_type, default_location, agency_id, agencies(name)")
+      .order("created_at", { ascending: true });
+
+    if (fallback.error && (fallback.error.code === "42703" || /column/i.test(fallback.error.message ?? ""))) {
+      const basic = await supabase
+        .from("clients")
+        .select("id, name, website, brand_name, service_type, default_location, agency_id")
+        .order("created_at", { ascending: true });
+      data = basic.data;
+      error = basic.error;
+    } else {
+      data = fallback.data;
+      error = fallback.error;
+    }
+  }
+
   return { rows: (data ?? []) as ClientRow[], error: error ? { code: error.code } : null };
 });
 

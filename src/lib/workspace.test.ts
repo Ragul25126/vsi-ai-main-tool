@@ -62,7 +62,7 @@ describe("createWorkspace: self-service (no invite)", () => {
     const { client: c } = client({ error: { code: "PGRST202", message: "Could not find the function public.create_own_organization" } });
     const result = await createWorkspace(c, { name: "Acme" });
     expect(result.status).toBe("unavailable");
-    expect(result.status === "unavailable" && result.message).toMatch(/invite code/);
+    expect(result.status === "unavailable" && result.message).toMatch(/Database setup incomplete/);
   });
 
   it("retries with a fresh slug when the address is taken, then succeeds", async () => {
@@ -146,7 +146,7 @@ describe("createWorkspace: with an invite code (existing flow)", () => {
 
   it("reports an invalid or used invite", async () => {
     const result = await createWorkspace(client({ error: { message: "This invite is invalid or already used" } }).client, { name: "Acme", inviteCode: "VG-XXXX-XXXX" });
-    expect(result).toMatchObject({ status: "error", message: expect.stringMatching(/invite code is invalid/) });
+    expect(result).toMatchObject({ status: "error", message: expect.stringMatching(/Invalid or expired invite code/) });
   });
 
   it("treats an already-set-up account as done", async () => {
