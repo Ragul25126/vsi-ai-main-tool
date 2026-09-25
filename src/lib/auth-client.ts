@@ -40,9 +40,8 @@ export function syncOAuthSession(): UserProfile | null {
 export function isAuthenticatedClient(): boolean {
   if (typeof window === "undefined") return false;
   const hasCookie = !!getClientCookie("vsi_session");
-  const hasUser = !!localStorage.getItem("vsi_user");
   const hasSbToken = document.cookie.split(";").some((item) => item.trim().startsWith("sb-"));
-  return hasCookie || hasUser || hasSbToken;
+  return hasCookie || hasSbToken;
 }
 
 export function setClientSession(user: UserProfile) {

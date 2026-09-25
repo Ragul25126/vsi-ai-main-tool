@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { FullScreenSignup, type AuthMode } from '@/components/ui/full-screen-signup';
 import { Toast } from '../common/Toast';
 import type { ToastMessage, UserProfile } from '@/types/login';
-import { setClientSession, isAuthenticatedClient, markJustSignedIn } from '@/lib/auth-client';
+import { setClientSession, isAuthenticatedClient, markJustSignedIn, clearClientSession } from '@/lib/auth-client';
 import { createClient } from '@/lib/supabase/client';
 import { signUpWithEmail, type SignupInput } from '@/lib/signup';
 
@@ -23,11 +23,18 @@ export const LoginPage: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (isAuthenticatedClient()) {
+    const params = new URLSearchParams(window.location.search);
+    const hasRedirectParam = params.has("redirect");
+
+    if (isAuthenticatedClient() && !hasRedirectParam) {
       window.location.href = "/dashboard";
       return;
     }
-    const params = new URLSearchParams(window.location.search);
+
+    if (!isAuthenticatedClient()) {
+      clearClientSession();
+    }
+
     const errorParam = params.get("error");
     if (errorParam === "google_unavailable") {
       setAuthError("Google sign-in isn't available. Sign in with your email and password.");
