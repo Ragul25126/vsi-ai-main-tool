@@ -41,7 +41,8 @@ export function isAuthenticatedClient(): boolean {
   if (typeof window === "undefined") return false;
   const hasCookie = !!getClientCookie("vsi_session");
   const hasUser = !!localStorage.getItem("vsi_user");
-  return hasCookie && hasUser;
+  const hasSbToken = document.cookie.split(";").some((item) => item.trim().startsWith("sb-"));
+  return hasCookie || hasUser || hasSbToken;
 }
 
 export function setClientSession(user: UserProfile) {

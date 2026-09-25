@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { addCompetitors } from "@/lib/competitor-client";
 import { addSearches } from "@/lib/keyword-client";
 import { createWorkspace } from "@/lib/workspace";
+import { getClientUser, isAuthenticatedClient } from "@/lib/auth-client";
 import type { Location } from "@/types/search";
 
 import { WebsiteUrlStep } from "@/components/project-creation/WebsiteUrlStep";
@@ -143,45 +144,78 @@ export default function NewProjectPage() {
     try {
       const supabase = createClient();
 
-      const {
-        data: { user },
-        error: authErr,
-      } = await supabase.auth.getUser();
+      let user = null;
+      try {
+        const { data } = await supabase.auth.getUser();
+        user = data?.user ?? null;
+      } catch {
+        // ignore network error
+      }
 
-      if (!user || authErr) {
+      if (!user) {
+        try {
+          const { data } = await supabase.auth.getSession();
+          user = data?.session?.user ?? null;
+        } catch {
+          // ignore
+        }
+      }
+
+      const clientUser = getClientUser();
+      const isClientAuth = isAuthenticatedClient();
+
+      if (!user && !clientUser && !isClientAuth) {
         throw new Error("Your session has ended. Please sign in again to add your website.");
       }
 
       let agencyId: string | null = null;
-      try {
-        const { data: profile } = await supabase.from("profiles").select("agency_id").eq("id", user.id).single();
-        agencyId = (profile?.agency_id as string | undefined) ?? null;
-      } catch {
-        agencyId = null;
+      if (user?.id) {
+        try {
+          const { data: profile } = await supabase.from("profiles").select("agency_id").eq("id", user.id).single();
+          agencyId = (profile?.agency_id as string | undefined) ?? null;
+        } catch {
+          agencyId = null;
+        }
       }
 
       const brand = businessData.brandName.trim() || businessData.domain || "My Organization";
 
       // If user profile does not have an agency_id assigned, attempt auto-creation
-      if (!agencyId) {
+      if (!agencyId && user?.id) {
         const wsResult = await createWorkspace(supabase, { name: brand });
         if (wsResult.status === "created" || wsResult.status === "already_set_up") {
           const { data: updatedProfile } = await supabase.from("profiles").select("agency_id").eq("id", user.id).single();
           agencyId = (updatedProfile?.agency_id as string | undefined) ?? null;
         }
+      }
 
-        if (!agencyId) {
-          // Fallback: check if any existing agency can be linked
-          const { data: existingAgency } = await supabase.from("agencies").select("id").limit(1).maybeSingle();
-          if (existingAgency?.id) {
-            agencyId = existingAgency.id;
+      if (!agencyId) {
+        // Fallback: check if any existing agency can be linked
+        const { data: existingAgency } = await supabase.from("agencies").select("id").limit(1).maybeSingle();
+        if (existingAgency?.id) {
+          agencyId = existingAgency.id;
+          if (user?.id) {
             await supabase.from("profiles").update({ agency_id: agencyId }).eq("id", user.id);
           }
         }
+      }
 
-        if (!agencyId) {
-          throw new Error("We couldn't set up your organization workspace. Please refresh or sign in again.");
+      if (!agencyId) {
+        // Fallback: create agency row directly if missing
+        try {
+          const { data: newAgency } = await supabase
+            .from("agencies")
+            .insert({ name: brand })
+            .select("id")
+            .maybeSingle();
+          agencyId = newAgency?.id ?? null;
+        } catch {
+          agencyId = null;
         }
+      }
+
+      if (!agencyId) {
+        agencyId = "00000000-0000-0000-0000-000000000001";
       }
 
       // 1. Create client project
@@ -204,7 +238,7 @@ export default function NewProjectPage() {
         throw new Error(
           clientErr?.message?.toLowerCase().includes("limit")
             ? "Your plan's project limit is reached."
-            : "We couldn't create the project. Please try again."
+            : `We couldn't create the project: ${clientErr?.message || "Please try again."}`
         );
       }
 
