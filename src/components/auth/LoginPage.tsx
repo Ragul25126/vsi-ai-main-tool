@@ -101,10 +101,22 @@ export const LoginPage: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 
 
     try {
       const supabase = createClient();
-      const { data, error } = await supabase.auth.signInWithPassword({
+      let { data, error } = await supabase.auth.signInWithPassword({
         email: cleanEmail,
         password: password,
       });
+
+      // If lowercased email fails, attempt exact trimmed email in case of legacy account casing
+      if (error && cleanEmail !== email.trim()) {
+        const retry = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password: password,
+        });
+        if (!retry.error && retry.data?.session) {
+          data = retry.data;
+          error = null;
+        }
+      }
 
       if (!error && data?.session && data?.user) {
         const userProfile: UserProfile = {
@@ -119,34 +131,23 @@ export const LoginPage: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 
         return;
       }
 
-      // If user account is not created in Supabase Auth yet, attempt auto sign-up
-      if (error && (error.message?.includes("Invalid login credentials") || error.status === 400)) {
-        const signupRes = await signUpWithEmail(
-          supabase,
-          {
-            email: cleanEmail,
-            password: password,
-            confirmPassword: password,
-            fullName: nameFromEmail(cleanEmail),
-          },
-          `${window.location.origin}/auth/callback`
-        );
-
-        if (signupRes.status === "signed_in") {
-          completeAuthentication(
-            { name: signupRes.fullName, email: signupRes.email, role: 'Member', company: '', plan: '' },
-            '/dashboard',
-          );
-          return;
+      if (error) {
+        console.error("[Login] Supabase Auth error:", error.message, error.status);
+        if (error.message && !error.message.toLowerCase().includes("invalid login credentials")) {
+          setAuthError(error.message);
+        } else {
+          setAuthError('Invalid email or password.');
         }
-        if (signupRes.status === "confirm_email") {
-          setConfirmationEmail(signupRes.email);
-          setIsLoading(false);
-          return;
-        }
+        setIsLoading(false);
+        return;
       }
-    } catch {
-      // Fall through if Supabase request fails or offline
+    } catch (e: any) {
+      console.error("[Login] Exception during sign in:", e);
+      if (e?.message) {
+        setAuthError(e.message);
+        setIsLoading(false);
+        return;
+      }
     }
 
     if (isPlaceholderSupabase) {
