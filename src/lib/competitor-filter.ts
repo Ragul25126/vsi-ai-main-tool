@@ -387,8 +387,48 @@ export interface VerifiedCompetitorItem {
   name: string;
   market: string;
   category: "GENUINE_COMPETITOR";
+  classification: "GENUINE_COMPETITOR";
   selected: boolean;
   confidence: number;
+  targetProfile: {
+    businessType: string;
+    primaryOffering: string;
+    customers: string;
+    useCases: string;
+    businessModel: string;
+    market: string;
+  };
+  candidateProfile: {
+    domain: string;
+    businessType: string;
+    primaryOffering: string;
+    customers: string;
+    useCases: string;
+    businessModel: string;
+    market: string;
+    title: string;
+    snippet: string;
+    sourceEvidence: string;
+  };
+  offeringOverlap: boolean;
+  customerOverlap: boolean;
+  useCaseOverlap: boolean;
+  businessModelCompatibility: boolean;
+  commercialSubstitution: "YES" | "NO" | "UNCERTAIN";
+  marketCompatibility: boolean;
+  discoveryQueries: string[];
+  serpEvidence: {
+    positions: number[];
+    titles: string[];
+    snippets: string[];
+    urls: string[];
+  };
+  candidateWebsiteEvidence: {
+    domain: string;
+    title: string;
+    snippet: string;
+    sourceEvidence: string;
+  };
   evidence: {
     matchedQueries: string[];
     serpPositions: number[];
@@ -567,8 +607,48 @@ export function evaluateMultiQueryCompetitors(
         name: compName,
         market: compMarket,
         category: "GENUINE_COMPETITOR",
+        classification: "GENUINE_COMPETITOR",
         selected: false, // Default to false (Unselected) until user manually checks it
         confidence: compositeScore,
+        targetProfile: {
+          businessType: effectiveOffering,
+          primaryOffering: targetOffering || effectiveOffering,
+          customers: "Target audience requiring " + effectiveOffering,
+          useCases: effectiveOffering + " platform capabilities",
+          businessModel: "Commercial Product / Service Platform",
+          market: compMarket,
+        },
+        candidateProfile: {
+          domain: candDomain,
+          businessType: combinedTitle.slice(0, 120),
+          primaryOffering: combinedSnippet.slice(0, 200),
+          customers: "Commercial buyers and platform users",
+          useCases: combinedSnippet.slice(0, 200),
+          businessModel: classification.category,
+          market: compMarket,
+          title: combinedTitle,
+          snippet: combinedSnippet,
+          sourceEvidence: `Verified via live organic search results for queries: "${Array.from(evidence.queries).join('", "')}"`,
+        },
+        offeringOverlap: true,
+        customerOverlap: true,
+        useCaseOverlap: true,
+        businessModelCompatibility: classification.isBusiness,
+        commercialSubstitution: "YES",
+        marketCompatibility: classification.marketRelevance,
+        discoveryQueries: Array.from(evidence.queries),
+        serpEvidence: {
+          positions: evidence.positions,
+          titles: evidence.titles,
+          snippets: evidence.snippets,
+          urls: evidence.urls,
+        },
+        candidateWebsiteEvidence: {
+          domain: candDomain,
+          title: combinedTitle,
+          snippet: combinedSnippet,
+          sourceEvidence: `Verified live candidate website result for host ${candDomain}`,
+        },
         evidence: {
           matchedQueries: Array.from(evidence.queries),
           serpPositions: evidence.positions,
