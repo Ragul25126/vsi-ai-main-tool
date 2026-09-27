@@ -859,7 +859,7 @@ function extractPrimaryCategoryQuery(domain: string, title: string, description:
     const m = combinedText.match(pat);
     if (m && m[1]) {
       let cand = m[1].trim();
-      cand = cand.replace(/^(?:and|the|with|for|our|your|best|top|official)\s+/gi, "").trim();
+      cand = cand.replace(/^(?:and|the|with|for|our|your|best|top|official|is|was|are|were|where|how|why|what|a|an|of|in|on|at|by|from)\s+/gi, "").trim();
       const candLow = cand.toLowerCase();
       if (!candLow.includes(brand.toLowerCase()) && !candLow.includes(targetStem) && cand.length >= 4 && cand.length <= 45) {
         const formatted = cand.split(/\s+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
@@ -987,7 +987,7 @@ export async function POST(req: NextRequest) {
             }
           });
 
-          // STRICT ROOT/MAIN DOMAIN MATCH ONLY. NEVER fall back to deep subdomain track/product URLs
+          // STRICT ROOT/MAIN DOMAIN MATCH ONLY. Reject deep subpaths (/listing/, /dp/, /tracks/, /item/, etc.)
           const sitePage =
             rootDomainMatch ||
             siteSerp.results.find((r) => {
@@ -996,11 +996,11 @@ export async function POST(req: NextRequest) {
                 const u = new URL(r.link);
                 const host = u.hostname.replace(/^www\./i, "").toLowerCase();
                 const path = u.pathname.toLowerCase();
-                return (
-                  (host === parsed.domain.toLowerCase() || host === `www.${parsed.domain.toLowerCase()}`) &&
-                  !/\/(tracks|albums|songs|posts|threads|items|item|product|dp)\//i.test(path) &&
-                  !/^(music|blog|forum|community|support|docs|careers)\./i.test(host)
-                );
+                if (host !== parsed.domain.toLowerCase() && host !== `www.${parsed.domain.toLowerCase()}`) {
+                  return false;
+                }
+                // Root paths or primary site section landing pages ONLY
+                return path === "" || path === "/" || path === "/index.html" || /^\/(about|services|products|solutions|features|pricing|store|market|categories|overview)\b/i.test(path);
               } catch {
                 return false;
               }
