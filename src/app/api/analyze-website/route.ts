@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { normaliseDomain } from "@/lib/url-input";
-import { isGenuineCompetitor, evaluateMultiQueryCompetitors, type SerpQueryResultBatch } from "@/lib/competitor-filter";
+import { isGenuineCompetitor, evaluateMultiQueryCompetitors, GENERIC_NON_OFFERING_WORDS, type SerpQueryResultBatch } from "@/lib/competitor-filter";
 import { searchSerpApi, type SerpSearchResultItem } from "@/lib/serpapi-service";
 import { crawlWebsite } from "@/lib/firecrawl";
 import { callOpenRouter } from "@/lib/llm";
@@ -862,24 +862,15 @@ function extractPrimaryCategoryQuery(domain: string, title: string, description:
     }
   }
 
-  // Fallback category inference using core business noun tokens in combinedRaw
-  if (/\b(music|audio|song|songs|podcast|podcasts|artist|artistes|album|albums|streaming)\b/i.test(combinedRaw)) {
-    return { category: "Digital Music & Audio Streaming Platform", semanticTokens };
-  }
-  if (/\b(vacation|vacations|rental|rentals|homestay|homestays|villas|cabins|guest|guests|host|hosts|lodging)\b/i.test(combinedRaw)) {
-    return { category: "Vacation Rentals & Property Booking Platform", semanticTokens };
-  }
-  if (/\b(hotel|hotels|stay|stays|accommodation|accommodations|holiday home|booking|flight|flights|resort|resorts)\b/i.test(combinedRaw)) {
-    return { category: "Hotels & Travel Accommodation Booking", semanticTokens };
-  }
-  if (/\b(design|template|templates|visual|logo|presentation|graphic)\b/i.test(combinedRaw)) {
-    return { category: "Online Graphic Design Software", semanticTokens };
-  }
-  if (/\b(game|games|gaming|console|consoles|controller|pass)\b/i.test(combinedRaw)) {
-    return { category: "Video Games & Consoles Platform", semanticTokens };
-  }
-  if (/\b(payment|payments|gateway|financial|checkout|billing|payouts)\b/i.test(combinedRaw)) {
-    return { category: "Payment Processing & Financial Infrastructure", semanticTokens };
+  // Dynamic category inference using core business noun tokens in combinedRaw
+  const extractedNounTokens = Array.from(semanticTokens).filter(t => t.length >= 3 && !GENERIC_NON_OFFERING_WORDS.has(t));
+  if (extractedNounTokens.length >= 2) {
+    const top2 = extractedNounTokens.slice(0, 2).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+    return { category: `${top2} Platform`, semanticTokens };
+  } else if (extractedNounTokens.length === 1) {
+    const tok = extractedNounTokens[0];
+    const formatted = tok.charAt(0).toUpperCase() + tok.slice(1).toLowerCase();
+    return { category: `${formatted} Services`, semanticTokens };
   }
 
   const fallbackCategory = cleanTitle ? cleanTitle.slice(0, 45) : cleanDesc ? cleanDesc.slice(0, 45) : `${brand} Services`;
@@ -1137,6 +1128,19 @@ export async function POST(req: NextRequest) {
       suggestedCompetitors: verifiedCompetitors,
       geoTopics: geoTopicsList,
     };
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`========== VSI ANALYSIS ==========`);
+      console.log(`TARGET: ${parsed.domain}`);
+      console.log(`BRAND: ${brand}`);
+      console.log(`BUSINESS PROFILE: ${finalCoreOffering}`);
+      console.log(`TOPIC QUERIES: site:${parsed.domain}`);
+      console.log(`VERIFIED TOPICS: ${finalTopics.join(", ")}`);
+      console.log(`KEYWORD CANDIDATES: ${finalKeywords.map((k) => k.keyword).join(", ")}`);
+      console.log(`COMPETITOR QUERIES: ${queryBatches.map((b) => b.query).join(", ")}`);
+      console.log(`VERIFIED COMPETITORS: ${verifiedCompetitors.map((c) => c.domain).join(", ")}`);
+      console.log(`=================================\n`);
+    }
 
     return NextResponse.json({ success: true, data: finalData });
   } catch (err) {

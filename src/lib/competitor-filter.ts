@@ -56,7 +56,7 @@ const NON_COMPETITOR_DOMAINS = new Set([
   "bing.com", "yahoo.com", "duckduckgo.com", "baidu.com", "yandex.com",
 ]);
 
-const GENERIC_NON_OFFERING_WORDS = new Set([
+export const GENERIC_NON_OFFERING_WORDS = new Set([
   "home", "official", "services", "service", "solutions", "solution", "website", "site",
   "company", "brand", "business", "about", "top", "best", "near", "help", "contact",
   "online", "global", "group", "inc", "ltd", "llc", "corp", "corporation", "platform",
