@@ -348,6 +348,51 @@ export function classifySerpDomain(
       };
     }
 
+    // Business model mismatches: Company Database / Market Intelligence / Analyst / Financial Research
+    if (
+      /\b(company profile|company report|financial report|annual revenue|market intelligence|investor database|funding rounds|company database|database of companies|valuation|market cap|stock analysis|ticker|historical market data|share price|shareholders|market research report|who is the competitor|biggest competitor of|revenue analysis|market capitalization|investor relations|key statistics|company overview|employee count|financial summary)\b/i.test(text)
+    ) {
+      return {
+        domain: cleanCand,
+        isTarget: false,
+        isBusiness: false,
+        competingOffering: false,
+        marketRelevance: false,
+        category: "INFORMATIONAL",
+        reason: "Company database, market intelligence, analyst report, or financial data site",
+      };
+    }
+
+    // Business model mismatches: Freelancer / Gig / Talent Marketplaces
+    if (
+      /\b(hire freelancers|freelance marketplace|freelance website|freelancer website|hire developers|hire designers|gig marketplace|post a gig|micro jobs|hire a freelancer|freelance services marketplace)\b/i.test(text)
+    ) {
+      return {
+        domain: cleanCand,
+        isTarget: false,
+        isBusiness: true,
+        competingOffering: false,
+        marketRelevance: true,
+        category: "IRRELEVANT_BUSINESS",
+        reason: "Freelancer / gig marketplace business model mismatch for first-party product/platform target",
+      };
+    }
+
+    // Business model mismatches: Forums / Discussion Threads
+    if (
+      /\b(forum thread|host forum|discussion board|thread \d+|user forum|topic \d+|community forum|discussion topic|post \d+)\b/i.test(text)
+    ) {
+      return {
+        domain: cleanCand,
+        isTarget: false,
+        isBusiness: false,
+        competingOffering: false,
+        marketRelevance: false,
+        category: "FORUM",
+        reason: "Community discussion forum thread or host Q&A board",
+      };
+    }
+
     // Editorial / News / Press Release / Definition / Listicles / Opinion Blog evidence
     if (
       /\b(definition|meaning of|dictionary|wikipedia|synonyms|pronunciation|what is|how to|personal blog|weblog|editorial|press release|news portal|magazine|journal|directory of|tutorial|explained|alternatives to|competitors and alternatives|software reviews|compare software|list of best|versus|top \d+|best \d+|the ten best|ten best|my top|my favorite|top five|top ten|all time ranked|ranked|buying guide|buyers guide|review of|reviews|globe newswire|pr newswire|business wire|wire service|distributed by)\b/i.test(text)
@@ -609,7 +654,33 @@ export function evaluateMultiQueryCompetitors(
       targetLocation
     );
 
-    const isMatch = classification.category === "GENUINE_COMPETITOR";
+    let isMatch = classification.category === "GENUINE_COMPETITOR";
+    let compositeScore = 50;
+
+    if (isMatch) {
+      const capabilityTokens = extractCoreCapabilityTokens(effectiveOffering);
+      const candText = `${combinedTitle} ${combinedSnippet}`.toLowerCase();
+      let matchedTokens = 0;
+      for (const tok of capabilityTokens) {
+        if (candText.includes(tok)) matchedTokens++;
+      }
+
+      const queryBonus = (evidence.queries.size - 1) * 20;
+      const positionBonus = Math.max(0, 25 - evidence.bestPosition * 2);
+      const tokenBonus = matchedTokens * 15;
+      
+      compositeScore = Math.min(99, 50 + queryBonus + positionBonus + tokenBonus);
+
+      // Single query discovery without capability token match is low confidence
+      if (evidence.queries.size === 1 && matchedTokens === 0) {
+        compositeScore -= 20;
+      }
+
+      // Reject if final confidence score is below 75 threshold
+      if (compositeScore < 75) {
+        isMatch = false;
+      }
+    }
 
     if (process.env.NODE_ENV !== "production") {
       console.log(`=================================`);
@@ -627,28 +698,16 @@ export function evaluateMultiQueryCompetitors(
       console.log(`CUSTOMER OVERLAP: ${isMatch ? "YES" : "NO"}`);
       console.log(`BUSINESS MODEL: ${classification.isBusiness ? "MATCH" : "MISMATCH"}`);
       console.log(`MARKET: ${classification.marketRelevance ? "MATCH" : "MISMATCH"}`);
+      console.log(`CONFIDENCE SCORE: ${compositeScore}`);
       console.log(`SEARCH INTENT: ${isMatch ? "COMMERCIAL_COMPETITOR" : classification.category}`);
       console.log(`WEBSITE EVIDENCE: Corroborated by live SerpAPI organic results`);
-      console.log(`CLASSIFICATION: ${classification.category}`);
+      console.log(`CLASSIFICATION: ${isMatch ? "GENUINE_COMPETITOR" : classification.category}`);
       console.log(`ACCEPTED/REJECTED: ${isMatch ? "ACCEPTED" : "REJECTED"}`);
-      console.log(`REASON: ${classification.reason}`);
+      console.log(`REASON: ${isMatch ? classification.reason : compositeScore < 75 ? "Confidence score below 75 threshold" : classification.reason}`);
       console.log(`=================================\n`);
     }
 
     if (isMatch) {
-      // Calculate Multi-Signal Evidence Score
-      const capabilityTokens = extractCoreCapabilityTokens(effectiveOffering);
-      const candText = `${combinedTitle} ${combinedSnippet}`.toLowerCase();
-      let matchedTokens = 0;
-      for (const tok of capabilityTokens) {
-        if (candText.includes(tok)) matchedTokens++;
-      }
-
-      const queryBonus = (evidence.queries.size - 1) * 25;
-      const positionBonus = Math.max(0, 30 - evidence.bestPosition * 3);
-      const tokenBonus = matchedTokens * 15;
-      const compositeScore = Math.min(99, Math.max(70, 60 + queryBonus + positionBonus + tokenBonus));
-
       const compStem = candDomain.split(".")[0];
       const compName = compStem.charAt(0).toUpperCase() + compStem.slice(1);
       const compMarket = targetLocation === "in" ? "India" : targetLocation === "uk" ? "United Kingdom" : "United States";
@@ -665,9 +724,9 @@ export function evaluateMultiQueryCompetitors(
           serpPositions: evidence.positions,
           offeringOverlap: true,
           customerOverlap: true,
-          marketOverlap: classification.marketRelevance,
+          marketOverlap: true,
           intentOverlap: true,
-          websiteEvidence: `Corroborated by live SerpAPI organic results for ${effectiveOffering}`,
+          websiteEvidence: `Discovered from search queries: "${Array.from(evidence.queries).join('", "')}"`,
           reason: classification.reason,
         },
       });

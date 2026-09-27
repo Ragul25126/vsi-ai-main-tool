@@ -473,7 +473,7 @@ function buildWebsiteBusinessProfile(
           if (!evidenceMap.has(cand)) {
             evidenceMap.set(cand, `Grounded in website ${sourceLabel}: "${trimmed}"`);
           }
-          if (sourceLabel === "main title" || sourceLabel === "meta description") {
+          if (sourceLabel === "main title" || sourceLabel === "meta description" || sourceLabel === "H1 heading") {
             coreOfferingsSet.add(cand);
           } else if (sourceLabel.includes("heading")) {
             categoriesSet.add(cand);
@@ -872,7 +872,7 @@ function extractPrimaryCategoryQuery(domain: string, title: string, description:
     const cleanO = sanitize(o);
     if (cleanO && cleanO.length >= 4 && cleanO.length <= 45) {
       const oLow = cleanO.toLowerCase();
-      if (!oLow.includes(brand.toLowerCase()) && !oLow.includes(targetStem)) {
+      if (!oLow.includes(brand.toLowerCase()) && !oLow.includes(targetStem) && !/\b(developer|designer|engineer|analyst|recruiter|manager|intern|associate|officer)\b/i.test(oLow)) {
         return { category: cleanO, semanticTokens };
       }
     }
@@ -914,10 +914,10 @@ function buildCommercialQueries(offering: string, brand: string, locationCode: s
   if (isGeneric) {
     if (locationCode === "in") {
       queries.push(`${brandStem} alternatives in India`);
-      queries.push(`${brandStem} competitor companies in India`);
+      queries.push(`sites like ${brandStem} in India`);
     } else {
       queries.push(`${brandStem} alternatives`);
-      queries.push(`${brandStem} competitor companies`);
+      queries.push(`sites like ${brandStem}`);
     }
   } else {
     if (locationCode === "in") {
