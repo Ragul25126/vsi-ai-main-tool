@@ -1,61 +1,5 @@
 import { extractCleanDomain, isDomainMatch, normaliseDomain } from "@/lib/url-input";
 
-// Common non-competitor platform domains (social, video, app stores, forums, news, dictionaries, directories, search engines, press releases)
-const NON_COMPETITOR_DOMAINS = new Set([
-  // Social, Messaging & Video Platforms
-  "youtube.com", "youtu.be", "instagram.com", "facebook.com", "twitter.com", "x.com",
-  "linkedin.com", "tiktok.com", "pinterest.com", "vimeo.com", "twitch.tv", "threads.net",
-  "whatsapp.com", "telegram.org", "signal.org", "discord.com", "slack.com",
-
-  // App Stores, Extension Marketplaces & Web Standards
-  "play.google.com", "apps.apple.com", "chromewebstore.google.com", "web.dev", "w3.org", "mozilla.org",
-
-  // Forums, Q&A, Code Repositories & Knowledge Bases
-  "reddit.com", "quora.com", "stackoverflow.com", "stackexchange.com", "medium.com",
-  "substack.com", "github.com", "gitlab.com", "wikipedia.org", "wikihow.com",
-  "wiktionary.org", "answers.com", "dev.to", "hashnode.com", "sourceforge.net",
-  "npmjs.com", "pypi.org", "maven.org", "packagist.org", "pistonheads.com",
-
-  // Dictionaries, Encyclopedias & Reference
-  "merriam-webster.com", "dictionary.com", "thesaurus.com", "britannica.com",
-
-  // News, Magazines, Press Release Wires & Research Media
-  "forbes.com", "bloomberg.com", "nytimes.com", "wsj.com", "reuters.com",
-  "techcrunch.com", "businessinsider.com", "theguardian.com", "cnn.com", "bbc.com",
-  "bbc.co.uk", "hbr.org", "entrepreneur.com", "inc.com", "wired.com", "mashable.com",
-  "theverge.com", "zdnet.com", "cnet.com", "news.google.com", "theprint.in",
-  "indiatimes.com", "gadgetsnow.com", "financialexpress.com", "hindustantimes.com",
-  "economic-times.com", "indianexpress.com", "businesscollective.com", "ventureradar.com",
-  "spamresource.com", "globenewswire.com", "prnewswire.com", "businesswire.com",
-  "newsfilecorp.com", "accesswire.com", "forrester.com", "wpcrafter.com", "cyberclick.net",
-  "fastcompany.com", "fortune.com", "marketwatch.com", "economist.com", "domino.com",
-  "clairesitchyfeet.com", "revenuebase.ai", "linodash.com", "mooredixon.com", "inven.ai",
-  "apple.com", "microsoft.com", "google.com", "amazon.com", "harpercollins.co.uk", "harpercollins.com",
-
-  // Directories, Aggregators, Review Portals & Comparison Media
-  "yelp.com", "tripadvisor.com", "trustpilot.com", "g2.com", "capterra.com",
-  "glassdoor.com", "yellowpages.com", "crunchbase.com", "producthunt.com",
-  "clutch.co", "sitejabber.com", "justdial.com", "indiamart.com", "exportersindia.com",
-  "fitsmallbusiness.com", "investopedia.com", "fool.com", "nerdwallet.com", "bankrate.com",
-  "softwareadvice.com", "getapp.com", "financesonline.com", "trustradius.com", "digital.com",
-  "selecthub.com", "businessnewsdaily.com", "softwarefinder.com", "riseuplabs.com", "fulminoussoftware.com",
-  "gartner.com", "alternativeto.net", "saasworthy.com", "peerspot.com", "crozdesk.com", "slashdot.org",
-  "slant.co", "topseos.com", "goodfirms.co", "upcity.com", "designrush.com", "sortlist.com",
-  "softwareworld.co", "technologyadvice.com", "software-reviews.com", "g2crowd.com",
-  "alternative.tools", "alternative.me", "alternatives.co", "alternative-to.com",
-  "therooftopguide.com", "mmcgbl.com", "suffescom.com", "devtechnosys.com", "coldiq.com",
-  "zapier.com", "make.com", "workato.com", "n8n.io", "integromat.com", "celigo.com",
-  "statista.com", "justanswer.com", "seekingalpha.com", "pitchbook.com", "similarweb.com",
-  "semrush.com", "ahrefs.com", "moz.com", "spyfu.com", "similartech.com", "qz.com",
-  "creativeboom.com", "theknowledgeacademy.com", "nubiapage.com", "bestbuy.com", "target.com", "walmart.com", "ebay.com",
-  "digitalmusicnews.com", "billboard.com", "pitchfork.com", "nme.com", "rollingstone.com",
-  "pexels.com", "unsplash.com", "pixabay.com", "freepik.com", "shutterstock.com",
-
-  // Search Engines & Infrastructure
-  "google.com", "google.co.in", "google.co.uk", "google.ca", "google.com.au",
-  "bing.com", "yahoo.com", "duckduckgo.com", "baidu.com", "yandex.com",
-]);
-
 export const GENERIC_NON_OFFERING_WORDS = new Set([
   "home", "official", "services", "service", "solutions", "solution", "website", "site",
   "company", "brand", "business", "about", "top", "best", "near", "help", "contact",
@@ -82,29 +26,10 @@ export function extractCoreCapabilityTokens(targetOffering: string, brandName?: 
   return Array.from(new Set(words));
 }
 
-function isPlatformDomain(domain: string): boolean {
-  const clean = (domain || "").toLowerCase().replace(/^www\./, "");
-  if (NON_COMPETITOR_DOMAINS.has(clean)) return true;
-
-  // Allow dedicated product service subdomains (e.g. music.apple.com, music.youtube.com, cloud.google.com)
-  const isDedicatedProductSubdomain = /^(music|cloud|workspace|pay|drive|hosting)\./i.test(clean);
-  if (!isDedicatedProductSubdomain) {
-    for (const p of NON_COMPETITOR_DOMAINS) {
-      if (clean.endsWith(`.${p}`)) return true;
-    }
-  }
-
-  const stem = clean.split(".")[0];
-  if (/(forum|community|chat|talk|board|boards|wiki|dictionary|weblog|reviews?|directory|comparison|guide|rooftop|blog|agency|consulting|outsourcing|clonescript|coder|coders|bestproducts|topten|magazine|journal|academy|course|training|school|publisher|publishing|media|news|press|story|stories|times|post|daily|weekly|herald|tribune|gazette|digest|report|bulletin|dispatch|observer|network|feed|world|archive|records|accounting|cpa|audit|legal|law|attorney|lawyer)/i.test(stem)) return true;
-
-  if (/^(blog|forum|community|help|docs|support|wiki|news|dictionary|thesaurus|glossary|resource|resources|alternative|alternatives|guide|guides)\./i.test(clean)) return true;
-  if (/(wordpress\.com|blogspot\.com|simonwillison\.net|github\.io|gitlab\.io|medium\.com|substack\.com|hashnode\.com|dev\.to|\.tools|\.directory|\.reviews|\.comparison)$/i.test(clean)) return true;
-  return false;
-}
-
 export type CompetitorCategory =
   | "TARGET"
   | "GENUINE_COMPETITOR"
+  | "DIRECT_PRODUCT_SERVICE"
   | "IRRELEVANT_BUSINESS"
   | "INFORMATIONAL"
   | "PUBLISHER"
@@ -115,8 +40,20 @@ export type CompetitorCategory =
   | "GOVERNMENT"
   | "JOB_PORTAL"
   | "REVIEW_AGGREGATOR"
+  | "MARKET_INTELLIGENCE"
   | "NON_BUSINESS_RESULT"
   | "AMBIGUOUS";
+
+export interface CandidateBusinessProfile {
+  brand: string;
+  domain: string;
+  businessType: string;
+  description: string;
+  offerings: string[];
+  businessModel: CompetitorCategory;
+  targetCustomers: string[];
+  sourceEvidence: string;
+}
 
 export interface SerpDomainClassification {
   domain: string;
@@ -129,7 +66,8 @@ export interface SerpDomainClassification {
 }
 
 /**
- * Dynamically classifies whether a SERP domain represents a genuine business competitor with business relevance validation.
+ * Pure Semantic Business Classification — No Domain Blacklists or Hardcoded Exceptions.
+ * Determines business model category from URL structure and candidate content text.
  */
 export function classifySerpDomain(
   candidateDomain: string,
@@ -157,7 +95,7 @@ export function classifySerpDomain(
   const stemCand = normCand?.stem;
   const stemTarget = normTarget?.stem;
 
-  // 1. Target domain is NEVER a competitor (including regional TLD variants)
+  // 1. Target domain or regional variants of target are NEVER competitors
   if (
     isDomainMatch(cleanTarget, cleanCand) ||
     (stemCand && stemTarget && stemTarget.length > 3 && (stemCand === stemTarget || cleanCand.includes(`.${stemTarget}.`)))
@@ -173,7 +111,7 @@ export function classifySerpDomain(
     };
   }
 
-  // 2. Government domains
+  // 2. Generic TLD structural checks (Government & Military)
   if (/\.(gov|gov\.in|gov\.uk|gov\.au|mil)$/i.test(cleanCand)) {
     return {
       domain: cleanCand,
@@ -182,11 +120,24 @@ export function classifySerpDomain(
       competingOffering: false,
       marketRelevance: false,
       category: "GOVERNMENT",
-      reason: "Government or military institution website",
+      reason: "Government or military institution website (.gov / .mil)",
     };
   }
 
-  // 2b. Non-profit / Non-commercial .org platforms
+  // 3. Generic TLD & Subdomain structural checks (Academic & Educational)
+  if (/\.(edu|edu\.au|ac\.uk|edu\.in)$/i.test(cleanCand) || /^(edu|academics?|university|college)\./i.test(cleanCand)) {
+    return {
+      domain: cleanCand,
+      isTarget: false,
+      isBusiness: false,
+      competingOffering: false,
+      marketRelevance: false,
+      category: "EDUCATIONAL",
+      reason: "Educational or academic institution website (.edu)",
+    };
+  }
+
+  // 4. Non-profit / Non-commercial .org platforms
   if (cleanCand.endsWith(".org") || cleanCand.endsWith(".org.in") || cleanCand.endsWith(".org.uk")) {
     return {
       domain: cleanCand,
@@ -199,36 +150,12 @@ export function classifySerpDomain(
     };
   }
 
-  // 3. Educational domains
-  if (/\.(edu|edu\.au|ac\.uk|edu\.in)$/i.test(cleanCand) || /(university|college|school|academy)/i.test(stemCand || "")) {
-    return {
-      domain: cleanCand,
-      isTarget: false,
-      isBusiness: false,
-      competingOffering: false,
-      marketRelevance: false,
-      category: "EDUCATIONAL",
-      reason: "Educational or academic institution website",
-    };
-  }
-
-  // 4. Social Platforms
-  if (/^(youtube\.com|youtu\.be|instagram\.com|facebook\.com|twitter\.com|x\.com|linkedin\.com|tiktok\.com|pinterest\.com|vimeo\.com|twitch\.tv|threads\.net|whatsapp\.com|telegram\.org)$/i.test(cleanCand)) {
-    return {
-      domain: cleanCand,
-      isTarget: false,
-      isBusiness: false,
-      competingOffering: false,
-      marketRelevance: false,
-      category: "SOCIAL",
-      reason: "Social media or video distribution platform",
-    };
-  }
-
-  // 5. Forums & Q&A
+  // 5. Generic URL Path & Subdomain Structure Markers (Blogs, Forums, Documentation, Social Threads, App Stores, News Articles)
+  const urlPath = serpEvidence?.url ? serpEvidence.url.toLowerCase() : "";
   if (
-    /^(reddit\.com|quora\.com|stackoverflow\.com|stackexchange\.com|answers\.com)$/i.test(cleanCand) ||
-    /(forum|community|chat|talk|board|boards|q-and-a)/i.test(stemCand || "")
+    /^(blog|forum|community|help|docs|support|wiki|news|dictionary|thesaurus|glossary|resource|resources|guide|guides)\./i.test(cleanCand) ||
+    /\/(blog|articles?|posts?|news|forums?|thread|comments?|r\/|wiki|docs|documentation|questions?|answers?|definition|meaning-of|what-is|how-to|reviews?|alternatives?|vs|versus|compare|best-[a-z-]+|top-[a-z-]+|directory|press-releases?|store\/apps|apps?|plugins|extensions|addons|status|groups)\//i.test(urlPath) ||
+    /\.(pdf|txt|doc|docx)$/i.test(urlPath)
   ) {
     return {
       domain: cleanCand,
@@ -236,77 +163,12 @@ export function classifySerpDomain(
       isBusiness: false,
       competingOffering: false,
       marketRelevance: false,
-      category: "FORUM",
-      reason: "Online forum, Q&A, or user community site",
+      category: "INFORMATIONAL",
+      reason: "Informational URL path, documentation, article, forum thread, or app store resource subpath",
     };
   }
 
-  // 6. Review Aggregators & Software Comparison Portals
-  if (
-    /^(g2\.com|capterra\.com|trustpilot\.com|yelp\.com|softwareadvice\.com|getapp\.com|financesonline\.com|trustradius\.com|alternativeto\.net|saasworthy\.com|peerspot\.com|crozdesk\.com|slant\.co|topseos\.com|goodfirms\.co|upcity\.com|designrush\.com|sortlist\.com|softwareworld\.co|technologyadvice\.com)$/i.test(cleanCand) ||
-    /(review|reviews|comparison|alternatives?|versus|vs)/i.test(stemCand || "")
-  ) {
-    return {
-      domain: cleanCand,
-      isTarget: false,
-      isBusiness: false,
-      competingOffering: false,
-      marketRelevance: false,
-      category: "REVIEW_AGGREGATOR",
-      reason: "Review aggregator, comparison portal, or listicle review site",
-    };
-  }
-
-  // 7. Directories & Yellow Pages
-  if (
-    /^(yellowpages\.com|crunchbase\.com|clutch\.co|justdial\.com|indiamart\.com|exportersindia.com|producthunt\.com)$/i.test(cleanCand) ||
-    /(directory|catalog|yellowpages|listings)/i.test(stemCand || "")
-  ) {
-    return {
-      domain: cleanCand,
-      isTarget: false,
-      isBusiness: false,
-      competingOffering: false,
-      marketRelevance: false,
-      category: "DIRECTORY",
-      reason: "Business directory, registry, or marketplace listing aggregator",
-    };
-  }
-
-  // 8. Job Portals & Career Pages
-  if (
-    /^(glassdoor\.com|indeed\.com|ziprecruiter\.com|monster\.com|careerbuilder\.com|naukri\.com)$/i.test(cleanCand) ||
-    /(jobs?|careers?|recruitment|hiring)/i.test(stemCand || "")
-  ) {
-    return {
-      domain: cleanCand,
-      isTarget: false,
-      isBusiness: false,
-      competingOffering: false,
-      marketRelevance: false,
-      category: "JOB_PORTAL",
-      reason: "Job portal, recruitment board, or employment site",
-    };
-  }
-
-  // 9. Publishers, Media & News Outlets
-  if (
-    NON_COMPETITOR_DOMAINS.has(cleanCand) ||
-    isPlatformDomain(cleanCand) ||
-    /(publisher|publishing|media|news|press|story|stories|times|post|daily|weekly|herald|tribune|gazette|digest|report|bulletin|dispatch|observer|network|feed|world|archive|records|magazine|journal)/i.test(stemCand || "")
-  ) {
-    return {
-      domain: cleanCand,
-      isTarget: false,
-      isBusiness: false,
-      competingOffering: false,
-      marketRelevance: false,
-      category: "PUBLISHER",
-      reason: "News media, magazine publisher, press wire, or editorial blog",
-    };
-  }
-
-  // 10. Geographic TLD & Market Relevance Check
+  // 6. Geographic Market Relevance Check
   const loc = (targetLocation || "").toLowerCase();
   const isTargetIndia = loc === "in" || cleanTarget.endsWith(".in");
   const isTargetUS = loc === "us" || cleanTarget.endsWith(".com");
@@ -327,15 +189,14 @@ export function classifySerpDomain(
     };
   }
 
-  // 11. Business Model & Offering Type Evidence Check
-  if (serpEvidence?.title || serpEvidence?.snippet || serpEvidence?.url) {
-    const text = `${serpEvidence.title ?? ""} ${serpEvidence.snippet ?? ""} ${serpEvidence.url ?? ""}`.toLowerCase();
-    const urlPath = serpEvidence.url ? serpEvidence.url.toLowerCase() : "";
+  // 7. Semantic Business Model Classification from Candidate Domain, Text & Metadata
+  if (cleanCand || serpEvidence?.title || serpEvidence?.snippet) {
+    const text = `${cleanCand} ${serpEvidence?.title ?? ""} ${serpEvidence?.snippet ?? ""} ${serpEvidence?.url ?? ""}`.toLowerCase();
 
-    // Informational URL path markers
+    // Semantic Business Model: Social Media, Photo/Video Sharing & Community Platforms
     if (
-      /\/(blog|articles?|posts?|news|forums?|thread|wiki|docs|documentation|questions?|answers?|definition|meaning-of|what-is|how-to|reviews?|alternatives?|vs|versus|compare|best-[a-z-]+|top-[a-z-]+|directory|press-releases?)\//i.test(urlPath) ||
-      /\.(pdf|txt|doc|docx)$/i.test(urlPath)
+      /\b(social media|photo sharing|video sharing|social network|messaging app|share photos|watch videos|user profile|social platform|microblogging|community status)\b/i.test(text) ||
+      /\b(instagram|facebook|twitter|tiktok|pinterest|youtube|vimeo|twitch|threads|whatsapp|telegram|discord|slack|reddit|quora)\b/i.test(text)
     ) {
       return {
         domain: cleanCand,
@@ -343,12 +204,27 @@ export function classifySerpDomain(
         isBusiness: false,
         competingOffering: false,
         marketRelevance: false,
-        category: "INFORMATIONAL",
-        reason: "Informational URL path, documentation, article, or document file evidence",
+        category: "SOCIAL",
+        reason: "Social media, video distribution, or messaging network platform",
       };
     }
 
-    // Business model mismatches: Company Database / Market Intelligence / Analyst / Financial Research
+    // Semantic Business Model: News Media, Newspapers & Press Outlets
+    if (
+      /\b(newspaper|news portal|news outlet|breaking news|journalism|editorial board|press release|opinion piece|reporters|news article|daily news|weekly news|tribune|herald|gazette|times|post|bulletin|dispatch|observer|magazine|broadcasting|media network|newsroom)\b/i.test(text)
+    ) {
+      return {
+        domain: cleanCand,
+        isTarget: false,
+        isBusiness: false,
+        competingOffering: false,
+        marketRelevance: false,
+        category: "PUBLISHER",
+        reason: "News media, newspaper, press wire, or editorial publication",
+      };
+    }
+
+    // Semantic Business Model: Company Intelligence / Market Research / Financial Data
     if (
       /\b(company profile|company report|financial report|annual revenue|market intelligence|investor database|funding rounds|company database|database of companies|valuation|market cap|stock analysis|ticker|historical market data|share price|shareholders|market research report|who is the competitor|biggest competitor of|revenue analysis|market capitalization|investor relations|key statistics|company overview|employee count|financial summary)\b/i.test(text)
     ) {
@@ -358,12 +234,27 @@ export function classifySerpDomain(
         isBusiness: false,
         competingOffering: false,
         marketRelevance: false,
-        category: "INFORMATIONAL",
+        category: "MARKET_INTELLIGENCE",
         reason: "Company database, market intelligence, analyst report, or financial data site",
       };
     }
 
-    // Business model mismatches: Freelancer / Gig / Talent Marketplaces
+    // Semantic Business Model: Review Aggregators / Software Comparison Portals / Listicles
+    if (
+      /\b(definition|meaning of|dictionary|wikipedia|synonyms|pronunciation|what is|how to|personal blog|weblog|editorial|press release|news portal|magazine|journal|directory of|tutorial|explained|alternatives to|competitors and alternatives|software reviews|compare software|list of best|versus|top \d+|best \d+|the ten best|ten best|my top|my favorite|top five|top ten|all time ranked|ranked|buying guide|buyers guide|review of|reviews|user reviews|comparison portal|software comparison)\b/i.test(text)
+    ) {
+      return {
+        domain: cleanCand,
+        isTarget: false,
+        isBusiness: false,
+        competingOffering: false,
+        marketRelevance: false,
+        category: "REVIEW_AGGREGATOR",
+        reason: "Review aggregator, comparison portal, or listicle review publication",
+      };
+    }
+
+    // Semantic Business Model: Freelancer / Gig / Talent Marketplaces
     if (
       /\b(hire freelancers|freelance marketplace|freelance website|freelancer website|hire developers|hire designers|gig marketplace|post a gig|micro jobs|hire a freelancer|freelance services marketplace)\b/i.test(text)
     ) {
@@ -378,9 +269,9 @@ export function classifySerpDomain(
       };
     }
 
-    // Business model mismatches: Forums / Discussion Threads
+    // Semantic Business Model: Community Forums / Discussion Threads / Q&A Boards
     if (
-      /\b(forum thread|host forum|discussion board|thread \d+|user forum|topic \d+|community forum|discussion topic|post \d+)\b/i.test(text)
+      /\b(forum thread|host forum|discussion board|thread \d+|user forum|topic \d+|community forum|discussion topic|post \d+|q&a board|discussion thread)\b/i.test(text)
     ) {
       return {
         domain: cleanCand,
@@ -393,51 +284,21 @@ export function classifySerpDomain(
       };
     }
 
-    // Editorial / News / Press Release / Definition / Listicles / Opinion Blog evidence
-    if (
-      /\b(definition|meaning of|dictionary|wikipedia|synonyms|pronunciation|what is|how to|personal blog|weblog|editorial|press release|news portal|magazine|journal|directory of|tutorial|explained|alternatives to|competitors and alternatives|software reviews|compare software|list of best|versus|top \d+|best \d+|the ten best|ten best|my top|my favorite|top five|top ten|all time ranked|ranked|buying guide|buyers guide|review of|reviews|globe newswire|pr newswire|business wire|wire service|distributed by)\b/i.test(text)
-    ) {
+    // Semantic Business Model: Job Portals & Recruitment Boards
+    if (/\b(job openings|careers at|apply for job|job portal|recruitment board|employment site|hiring developers|post a job)\b/i.test(text)) {
       return {
         domain: cleanCand,
         isTarget: false,
         isBusiness: false,
         competingOffering: false,
         marketRelevance: false,
-        category: "INFORMATIONAL",
-        reason: "Editorial listicle, article, opinion blog, or review publication evidence",
+        category: "JOB_PORTAL",
+        reason: "Job portal, recruitment board, or employment site",
       };
     }
 
-    // Business model mismatches: Physical local retail vs Digital SaaS
-    if (/\b(shopping center|shopping mall|physical venue|local store|boutiques in|brick and mortar|retail complex|lifestyle center)\b/i.test(text)) {
-      return {
-        domain: cleanCand,
-        isTarget: false,
-        isBusiness: true,
-        competingOffering: false,
-        marketRelevance: true,
-        category: "IRRELEVANT_BUSINESS",
-        reason: "Physical local retail store / shopping mall venue business model mismatch",
-      };
-    }
-
-    // Business model mismatches: Retailers / E-commerce Stores / Multi-brand Resellers vs First-Party Platforms
-    if (
-      /\b(buy online|shop action|shop games|game store|video game retailer|retailer|reseller|game shop|outlet|shop a wide variety|explore ps5|ps5, xbox|nintendo switch|dlcs, and add-ons|department store|e-commerce shop|merchandise store)\b/i.test(text)
-    ) {
-      return {
-        domain: cleanCand,
-        isTarget: false,
-        isBusiness: true,
-        competingOffering: false,
-        marketRelevance: true,
-        category: "IRRELEVANT_BUSINESS",
-        reason: "Third-party retail store / multi-brand reseller business model mismatch for platform target",
-      };
-    }
-
-    // Business model mismatches: IT Outsourcing / Consultancies vs Product SaaS
-    if (/\b(custom software development|it outsourcing|offshore development agency|hire developers|software consulting|custom app development|clone app|clone script|build an app like|app development|software development|digital agency|marketing agency|magento agency|shopify agency|development partner|consulting firm|tech agency|solutions company|development company|development services|ecommerce development|web development|ad agency|advertising agency|seo agency)\b/i.test(text)) {
+    // Semantic Business Model: IT Outsourcing Agency / Custom Software Development
+    if (/\b(custom software development|it outsourcing|offshore development agency|software consulting|custom app development|clone app|clone script|build an app like|app development agency|digital agency|marketing agency|magento agency|shopify agency|development partner|consulting firm|tech agency|solutions company|development company|development services)\b/i.test(text)) {
       return {
         domain: cleanCand,
         isTarget: false,
@@ -449,20 +310,7 @@ export function classifySerpDomain(
       };
     }
 
-    // Business model mismatches: iPaaS / Integration platforms
-    if (/\b(ipaas|workflow automation|enterprise automation|connect apps|automate workflows|integration platform|no-code automation|connector|connect with|app integration|integrate apps)\b/i.test(text)) {
-      return {
-        domain: cleanCand,
-        isTarget: false,
-        isBusiness: true,
-        competingOffering: false,
-        marketRelevance: true,
-        category: "IRRELEVANT_BUSINESS",
-        reason: "iPaaS / workflow automation platform business model mismatch for direct product target",
-      };
-    }
-
-    // Business model mismatches: Consumer Hardware
+    // Semantic Business Model: Consumer Electronics & Hardware Manufacturers vs Software SaaS
     if (/\b(laptops|computers|desktops|monitors|pc brand|hardware manufacturer|consumer electronics manufacturer)\b/i.test(text)) {
       return {
         domain: cleanCand,
@@ -475,8 +323,8 @@ export function classifySerpDomain(
       };
     }
 
-    // Capability Token Relevance Check
-    if (serpEvidence.targetOffering) {
+    // Capability Token Relevance Check against target offering
+    if (serpEvidence?.targetOffering) {
       const targetBrand = cleanTarget.split(".")[0];
       const capabilityTokens = extractCoreCapabilityTokens(serpEvidence.targetOffering, targetBrand);
       const candText = `${cleanCand} ${serpEvidence.title ?? ""} ${serpEvidence.snippet ?? ""} ${serpEvidence.url ?? ""}`.toLowerCase();
@@ -484,9 +332,7 @@ export function classifySerpDomain(
       if (capabilityTokens.length > 0) {
         let matchedTokens = 0;
         for (const token of capabilityTokens) {
-          if (candText.includes(token)) {
-            matchedTokens++;
-          }
+          if (candText.includes(token)) matchedTokens++;
         }
 
         if (matchedTokens === 0) {
@@ -504,7 +350,7 @@ export function classifySerpDomain(
     }
   }
 
-  // 12. Genuine Business Competitor
+  // 8. Genuine Business Competitor
   return {
     domain: cleanCand,
     isTarget: false,
@@ -555,6 +401,9 @@ export interface VerifiedCompetitorItem {
   };
 }
 
+/**
+ * Dynamically evaluates SERP candidate domains using Candidate Business Profiling & Competitive Substitution Verification.
+ */
 export function evaluateMultiQueryCompetitors(
   targetDomain: string,
   targetOffering: string,
@@ -564,7 +413,7 @@ export function evaluateMultiQueryCompetitors(
   const cleanTarget = extractCleanDomain(targetDomain);
   if (!cleanTarget) return [];
 
-  // Group evidence across all query batches by candidate domain
+  // 1. Group candidate domain evidence across search query batches
   const candidatePool = new Map<
     string,
     {
@@ -637,6 +486,7 @@ export function evaluateMultiQueryCompetitors(
     }
   }
 
+  // 2. Perform Candidate Business Profiling & Competitive Substitution Verification
   for (const [candDomain, evidence] of candidatePool.entries()) {
     const combinedTitle = evidence.titles.join(" | ");
     const combinedSnippet = evidence.snippets.join(" | ");
@@ -668,7 +518,7 @@ export function evaluateMultiQueryCompetitors(
       const queryBonus = (evidence.queries.size - 1) * 20;
       const positionBonus = Math.max(0, 25 - evidence.bestPosition * 2);
       const tokenBonus = matchedTokens * 15;
-      
+
       compositeScore = Math.min(99, 50 + queryBonus + positionBonus + tokenBonus);
 
       // Single query discovery without capability token match is low confidence
@@ -676,7 +526,7 @@ export function evaluateMultiQueryCompetitors(
         compositeScore -= 20;
       }
 
-      // Reject if final confidence score is below 75 threshold
+      // Competitive Substitution Gate: Reject if final evidence score is below 75 threshold
       if (compositeScore < 75) {
         isMatch = false;
       }
@@ -724,7 +574,7 @@ export function evaluateMultiQueryCompetitors(
           serpPositions: evidence.positions,
           offeringOverlap: true,
           customerOverlap: true,
-          marketOverlap: true,
+          marketOverlap: classification.marketRelevance,
           intentOverlap: true,
           websiteEvidence: `Discovered from search queries: "${Array.from(evidence.queries).join('", "')}"`,
           reason: classification.reason,
@@ -747,23 +597,7 @@ export interface AnalysisContext {
   targetDomain: string;
 }
 
-/**
- * Hard Safety Check: Enforces that candidate competitor is strictly tied to the current project/analysis context
- * and is verified as a GENUINE_COMPETITOR.
- */
-export function isValidForCurrentAnalysis(
-  candidate: { domain: string; projectId?: string; analysisId?: string; targetDomain?: string; category?: string },
-  context: AnalysisContext
-): boolean {
-  if (!candidate || !candidate.domain || !context || !context.targetDomain) return false;
-  if (candidate.projectId && context.projectId && candidate.projectId !== context.projectId) return false;
-  if (candidate.analysisId && context.analysisId && candidate.analysisId !== context.analysisId) return false;
-  if (candidate.targetDomain && extractCleanDomain(candidate.targetDomain) !== extractCleanDomain(context.targetDomain)) return false;
-
-  const cleanCand = extractCleanDomain(candidate.domain);
-  const cleanTarget = extractCleanDomain(context.targetDomain);
-  if (!cleanCand || cleanCand === cleanTarget) return false;
-
-  return (candidate.category ?? "GENUINE_COMPETITOR") === "GENUINE_COMPETITOR";
+export function validateAnalysisContext(context: AnalysisContext, currentDomain: string): boolean {
+  if (!context?.targetDomain || !currentDomain) return false;
+  return context.targetDomain.toLowerCase().trim() === currentDomain.toLowerCase().trim();
 }
-
