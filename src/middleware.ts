@@ -13,6 +13,7 @@ const PUBLIC_PATHS = [
   "/api/qa",
   "/api/cron",
   "/api/auth",
+  "/api/analyze-website",
   "/auth/callback",
 ];
 
@@ -84,6 +85,14 @@ export async function middleware(request: NextRequest) {
 
   // Protect all non-public routes (e.g. /dashboard, /clients, /tasks, /prompts, /settings, /feedback, etc.)
   if (!isPublicPath && !isAuthorized) {
+    // API endpoints must return JSON error instead of redirecting to HTML login page
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required. Please sign in." },
+        { status: 401 }
+      );
+    }
+
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     const res = NextResponse.redirect(loginUrl);

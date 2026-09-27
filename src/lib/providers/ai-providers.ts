@@ -190,6 +190,197 @@ export class OpenAIProvider implements AIProviderAdapter {
   }
 }
 
+export class GeminiAIProvider implements AIProviderAdapter {
+  name = "Google Gemini (Gemini 2.5 Flash)";
+
+  isConfigured(): boolean {
+    return !!(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
+  }
+
+  async generateResponse(
+    prompt: string,
+    brand: string,
+    domain: string,
+    competitors: string[]
+  ): Promise<AIResponseResult> {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
+    const startTime = Date.now();
+
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: `You are a neutral search and AI recommendations assistant. Answer the user prompt directly and concisely.\n\nUser prompt: ${prompt}` }] }],
+            generationConfig: { temperature: 0.1, maxOutputTokens: 600 },
+          }),
+          signal: AbortSignal.timeout(20000),
+        }
+      );
+
+      const latencyMs = Date.now() - startTime;
+      const data = await res.json();
+
+      if (data.error) {
+        throw new Error(data.error.message || "Gemini API error");
+      }
+
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+      const analysis = extractCitationsAndMentions(content, brand, domain, competitors);
+
+      return {
+        providerName: this.name,
+        modelName: "gemini-2.5-flash",
+        prompt,
+        timestamp: new Date().toISOString(),
+        rawResponse: content,
+        latencyMs,
+        ...analysis,
+      };
+    } catch (err) {
+      return {
+        providerName: this.name,
+        modelName: "gemini-2.5-flash",
+        prompt,
+        timestamp: new Date().toISOString(),
+        rawResponse: "",
+        latencyMs: Date.now() - startTime,
+        brandMentioned: false,
+        mentionCount: 0,
+        competitorsMentioned: [],
+        citations: [],
+        isTargetCited: false,
+        error: err instanceof Error ? err.message : "Gemini call failed",
+      };
+    }
+  }
+}
+
+export class AnthropicAIProvider implements AIProviderAdapter {
+  name = "Anthropic (Claude 3.5 Sonnet)";
+
+  isConfigured(): boolean {
+    return !!process.env.ANTHROPIC_API_KEY;
+  }
+
+  async generateResponse(
+    prompt: string,
+    brand: string,
+    domain: string,
+    competitors: string[]
+  ): Promise<AIResponseResult> {
+    const apiKey = process.env.ANTHROPIC_API_KEY || "";
+    const startTime = Date.now();
+
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-3-5-sonnet-20241022",
+          max_tokens: 600,
+          messages: [{ role: "user", content: prompt }],
+        }),
+        signal: AbortSignal.timeout(20000),
+      });
+
+      const latencyMs = Date.now() - startTime;
+      const data = await res.json();
+
+      if (data.error) {
+        throw new Error(data.error.message || "Anthropic API error");
+      }
+
+      const content = data.content?.[0]?.text ?? "";
+      const analysis = extractCitationsAndMentions(content, brand, domain, competitors);
+
+      return {
+        providerName: this.name,
+        modelName: "claude-3-5-sonnet",
+        prompt,
+        timestamp: new Date().toISOString(),
+        rawResponse: content,
+        latencyMs,
+        ...analysis,
+      };
+    } catch (err) {
+      return {
+        providerName: this.name,
+        modelName: "claude-3-5-sonnet",
+        prompt,
+        timestamp: new Date().toISOString(),
+        rawResponse: "",
+        latencyMs: Date.now() - startTime,
+        brandMentioned: false,
+        mentionCount: 0,
+        competitorsMentioned: [],
+        citations: [],
+        isTargetCited: false,
+        error: err instanceof Error ? err.message : "Anthropic call failed",
+      };
+    }
+  }
+}
+
+export class SerpApiAIProvider implements AIProviderAdapter {
+  name = "SerpAPI (Search & AI Overview)";
+
+  isConfigured(): boolean {
+    return !!(process.env.SERPAPI_KEY || process.env.SERPAPI_API_KEY);
+  }
+
+  async generateResponse(
+    prompt: string,
+    brand: string,
+    domain: string,
+    competitors: string[]
+  ): Promise<AIResponseResult> {
+    const startTime = Date.now();
+    try {
+      const { searchSerpApi } = await import("@/lib/serpapi-service");
+      const serpRes = await searchSerpApi(prompt, { gl: "us" });
+      const latencyMs = Date.now() - startTime;
+
+      const snippets = (serpRes.results || []).map((r) => `${r.title}: ${r.snippet} (${r.link})`).join("\n");
+      const kgText = serpRes.knowledge_graph ? `${serpRes.knowledge_graph.title} - ${serpRes.knowledge_graph.description}` : "";
+      const rawText = [kgText, snippets].filter(Boolean).join("\n\n");
+
+      const analysis = extractCitationsAndMentions(rawText, brand, domain, competitors);
+
+      return {
+        providerName: this.name,
+        modelName: "serp-ai-overview",
+        prompt,
+        timestamp: new Date().toISOString(),
+        rawResponse: rawText,
+        latencyMs,
+        ...analysis,
+      };
+    } catch (err) {
+      return {
+        providerName: this.name,
+        modelName: "serp-ai-overview",
+        prompt,
+        timestamp: new Date().toISOString(),
+        rawResponse: "",
+        latencyMs: Date.now() - startTime,
+        brandMentioned: false,
+        mentionCount: 0,
+        competitorsMentioned: [],
+        citations: [],
+        isTargetCited: false,
+        error: err instanceof Error ? err.message : "SerpAPI AI search failed",
+      };
+    }
+  }
+}
+
 export class UnconfiguredAIProvider implements AIProviderAdapter {
   name = "Unconfigured AI Provider";
 
@@ -215,17 +406,43 @@ export class UnconfiguredAIProvider implements AIProviderAdapter {
       competitorsMentioned: [],
       citations: [],
       isTargetCited: false,
-      error: "AI provider API key (OPENROUTER_API_KEY / OPENAI_API_KEY) not configured.",
+      error: "AI provider API key (OPENROUTER_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY / SERPAPI_KEY) not configured.",
     };
   }
 }
 
 export function getAIProvider(): AIProviderAdapter {
+  const preferred = (process.env.AI_PROVIDER || "").toUpperCase();
+
+  if (preferred === "OPENROUTER" && process.env.OPENROUTER_API_KEY) {
+    return new OpenRouterAIProvider();
+  }
+  if (preferred === "OPENAI" && process.env.OPENAI_API_KEY) {
+    return new OpenAIProvider();
+  }
+  if (preferred === "GEMINI" && (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY)) {
+    return new GeminiAIProvider();
+  }
+  if (preferred === "ANTHROPIC" && process.env.ANTHROPIC_API_KEY) {
+    return new AnthropicAIProvider();
+  }
+
+  // Priority Fallback Chain
   if (process.env.OPENROUTER_API_KEY) {
     return new OpenRouterAIProvider();
   }
   if (process.env.OPENAI_API_KEY) {
     return new OpenAIProvider();
   }
+  if (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) {
+    return new GeminiAIProvider();
+  }
+  if (process.env.ANTHROPIC_API_KEY) {
+    return new AnthropicAIProvider();
+  }
+  if (process.env.SERPAPI_KEY || process.env.SERPAPI_API_KEY) {
+    return new SerpApiAIProvider();
+  }
+
   return new UnconfiguredAIProvider();
 }

@@ -4,6 +4,7 @@ import { normaliseDomain } from "@/lib/url-input";
 import { fetchRank } from "@/lib/serper";
 import { fetchAIO } from "@/lib/serpapi";
 import { buildBrandTokens, matchesBrand } from "@/lib/brand-match";
+import { isGenuineCompetitor } from "@/lib/competitor-filter";
 
 export interface RunCheckInput {
   keyword: string;
@@ -107,13 +108,13 @@ export async function runCheckPipeline(input: RunCheckInput): Promise<RunCheckRe
 
   console.log(`[RUN_CHECK_PIPELINE] AI Visibility: aioPresent=${aioPresent}, brandMentioned=${brandMentioned}, brandCited=${brandCited}, clientCitationPosition=${clientCitationPosition}`);
 
-  // 4. COMPETITOR EXTRACTION & DEDUPLICATION
+  // 4. COMPETITOR EXTRACTION & DEDUPLICATION (Filter genuine business competitors only)
   const competitorDomainSet = new Set<string>();
   
   // Extract domains from organic SERP results
   for (const org of serp.organicResults || []) {
     const d = normaliseDomain(org.url || org.domain)?.domain || org.domain?.toLowerCase().replace(/^www\./, "");
-    if (d && !isDomainMatch(d)) {
+    if (d && isGenuineCompetitor(d, normDomain, { title: org.title, snippet: org.snippet, url: org.url }, location)) {
       competitorDomainSet.add(d);
     }
   }
@@ -121,7 +122,7 @@ export async function runCheckPipeline(input: RunCheckInput): Promise<RunCheckRe
   // Extract domains from AI citations
   for (const cit of aio.citations || []) {
     const d = normaliseDomain(cit.url || cit.domain)?.domain || cit.domain?.toLowerCase().replace(/^www\./, "");
-    if (d && !isDomainMatch(d)) {
+    if (d && isGenuineCompetitor(d, normDomain, { title: cit.title, url: cit.url }, location)) {
       competitorDomainSet.add(d);
     }
   }

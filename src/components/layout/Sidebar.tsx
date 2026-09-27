@@ -81,7 +81,8 @@ export default function Sidebar({ agencyName, projects, activeProjectId, userRol
     window.dispatchEvent(new Event(COLLAPSE_EVENT));
   };
 
-  const active = projects.find((p) => p.id === activeProjectId) ?? null;
+  const matchId = pathname.match(/^\/dashboard\/clients\/([a-f0-9-]{36})/i)?.[1];
+  const active = projects.find((p) => p.id === (matchId || activeProjectId)) ?? projects.find((p) => p.id === activeProjectId) ?? null;
   const isCollapsed = collapsed && !mobileOpen;
 
   const content = (

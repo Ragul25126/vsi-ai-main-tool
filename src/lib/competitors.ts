@@ -23,6 +23,8 @@ export interface CompetitorRow {
   seen: boolean;
 }
 
+import { isGenuineCompetitor } from "@/lib/competitor-filter";
+
 export function isPlatformDomain(domain: string): boolean {
   const p = detectPlatform(domain);
   return p !== "other" && p !== "news" && p !== "brand";
@@ -37,6 +39,12 @@ export function computeGooglePresence(snapshots: SerpSnapshot[], ownDomain: stri
       if (!r.position || r.position > 10) continue;
       const d = cleanDomain(r.domain || r.url || "");
       if (!d || (own && (d === own || d.endsWith(`.${own}`))) || seen.has(d)) continue;
+
+      // Verification check: candidate domain MUST be a genuine commercial competitor
+      if (own && !isGenuineCompetitor(d, own, { title: (r as { title?: string }).title, url: r.url })) {
+        continue;
+      }
+
       seen.add(d);
       const cur = map.get(d) ?? { top10: 0, best: 99 };
       cur.top10++;

@@ -70,20 +70,26 @@ function htmlToMarkdown(html: string): string {
 async function scrapeWithFallback(url: string): Promise<FirecrawlResult> {
   const res = await fetch(url, {
     headers: {
-      "User-Agent": "Mozilla/5.0 (compatible; VSI/1.0)",
-      "Accept": "text/html",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+      "Accept-Language": "en-US,en;q=0.9",
+      "Cache-Control": "no-cache",
     },
     signal: AbortSignal.timeout(12000),
+    redirect: "follow",
   });
 
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-  const html = await res.text();
-  const markdown = htmlToMarkdown(html);
-
+  const html = await res.text().catch(() => "");
   const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   const descMatch = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
-    ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i);
+    ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i)
+    ?? html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i);
+
+  if (!res.ok && !titleMatch?.[1] && !html) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+
+  const markdown = htmlToMarkdown(html);
 
   return {
     markdown: markdown.slice(0, 8000),
@@ -102,6 +108,137 @@ export async function scrapeUrl(url: string): Promise<FirecrawlResult> {
     // Firecrawl timed out or failed — use HTML fallback
     return await scrapeWithFallback(url);
   }
+}
+
+export interface CrawledPage {
+  url: string;
+  title: string | null;
+  description: string | null;
+  headings: string[];
+  markdown: string;
+}
+
+export interface CrawledWebsiteResult {
+  mainPage: FirecrawlResult;
+  subPages: CrawledPage[];
+  combinedMarkdown: string;
+}
+
+function extractInternalLinks(html: string, baseUrlStr: string): string[] {
+  const links: string[] = [];
+  try {
+    const baseUrl = new URL(baseUrlStr);
+    const regex = /<a[^>]+href=["']([^"']+)["']/gi;
+    let match;
+    const priorityPaths = [
+      "about", "service", "product", "solution", "category", "course",
+      "treatment", "program", "feature", "pricing", "team", "clinic",
+      "department", "research", "portfolio", "project", "store", "shop"
+    ];
+
+    while ((match = regex.exec(html)) !== null) {
+      const rawHref = match[1]?.trim();
+      if (
+        !rawHref ||
+        rawHref.startsWith("#") ||
+        rawHref.startsWith("javascript:") ||
+        rawHref.startsWith("mailto:") ||
+        rawHref.startsWith("tel:")
+      ) {
+        continue;
+      }
+      try {
+        const resolved = new URL(rawHref, baseUrl.origin);
+        if (resolved.hostname === baseUrl.hostname && resolved.pathname !== baseUrl.pathname && resolved.pathname !== "/") {
+          const lowerPath = resolved.pathname.toLowerCase();
+          const matchesPriority = priorityPaths.some((p) => lowerPath.includes(p));
+          if (matchesPriority && !links.includes(resolved.href)) {
+            links.push(resolved.href);
+          }
+        }
+      } catch {
+        // Invalid URL format snippet
+      }
+    }
+  } catch {
+    // Base URL parse error
+  }
+  return links.slice(0, 4);
+}
+
+export async function crawlWebsite(baseUrl: string): Promise<CrawledWebsiteResult> {
+  const mainPage = await scrapeUrl(baseUrl);
+  const subPages: CrawledPage[] = [];
+
+  let rawHtml = "";
+  try {
+    const res = await fetch(baseUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html",
+      },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (res.ok) rawHtml = await res.text();
+  } catch {
+    // Ignore fetch error for sub-link discovery
+  }
+
+  const discoveredLinks = extractInternalLinks(rawHtml, baseUrl);
+
+  if (discoveredLinks.length > 0) {
+    const fetchPromises = discoveredLinks.map(async (link) => {
+      try {
+        const subRes = await fetch(link, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html",
+          },
+          signal: AbortSignal.timeout(4000),
+        });
+        if (!subRes.ok) return null;
+        const subHtml = await subRes.text();
+        const titleMatch = subHtml.match(/<title[^>]*>([^<]+)<\/title>/i);
+        const descMatch = subHtml.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
+        const headings: string[] = [];
+        const hRegex = /<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi;
+        let hMatch;
+        while ((hMatch = hRegex.exec(subHtml)) !== null) {
+          const text = hMatch[1].replace(/<[^>]+>/g, "").trim();
+          if (text.length >= 3 && text.length <= 60) headings.push(text);
+        }
+        const md = htmlToMarkdown(subHtml);
+        return {
+          url: link,
+          title: titleMatch?.[1]?.trim() ?? null,
+          description: descMatch?.[1]?.trim() ?? null,
+          headings,
+          markdown: md.slice(0, 3000),
+        };
+      } catch {
+        return null;
+      }
+    });
+
+    const results = await Promise.all(fetchPromises);
+    for (const r of results) {
+      if (r) subPages.push(r);
+    }
+  }
+
+  let combinedMarkdown = mainPage.markdown;
+  for (const page of subPages) {
+    combinedMarkdown += `\n\n--- Subpage: ${page.url} (${page.title ?? "Section"}) ---\n`;
+    if (page.description) combinedMarkdown += `Meta Description: ${page.description}\n`;
+    if (page.headings.length > 0) combinedMarkdown += `Headings: ${page.headings.join(" | ")}\n`;
+    combinedMarkdown += page.markdown;
+  }
+
+  return {
+    mainPage,
+    subPages,
+    combinedMarkdown,
+  };
 }
 
 /**

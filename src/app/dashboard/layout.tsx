@@ -47,7 +47,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <NotificationsProvider userId={session.userId}>
       <MessagesProvider>
         <FeedbackProvider>
-          <ProjectProvider project={projectContext.active}>
+          <ProjectProvider project={projectContext.active} projects={projectContext.projects}>
             <OnboardingProvider state={onboarding} projectId={projectContext.active?.id ?? null}>
             <ScrollToTop />
             <WelcomeToast />

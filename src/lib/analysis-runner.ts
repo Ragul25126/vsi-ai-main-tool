@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { runSiteAudit } from "@/lib/site-audit/run";
 import { getSearchProvider, getAIProvider, calculateVisibilityMetrics, generateDataDrivenRecommendations, type SearchQueryResult, type AIResponseResult, type TechnicalSeoIssue } from "@/lib/providers";
+import { extractCleanDomain, isDomainMatch } from "@/lib/url-input";
+import { isGenuineCompetitor } from "@/lib/competitor-filter";
 import type { Location } from "@/types/search";
 
 export type StageName =
@@ -157,7 +159,7 @@ export async function runFullAnalysisPipeline(
       return;
     }
 
-    const domain = client.website.replace(/^https?:\/\//i, "").replace(/\/.*$/, "");
+    const domain = extractCleanDomain(client.website);
     const brandName = client.brand_name || client.name || domain;
     const locationCode = (client.default_location || "us") as Location;
 
@@ -177,6 +179,57 @@ export async function runFullAnalysisPipeline(
         if (kwRows) keywords = kwRows;
       } catch {
         // non-fatal
+      }
+    }
+
+    if (keywords.length === 0) {
+      // Build dynamic seed keywords tailored to this website/brand/industry
+      const targetIndustry = client.industry || "online store";
+      const targetLocation = client.country || client.default_location || "India";
+      const dynamicKeywordsText = [
+        brandName,
+        `best ${targetIndustry} in ${targetLocation}`.trim(),
+        `buy from ${brandName}`.trim(),
+      ];
+
+      keywords = [];
+      for (const kwText of dynamicKeywordsText) {
+        let createdKwId = `default_kw_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+        if (supabase) {
+          try {
+            const { data: createdKw } = await supabase
+              .from("tracked_keywords")
+              .upsert(
+                {
+                  agency_id: agencyId,
+                  client_id: clientId,
+                  keyword: kwText,
+                  domain: domain,
+                  brand: brandName,
+                  track_type: "both",
+                  location: locationCode,
+                  is_active: true,
+                },
+                { onConflict: "client_id,keyword,domain,location", ignoreDuplicates: false }
+              )
+              .select("id")
+              .maybeSingle();
+
+            if (createdKw?.id) {
+              createdKwId = createdKw.id;
+            }
+          } catch {
+            // ignore DB error
+          }
+        }
+        keywords.push({
+          id: createdKwId,
+          keyword: kwText,
+          domain: domain,
+          brand: brandName,
+          location: locationCode,
+          track_type: "both",
+        });
       }
     }
 
@@ -282,7 +335,7 @@ export async function runFullAnalysisPipeline(
               await supabase.from("search_results").insert({
                 agency_id: agencyId,
                 client_id: clientId,
-                tracked_keyword_id: kw.id,
+                tracked_keyword_id: kw.id.startsWith("default_") ? null : kw.id,
                 keyword: kw.keyword,
                 domain: domain,
                 brand: kw.brand || brandName,
@@ -298,8 +351,8 @@ export async function runFullAnalysisPipeline(
               // ignore DB insert error
             }
           }
-        } catch {
-          // Continue with next keyword
+        } catch (err) {
+          console.error(`[analysis-runner] Search error for keyword "${kw.keyword}":`, err);
         }
       }
 
@@ -330,7 +383,7 @@ export async function runFullAnalysisPipeline(
 
 
     // ─────────────────────────────────────────
-    // STAGE 3: COMPETITOR ANALYSIS
+    // STAGE 3: COMPETITOR ANALYSIS (DYNAMIC FROM SERP)
     // ─────────────────────────────────────────
     await updateJobStage(jobId, "competitor_analysis", "in_progress", "competitor_analysis");
 
@@ -347,7 +400,9 @@ export async function runFullAnalysisPipeline(
       }
     }
 
-    const competitorDomains = competitors.map((c) => c.domain);
+    // STAGE 3: Competitor Analysis - Use only tracked competitors explicitly saved for the current project
+    const explicitDomains = competitors.map((c) => extractCleanDomain(c.domain)).filter(Boolean);
+    const combinedCompetitorDomains = Array.from(new Set(explicitDomains));
 
     await updateJobStage(
       jobId,
@@ -355,8 +410,8 @@ export async function runFullAnalysisPipeline(
       "completed",
       "geo_analysis",
       {
-        totalCompetitors: competitorDomains.length,
-        competitorDomains,
+        totalCompetitors: combinedCompetitorDomains.length,
+        competitorDomains: combinedCompetitorDomains,
       }
     );
 
@@ -368,11 +423,23 @@ export async function runFullAnalysisPipeline(
     const aiProvider = getAIProvider();
     const isAiConfigured = aiProvider.isConfigured();
 
-    if (keywords.length > 0 && isAiConfigured) {
-      for (const kw of keywords.slice(0, 5)) {
+    const targetPrompts = keywords.length > 0
+      ? keywords.slice(0, 5)
+      : [
+          {
+            id: `default_kw_${Date.now()}`,
+            keyword: `best ${brandName} options in ${locationCode}`,
+            domain: domain,
+            brand: brandName,
+            location: locationCode,
+            track_type: "geo",
+          },
+        ];
 
+    if (isAiConfigured) {
+      for (const kw of targetPrompts) {
         try {
-          const aiRes = await aiProvider.generateResponse(kw.keyword, brandName, domain, competitorDomains);
+          const aiRes = await aiProvider.generateResponse(kw.keyword, brandName, domain, combinedCompetitorDomains);
           aiResults.push(aiRes);
 
           if (supabase) {
@@ -380,7 +447,7 @@ export async function runFullAnalysisPipeline(
               await supabase.from("search_results").insert({
                 agency_id: agencyId,
                 client_id: clientId,
-                tracked_keyword_id: kw.id,
+                tracked_keyword_id: kw.id.startsWith("default_") ? null : kw.id,
                 keyword: kw.keyword,
                 domain: domain,
                 brand: kw.brand || brandName,
@@ -428,12 +495,12 @@ export async function runFullAnalysisPipeline(
     // ─────────────────────────────────────────
     await updateJobStage(jobId, "results_prep", "in_progress", "results_prep");
 
-    const metrics = calculateVisibilityMetrics(searchResults, aiResults, competitorDomains);
+    const metrics = calculateVisibilityMetrics(searchResults, aiResults, combinedCompetitorDomains);
     const recommendations = generateDataDrivenRecommendations({
       technicalIssues,
       searchResults,
       aiResults,
-      competitorDomains,
+      competitorDomains: combinedCompetitorDomains,
     });
 
     await updateJobStage(
@@ -459,4 +526,5 @@ export async function runFullAnalysisPipeline(
     );
   }
 }
+
 

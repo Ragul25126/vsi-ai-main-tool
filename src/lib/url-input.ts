@@ -47,3 +47,29 @@ export function normaliseDomain(input: string): NormalisedDomain | null {
 export function isValidDomain(input: string): boolean {
   return normaliseDomain(input) !== null;
 }
+
+/**
+ * Extract clean bare domain for comparison (lowercased, no scheme, no www, no path).
+ */
+export function extractCleanDomain(urlOrDomain: string): string {
+  if (!urlOrDomain) return "";
+  const norm = normaliseDomain(urlOrDomain);
+  if (norm) return norm.domain;
+  let s = urlOrDomain.trim().toLowerCase();
+  s = s.replace(/^[a-z]+:\/+/, "").replace(/^[a-z]+:\/?/, "");
+  s = s.replace(/^www\./, "");
+  s = s.split(/[\/?#]/)[0];
+  s = s.replace(/:\d+$/, "");
+  return s;
+}
+
+/**
+ * Check if candidate URL or domain matches target domain (handling www, http/https, subdomains, trailing slashes, etc.)
+ */
+export function isDomainMatch(targetUrlOrDomain: string, candidateUrlOrDomain: string): boolean {
+  const target = extractCleanDomain(targetUrlOrDomain);
+  const candidate = extractCleanDomain(candidateUrlOrDomain);
+  if (!target || !candidate) return false;
+  return target === candidate || candidate.endsWith(`.${target}`) || target.endsWith(`.${candidate}`);
+}
+

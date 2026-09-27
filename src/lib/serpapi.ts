@@ -1,6 +1,8 @@
 import type { AIOResult, AIOCitation, AIOTextBlock, Location } from "@/types/search";
 import { LOCATIONS, detectPlatform } from "@/types/search";
 import { buildBrandTokens, matchesBrand } from "@/lib/brand-match";
+import { extractCleanDomain, isDomainMatch } from "@/lib/url-input";
+
 
 // ─────────────────────────────────────────
 // SerpApi response shape (engine=google + engine=google_ai_overview)
@@ -215,80 +217,25 @@ export async function fetchAIO(
   location: Location
 ): Promise<AIOResult> {
   const key = process.env.SERPAPI_KEY || process.env.SERPAPI_API_KEY || process.env.SERPER_API_KEY || process.env.SEARCHAPI_KEY;
-  const cleanDomain = (domain ?? "")
-    .toLowerCase()
-    .replace(/^[a-z]+:\/+/, "")
-    .replace(/^www\./, "")
-    .split(/[\/?#]/)[0]
-    .replace(/:\d+$/, "");
-  const validClientDomain = cleanDomain.includes(".") && /[a-z]/.test(cleanDomain) ? cleanDomain : "example.com";
+  const cleanDomain = extractCleanDomain(domain);
+  const validClientDomain = cleanDomain || "example.com";
   const brandName = brand || cleanDomain.split(".")[0] || "Client Brand";
 
   if (!key || !key.trim()) {
-    const citations: AIOCitation[] = [
-      {
-        position: 1,
-        sourceName: "industry-leader.com",
-        title: `Top Rated Solutions for ${keyword}`,
-        domain: "industry-leader.com",
-        url: `https://www.industry-leader.com/insights/${encodeURIComponent(keyword.toLowerCase().replace(/\s+/g, "-"))}`,
-        isClient: false,
-        platform: "other",
-      },
-      {
-        position: 2,
-        sourceName: validClientDomain,
-        title: `${brandName} - ${keyword} Official Page`,
-        domain: validClientDomain,
-        url: `https://${validClientDomain}/solutions`,
-        isClient: true,
-        platform: detectPlatform(validClientDomain, validClientDomain),
-      },
-      {
-        position: 3,
-        sourceName: "topservices.com",
-        title: `Best Providers for ${keyword} in 2026`,
-        domain: "topservices.com",
-        url: `https://www.topservices.com/best-${encodeURIComponent(keyword.toLowerCase().replace(/\s+/g, "-"))}`,
-        isClient: false,
-        platform: "other",
-      },
-    ];
-
-    const fullText = `When searching for "${keyword}", top providers offer comprehensive solutions tailored to market demands. Key industry options include Industry Leader, ${brandName}, and Top Services. Recommendations depend on your specific business goals, scale, and feature requirements.`;
-
-    return {
-      keyword,
-      domain,
-      brand,
-      location,
-      aioPresent: true,
-      aioSnippet: fullText,
-      aioFullText: fullText,
-      aioBlocks: [
-        {
-          type: "paragraph",
-          snippet: `When searching for "${keyword}", top providers offer comprehensive solutions tailored to market demands.`,
-        },
-        {
-          type: "list",
-          list: [
-            { snippet: `Industry Leader — Premier choice for enterprise scale.` },
-            { snippet: `${brandName} — Specialized services with verified track record.` },
-            { snippet: `Top Services — Flexible options for growing businesses.` },
-          ],
-        },
-      ],
-      citations,
-      citedDomains: citations.map((c) => c.domain),
-      clientCited: true,
-      mentionedInText: true,
-    };
+    throw new Error("SerpAPI key is missing or unconfigured. Real SerpAPI key is required for SEO/AIO analysis.");
   }
 
   const loc = LOCATIONS[location];
 
-  const aio = await fetchAIORaw(keyword, loc, key);
+  let aio = null;
+  try {
+    aio = await fetchAIORaw(keyword, loc, key);
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message.toLowerCase().includes("authentication")) {
+      throw err;
+    }
+    console.warn(`[fetchAIO] AI Overview fetch warning for keyword "${keyword}":`, err instanceof Error ? err.message : err);
+  }
 
   const aioPresent = !!aio && (
     (aio.text_blocks?.length ?? 0) > 0 ||
@@ -311,9 +258,8 @@ export async function fetchAIO(
     .slice()
     .sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
     .map((ref, i) => {
-      const citDomain = extractDomain(ref.link);
-      const isClient =
-        !!validClientDomain && (citDomain === validClientDomain || citDomain.endsWith(`.${validClientDomain}`) || validClientDomain.endsWith(`.${citDomain}`));
+      const citDomain = extractCleanDomain(ref.link);
+      const isClient = isDomainMatch(cleanDomain, citDomain);
       return {
         position: i + 1,
         sourceName: ref.source ?? citDomain,
@@ -345,6 +291,7 @@ export async function fetchAIO(
     clientCited,
     mentionedInText,
   };
+
 }
 
 // ─────────────────────────────────────────

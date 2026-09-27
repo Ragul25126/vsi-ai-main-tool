@@ -56,6 +56,7 @@ export async function callOpenRouter(
       temperature: 0.1,
       max_tokens: 600,
     }),
+    signal: AbortSignal.timeout(10000),
   });
 
   const data = await res.json();

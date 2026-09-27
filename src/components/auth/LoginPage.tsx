@@ -96,21 +96,37 @@ export const LoginPage: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 
     setIsLoading(true);
     setAuthError('');
 
-    const cleanEmail = email.trim().toLowerCase();
+    const rawEmail = email.trim();
     const isPlaceholderSupabase = isPlaceholder();
 
     try {
+      console.log("[AUTH_TRACE] Request initiated. Is placeholder Supabase:", isPlaceholderSupabase);
       const supabase = createClient();
       let { data, error } = await supabase.auth.signInWithPassword({
-        email: cleanEmail,
+        email: rawEmail,
         password: password,
       });
 
-      // If lowercased email fails, attempt exact trimmed email in case of legacy account casing
-      if (error && cleanEmail !== email.trim()) {
+      console.log("[AUTH_TRACE] Response received.", {
+        hasError: !!error,
+        errorMessage: error?.message,
+        errorStatus: error?.status,
+        hasSession: !!data?.session,
+        hasUser: !!data?.user
+      });
+
+      // If exact trimmed email fails and contains uppercase, retry with lowercased email
+      if (error && rawEmail !== rawEmail.toLowerCase()) {
+        console.log("[AUTH_TRACE] Retrying sign in with lowercased email");
         const retry = await supabase.auth.signInWithPassword({
-          email: email.trim(),
+          email: rawEmail.toLowerCase(),
           password: password,
+        });
+        console.log("[AUTH_TRACE] Retry response received.", {
+          hasError: !!retry.error,
+          errorMessage: retry.error?.message,
+          errorStatus: retry.error?.status,
+          hasSession: !!retry.data?.session,
         });
         if (!retry.error && retry.data?.session) {
           data = retry.data;
@@ -119,6 +135,7 @@ export const LoginPage: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 
       }
 
       if (!error && data?.session && data?.user) {
+        console.log("[AUTH_TRACE] Sign-in successful. Session and User present.");
         const userProfile: UserProfile = {
           name: data.user.user_metadata?.full_name || nameFromEmail(data.user.email!),
           email: data.user.email!,
@@ -132,17 +149,13 @@ export const LoginPage: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 
       }
 
       if (error) {
-        console.error("[Login] Supabase Auth error:", error.message, error.status);
-        if (error.message && !error.message.toLowerCase().includes("invalid login credentials")) {
-          setAuthError(error.message);
-        } else {
-          setAuthError('Invalid email or password.');
-        }
+        console.error("[AUTH_TRACE] Supabase Auth error:", error.message, "Status:", error.status);
+        setAuthError(error.message || 'Invalid email or password.');
         setIsLoading(false);
         return;
       }
     } catch (e: any) {
-      console.error("[Login] Exception during sign in:", e);
+      console.error("[AUTH_TRACE] Exception during sign in:", e);
       if (e?.message) {
         setAuthError(e.message);
         setIsLoading(false);
@@ -152,8 +165,8 @@ export const LoginPage: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 
 
     if (isPlaceholderSupabase) {
       const userProfile: UserProfile = {
-        name: nameFromEmail(cleanEmail),
-        email: cleanEmail,
+        name: nameFromEmail(rawEmail),
+        email: rawEmail,
         role: "Member",
         company: "",
         plan: "",

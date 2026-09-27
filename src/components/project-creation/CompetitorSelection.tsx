@@ -45,21 +45,22 @@ export function CompetitorSelection({
   const [items, setItems] = useState<CompetitorItem[]>(() =>
     initialCompetitors.map((c) => ({
       ...c,
+      selected: Boolean(c.selected),
       market: detectMarketFromDomain(c.domain, defaultMarket),
     }))
   );
   const [manualInput, setManualInput] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  // Sync market of competitors whenever defaultMarket or initialCompetitors change
+  // Sync competitors whenever defaultMarket or initialCompetitors change
   useEffect(() => {
-    setItems((prevItems) => {
-      const source = prevItems.length > 0 ? prevItems : initialCompetitors;
-      return source.map((item) => ({
+    setItems(
+      initialCompetitors.map((item) => ({
         ...item,
+        selected: Boolean(item.selected),
         market: detectMarketFromDomain(item.domain, defaultMarket),
-      }));
-    });
+      }))
+    );
   }, [defaultMarket, initialCompetitors]);
 
   const selectedCount = items.filter((i) => i.selected).length;

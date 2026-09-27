@@ -1,27 +1,21 @@
 import { fetchRank } from "@/lib/serper";
 import { searchSerpApi } from "@/lib/serpapi-service";
+import { extractCleanDomain, isDomainMatch } from "@/lib/url-input";
+import { isGenuineCompetitor } from "@/lib/competitor-filter";
 import type { Location } from "@/types/search";
 import type { SearchProvider, SearchQueryResult } from "./types";
-
-function extractDomain(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return "";
-  }
-}
 
 export class SerperSearchProvider implements SearchProvider {
   name = "Serper.dev";
 
   isConfigured(): boolean {
-    return !!process.env.SERPER_API_KEY;
+    return !!(process.env.SERPER_API_KEY && process.env.SERPER_API_KEY.trim());
   }
 
   async search(query: string, location: string, domain: string, brand: string): Promise<SearchQueryResult> {
     const loc = (location || "us") as Location;
     const res = await fetchRank(query, domain, loc, brand);
-    const cleanDomain = domain.toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+    const cleanDomain = extractCleanDomain(domain);
 
     const isVisible = res.position !== null;
 
@@ -31,15 +25,20 @@ export class SerperSearchProvider implements SearchProvider {
       location: loc,
       timestamp: new Date().toISOString(),
       serpFeatures: res.serpFeatures || [],
-      organicResults: (res.organicResults || []).map((r) => ({
-        position: r.position,
-        title: r.title,
-        url: r.url,
-        domain: r.domain,
-        snippet: r.snippet,
-        isClient: r.isClient,
-        isCompetitor: false,
-      })),
+      organicResults: (res.organicResults || []).map((r) => {
+        const rDom = extractCleanDomain(r.url || r.domain);
+        const isClient = isDomainMatch(cleanDomain, rDom);
+        const isCompetitor = isGenuineCompetitor(rDom, cleanDomain, { title: r.title, snippet: r.snippet, url: r.url });
+        return {
+          position: r.position,
+          title: r.title,
+          url: r.url,
+          domain: rDom,
+          snippet: r.snippet,
+          isClient,
+          isCompetitor,
+        };
+      }),
       rankingPosition: res.position,
       rankingUrl: res.rankingUrl,
       rankingTitle: res.rankingTitle,
@@ -53,15 +52,18 @@ export class SerpApiSearchProvider implements SearchProvider {
   name = "SerpAPI";
 
   isConfigured(): boolean {
-    return !!(process.env.SERPAPI_KEY || process.env.SERPAPI_API_KEY);
+    return !!(
+      (process.env.SERPAPI_KEY && process.env.SERPAPI_KEY.trim()) ||
+      (process.env.SERPAPI_API_KEY && process.env.SERPAPI_API_KEY.trim())
+    );
   }
 
   async search(query: string, location: string, domain: string, _brand: string): Promise<SearchQueryResult> {
-    const cleanDomain = domain.toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+    const cleanDomain = extractCleanDomain(domain);
     const serpRes = await searchSerpApi(query, { gl: location || "us" });
 
     const organic = serpRes.results || [];
-    const clientMatch = organic.find((r) => extractDomain(r.link).includes(cleanDomain) || cleanDomain.includes(extractDomain(r.link)));
+    const clientMatch = organic.find((r) => isDomainMatch(cleanDomain, r.link || r.source || ""));
 
     return {
       query,
@@ -70,14 +72,18 @@ export class SerpApiSearchProvider implements SearchProvider {
       timestamp: new Date().toISOString(),
       serpFeatures: serpRes.knowledge_graph ? ["knowledge_graph"] : [],
       organicResults: organic.map((r) => {
-        const rDom = extractDomain(r.link);
+        const rDom = extractCleanDomain(r.link || r.source || "");
+        const isClient = isDomainMatch(cleanDomain, rDom);
+        const isCompetitor = isGenuineCompetitor(rDom, cleanDomain, { title: r.title, snippet: r.snippet, url: r.link });
+
         return {
           position: r.position,
           title: r.title,
           url: r.link,
           domain: rDom,
           snippet: r.snippet,
-          isClient: rDom.includes(cleanDomain) || cleanDomain.includes(rDom),
+          isClient,
+          isCompetitor,
         };
       }),
       rankingPosition: clientMatch?.position ?? null,
@@ -114,11 +120,12 @@ export class UnconfiguredSearchProvider implements SearchProvider {
 }
 
 export function getSearchProvider(): SearchProvider {
-  if (process.env.SERPER_API_KEY) {
-    return new SerperSearchProvider();
-  }
-  if (process.env.SERPAPI_KEY || process.env.SERPAPI_API_KEY) {
+  if (process.env.SERPAPI_KEY?.trim() || process.env.SERPAPI_API_KEY?.trim()) {
     return new SerpApiSearchProvider();
+  }
+  if (process.env.SERPER_API_KEY?.trim()) {
+    return new SerperSearchProvider();
   }
   return new UnconfiguredSearchProvider();
 }
+

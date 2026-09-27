@@ -37,12 +37,6 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     if (kwData) keywords = kwData;
   } catch {}
 
-  const kwAll = keywords ?? [];
-  const kwActive = kwAll.filter((k) => k.is_active);
-  const kwSEO = kwActive.filter((k) => k.track_type === "seo" || k.track_type === "both");
-  const kwGEO = kwActive.filter((k) => k.track_type === "geo" || k.track_type === "both");
-  const kwBoth = kwActive.filter((k) => k.track_type === "both");
-
   let latestResults: any[] = [];
   try {
     const { data: resData } = await supabase
@@ -53,6 +47,32 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       .limit(200);
     if (resData) latestResults = resData;
   } catch {}
+
+  // If tracked_keywords table is empty for this project, derive tracked keywords from completed search_results
+  if (keywords.length === 0 && latestResults.length > 0) {
+    const resultKeywordsMap = new Map<string, any>();
+    for (const r of latestResults) {
+      const key = `${r.keyword}|${r.track_type}`;
+      if (!resultKeywordsMap.has(key)) {
+        resultKeywordsMap.set(key, {
+          id: r.tracked_keyword_id || `derived_${r.id}`,
+          keyword: r.keyword,
+          domain: r.domain || client.website,
+          brand: client.brand_name || client.name,
+          location: client.default_location || "us",
+          track_type: r.track_type || "both",
+          is_active: true,
+        });
+      }
+    }
+    keywords = Array.from(resultKeywordsMap.values());
+  }
+
+  const kwAll = keywords ?? [];
+  const kwActive = kwAll.filter((k) => k.is_active);
+  const kwSEO = kwActive.filter((k) => k.track_type === "seo" || k.track_type === "both");
+  const kwGEO = kwActive.filter((k) => k.track_type === "geo" || k.track_type === "both");
+  const kwBoth = kwActive.filter((k) => k.track_type === "both");
 
  const seenKeywords = new Set<string>();
  const latestPerKeyword = (latestResults ?? []).filter((r) => {

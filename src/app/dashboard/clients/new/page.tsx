@@ -74,6 +74,13 @@ export default function NewProjectPage() {
         body: JSON.stringify({ url }),
       });
 
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        const text = await res.text().catch(() => "");
+        console.error("[analyze-website] Received non-JSON response:", res.status, contentType, text.slice(0, 300));
+        throw new Error("Unable to analyze website at this time. Please verify the URL and try again.");
+      }
+
       const json = await res.json();
 
       if (!res.ok || !json.success) {
@@ -103,6 +110,7 @@ export default function NewProjectPage() {
       const mappedCompetitors = (extracted.suggestedCompetitors || []).map((c) => ({
         ...c,
         market: detectMarketFromDomain(c.domain, targetLocation),
+        selected: false,
       }));
 
       setCompetitors(mappedCompetitors);

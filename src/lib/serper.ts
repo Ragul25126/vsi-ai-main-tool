@@ -1,5 +1,6 @@
 import type { SerpResult, OrganicResult, Location } from "@/types/search";
 import { LOCATIONS, detectPlatform } from "@/types/search";
+import { extractCleanDomain, isDomainMatch } from "@/lib/url-input";
 
 interface SerperOrganicResult {
   position: number;
@@ -16,14 +17,6 @@ interface SerperResponse {
   topStories?: object[];
   images?: object[];
   videos?: object[];
-}
-
-function extractDomain(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return "";
-  }
 }
 
 function detectSerpFeatures(raw: SerperResponse): string[] {
@@ -46,7 +39,7 @@ export interface DomainRank {
 
 async function fetchOrganicResults(keyword: string, loc: typeof LOCATIONS[Location], key: string): Promise<SerperResponse> {
   // First try Serper endpoint if a dedicated SERPER_API_KEY is configured
-  if (process.env.SERPER_API_KEY && process.env.SERPER_API_KEY !== process.env.SERPAPI_KEY && process.env.SERPER_API_KEY !== process.env.SERPAPI_API_KEY) {
+  if (process.env.SERPER_API_KEY && process.env.SERPER_API_KEY.trim() && process.env.SERPER_API_KEY !== process.env.SERPAPI_KEY && process.env.SERPER_API_KEY !== process.env.SERPAPI_API_KEY) {
     try {
       const res = await fetch("https://google.serper.dev/search", {
         method: "POST",
@@ -72,43 +65,7 @@ async function fetchOrganicResults(keyword: string, loc: typeof LOCATIONS[Locati
   // Primary / Fallback to SerpAPI
   const serpApiKey = process.env.SERPAPI_KEY || process.env.SERPAPI_API_KEY || process.env.SEARCHAPI_KEY || key;
   if (!serpApiKey || !serpApiKey.trim()) {
-    const cleanKeyword = keyword.trim();
-    const words = cleanKeyword.split(/\s+/);
-    const mainSubject = words.slice(0, 3).join(" ");
-    return {
-      organic: [
-        {
-          position: 1,
-          title: `Top Rated Solutions for ${mainSubject}`,
-          link: `https://www.industry-leader.com/${encodeURIComponent(cleanKeyword.toLowerCase().replace(/\s+/g, "-"))}`,
-          snippet: `Discover top rated insights and strategies regarding ${cleanKeyword}. Find expert reviews, pricing, and comparisons.`,
-        },
-        {
-          position: 2,
-          title: `Best Services for ${mainSubject} 2026`,
-          link: `https://www.topservices.com/${encodeURIComponent(cleanKeyword.toLowerCase().replace(/\s+/g, "-"))}`,
-          snippet: `Leading provider of ${mainSubject} solutions. Trusted by global brands with proven results.`,
-        },
-        {
-          position: 3,
-          title: `${mainSubject} - Official Solutions & Pricing`,
-          link: `https://www.globalprovider.com/services`,
-          snippet: `Explore enterprise solutions for ${cleanKeyword}. Request a custom demo today.`,
-        },
-        {
-          position: 4,
-          title: `Complete Review of ${mainSubject} Solutions`,
-          link: `https://www.digitaltech-review.org/${encodeURIComponent(cleanKeyword.toLowerCase().replace(/\s+/g, "-"))}`,
-          snippet: `An in-depth analysis of ${cleanKeyword} key players, features, market presence, and benchmark performance.`,
-        },
-        {
-          position: 5,
-          title: `How to Choose the Right ${mainSubject}`,
-          link: `https://www.businessinsights.com/guides/${encodeURIComponent(cleanKeyword.toLowerCase().replace(/\s+/g, "-"))}`,
-          snippet: `Compare features, capabilities, and ROI across top-ranking ${mainSubject} providers in the market.`,
-        },
-      ],
-    };
+    throw new Error("SerpAPI key is missing or unconfigured. Real SerpAPI key is required for SEO analysis.");
   }
 
   const searchParams = new URLSearchParams({
@@ -166,10 +123,8 @@ export async function fetchBulkRanks(
   const organic = raw.organic ?? [];
 
   return domains.map((domain) => {
-    const clean = domain.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
-    const match = organic.find(
-      (r) => extractDomain(r.link).includes(clean) || clean.includes(extractDomain(r.link))
-    );
+    const clean = extractCleanDomain(domain);
+    const match = organic.find((r) => isDomainMatch(clean, r.link));
     return {
       domain,
       position: match?.position ?? null,
@@ -189,25 +144,14 @@ export async function fetchRank(
   const loc = LOCATIONS[location];
   const raw = await fetchOrganicResults(keyword, loc, key);
 
-  const cleanDomain = (domain ?? "")
-    .toLowerCase()
-    .replace(/^[a-z]+:\/+/, "")
-    .replace(/^www\./, "")
-    .split(/[\/?#]/)[0]
-    .replace(/:\d+$/, "");
-  
-  const validClientDomain = cleanDomain.includes(".") && /[a-z]/.test(cleanDomain) ? cleanDomain : "";
-
-  const matchesClient = (d: string) =>
-    !!validClientDomain && (d === validClientDomain || d.endsWith(`.${validClientDomain}`) || validClientDomain.endsWith(`.${d}`));
-
-  const match = raw.organic?.find((r) => matchesClient(extractDomain(r.link)));
+  const cleanDomain = extractCleanDomain(domain);
+  const match = raw.organic?.find((r) => isDomainMatch(cleanDomain, r.link));
 
   const organicResults: OrganicResult[] = (raw.organic ?? [])
     .slice(0, 10)
     .map((r) => {
-      const rDomain = extractDomain(r.link);
-      const isClient = matchesClient(rDomain);
+      const rDomain = extractCleanDomain(r.link);
+      const isClient = isDomainMatch(cleanDomain, rDomain);
       return {
         position: r.position,
         title: r.title,
@@ -230,4 +174,5 @@ export async function fetchRank(
     organicResults,
   };
 }
+
 
