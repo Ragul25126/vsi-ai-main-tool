@@ -490,12 +490,27 @@ function buildWebsiteBusinessProfile(
   for (const h of headings) extractNounsFromText(h, "section heading");
   for (const st of subpages) extractNounsFromText(st, "subpage section");
 
-  // Include domain-owned indexed page titles from SerpAPI
+  // Include ONLY root domain / main landing page titles from SerpAPI (reject deep subdomain tracks/albums/blogs)
   for (const r of siteSerpResults) {
-    if (r.title && r.link && r.link.toLowerCase().includes(domain.toLowerCase())) {
-      extractNounsFromText(r.title, "indexed site page title");
-      if (r.snippet) {
-        extractNounsFromText(r.snippet, "indexed site page snippet");
+    if (r.title && r.link) {
+      try {
+        const parsedUrl = new URL(r.link);
+        const host = parsedUrl.hostname.replace(/^www\./i, "").toLowerCase();
+        const path = parsedUrl.pathname.toLowerCase();
+
+        // Only include exact root domain or main landing pages (exclude subdomains like music., blog., support., etc.)
+        const isRootDomainPage =
+          host === domain.toLowerCase() &&
+          (path === "" || path === "/" || /\/(about|services|products|solutions|features|pricing|store)\b/i.test(path));
+
+        if (isRootDomainPage) {
+          extractNounsFromText(r.title, "root site page title");
+          if (r.snippet) {
+            extractNounsFromText(r.snippet, "root site page snippet");
+          }
+        }
+      } catch {
+        // Skip invalid URL
       }
     }
   }
@@ -503,7 +518,7 @@ function buildWebsiteBusinessProfile(
   return {
     brandName: brand,
     domain: domain,
-    industryCategory: Array.from(coreOfferingsSet)[0] || Array.from(categoriesSet)[0] || `${brand} Services`,
+    industryCategory: Array.from(coreOfferingsSet)[0] || Array.from(categoriesSet)[0] || `${brand} Platform`,
     coreOfferings: Array.from(coreOfferingsSet),
     productServiceCategories: Array.from(categoriesSet),
     businessSolutions: Array.from(solutionsSet),
@@ -843,10 +858,11 @@ function extractPrimaryCategoryQuery(domain: string, title: string, description:
   for (const pat of commercialPatterns) {
     const m = combinedText.match(pat);
     if (m && m[1]) {
-      const cand = m[1].trim();
+      let cand = m[1].trim();
+      cand = cand.replace(/^(?:and|the|with|for|our|your|best|top|official)\s+/gi, "").trim();
       const candLow = cand.toLowerCase();
       if (!candLow.includes(brand.toLowerCase()) && !candLow.includes(targetStem) && cand.length >= 4 && cand.length <= 45) {
-        const formatted = cand.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+        const formatted = cand.split(/\s+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
         return { category: formatted, semanticTokens };
       }
     }
@@ -953,19 +969,53 @@ export async function POST(req: NextRequest) {
     let initialSiteDesc = decodeEntities(crawlData?.mainPage?.description || "");
     const locInfo = detectDomainLocation(parsed.domain, `${initialSiteTitle} ${initialSiteDesc}`);
 
-    // If website title or description is sparse/missing from direct crawl, fetch site metadata via site: query FIRST
+    // If website title or description is sparse/missing from direct crawl, fetch site metadata via site: query FIRST (STRICT ROOT DOMAIN ONLY)
     if (!initialSiteTitle || !initialSiteDesc || initialSiteTitle.toLowerCase().includes("redirect")) {
       try {
         const siteSerp = await searchSerpApi(`site:${parsed.domain}`, { gl: locInfo.locationCode });
         if (siteSerp?.results?.length) {
-          const sitePage = siteSerp.results.find((r) => r.link?.toLowerCase().includes(parsed.domain.toLowerCase())) || siteSerp.results[0];
-          if (sitePage) {
-            if (!initialSiteTitle || initialSiteTitle.toLowerCase().includes("redirect")) {
-              initialSiteTitle = decodeEntities(sitePage.title || "");
+          // STRICT ROOT HOMEPAGE MATCH ONLY! Exclude deep subdomains (music., blog., support., etc.)
+          const rootDomainMatch = siteSerp.results.find((r) => {
+            if (!r.link) return false;
+            try {
+              const u = new URL(r.link);
+              const host = u.hostname.replace(/^www\./i, "").toLowerCase();
+              const path = u.pathname.toLowerCase();
+              return host === parsed.domain.toLowerCase() && (path === "" || path === "/" || path === "/index.html");
+            } catch {
+              return false;
             }
-            if (!initialSiteDesc) {
-              initialSiteDesc = decodeEntities(sitePage.snippet || "");
-            }
+          });
+
+          // STRICT ROOT/MAIN DOMAIN MATCH ONLY. NEVER fall back to deep subdomain track/product URLs
+          const sitePage =
+            rootDomainMatch ||
+            siteSerp.results.find((r) => {
+              if (!r.link) return false;
+              try {
+                const u = new URL(r.link);
+                const host = u.hostname.replace(/^www\./i, "").toLowerCase();
+                const path = u.pathname.toLowerCase();
+                return (
+                  (host === parsed.domain.toLowerCase() || host === `www.${parsed.domain.toLowerCase()}`) &&
+                  !/\/(tracks|albums|songs|posts|threads|items|item|product|dp)\//i.test(path) &&
+                  !/^(music|blog|forum|community|support|docs|careers)\./i.test(host)
+                );
+              } catch {
+                return false;
+              }
+            });
+
+          if (sitePage?.title && !sitePage.title.toLowerCase().includes("redirect")) {
+            initialSiteTitle = decodeEntities(sitePage.title);
+          } else if (!initialSiteTitle || initialSiteTitle.toLowerCase().includes("redirect")) {
+            initialSiteTitle = `${brand} Official Site`;
+          }
+
+          if (sitePage?.snippet) {
+            initialSiteDesc = decodeEntities(sitePage.snippet);
+          } else if (!initialSiteDesc) {
+            initialSiteDesc = `${brand} products, services, and online platform`;
           }
         }
       } catch {
