@@ -1,14 +1,15 @@
 import { extractCleanDomain, isDomainMatch, normaliseDomain } from "@/lib/url-input";
 
 export const GENERIC_NON_OFFERING_WORDS = new Set([
-  "home", "official", "services", "service", "solutions", "solution", "website", "site",
-  "company", "brand", "business", "about", "top", "best", "near", "help", "contact",
-  "online", "global", "group", "inc", "ltd", "llc", "corp", "corporation", "platform",
+  "home", "official", "services", "service", "solutions", "solution", "website", "site", "sites",
+  "company", "brand", "business", "about", "top", "best", "near", "help", "contact", "like", "likes",
+  "online", "global", "group", "inc", "ltd", "llc", "corp", "corporation", "platform", "india",
   "platforms", "software", "page", "details", "info", "portal", "system", "systems", "provider",
   "providers", "one", "get", "for", "and", "the", "with", "your", "build", "manage", "update", "issue",
   "latest", "user", "fast", "from", "more", "into", "over", "under", "team", "teams", "work", "tool", "tools",
   "infrastructure", "management", "development", "technology", "technologies", "innovation", "advisory",
-  "operations", "architecture", "integration", "suite", "enterprise", "digital", "network", "networks"
+  "operations", "architecture", "integration", "suite", "enterprise", "digital", "network", "networks",
+  "alternative", "alternatives", "competitor", "competitors", "versus", "vs", "other"
 ]);
 
 export function extractCoreCapabilityTokens(targetOffering: string, brandName?: string): string[] {
