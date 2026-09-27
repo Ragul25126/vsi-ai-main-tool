@@ -533,40 +533,12 @@ export function extractCompetitorsFromSerpResults(
   targetLocation: string,
   targetOffering?: string
 ): Array<{ domain: string; name: string; market: string; selected: boolean }> {
-  const competitorMap = new Map<string, { name: string; market: string }>();
-
-  for (const r of organicResults) {
-    if (!r.link) continue;
-    try {
-      const host = new URL(r.link).hostname.replace(/^www\./i, "").toLowerCase();
-      if (!host) continue;
-
-      const isGenuine = isGenuineCompetitor(
-        host,
-        targetDomain,
-        { title: r.title, snippet: r.snippet, url: r.link, targetOffering },
-        targetLocation
-      );
-
-      if (isGenuine && !competitorMap.has(host)) {
-        const compName = host.split(".")[0];
-        const formattedComp = compName.charAt(0).toUpperCase() + compName.slice(1);
-        const market = detectDomainLocation(host).location || targetLocation;
-        competitorMap.set(host, { name: formattedComp, market });
-      }
-    } catch {
-      // URL parse skip
-    }
-
-    if (competitorMap.size >= 10) break;
-  }
-
-  return Array.from(competitorMap.entries()).slice(0, 10).map(([compDom, info]) => ({
-    domain: compDom,
-    name: info.name,
-    market: info.market,
-    selected: false, // Default to UNSELECTED so user manually selects
-  }));
+  return evaluateMultiQueryCompetitors(
+    targetDomain,
+    targetOffering || "",
+    targetLocation,
+    [{ query: targetOffering || targetDomain, results: organicResults }]
+  );
 }
 
 /** Step 3, 4, 5, 6: Synthesize Business Topics using Business Profile + SerpAPI Evidence */
@@ -761,7 +733,7 @@ function generateSynthesizedWebsiteData(
     sources: ["website", "serpapi"],
   }));
 
-  const suggestedCompetitors = extractCompetitorsFromSerpResults(organicResults, domain, locInfo.locationCode, effectiveCategory);
+  const suggestedCompetitors: any[] = [];
 
   return {
     brandName: brand,

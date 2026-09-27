@@ -211,7 +211,7 @@ export function classifySerpDomain(
 
     // Semantic Business Model: News Media, Newspapers & Press Outlets
     if (
-      /\b(newspaper|news portal|news outlet|breaking news|journalism|editorial board|press release|opinion piece|reporters|news article|daily news|weekly news|tribune|herald|gazette|times|post|bulletin|dispatch|observer|magazine|broadcasting|media network|newsroom)\b/i.test(text)
+      /\b(newspaper|news\w*|journal\w*|editorial\w*|press\w*|opinion piece|reporters?|daily\w*|weekly\w*|tribune|herald|gazette|times\w*|post\w*|bulletin|dispatch|observer|magazine|broadcasting|media\w*|newsroom|indiatimes|ndtv|breaking\w*)\b/i.test(text)
     ) {
       return {
         domain: cleanCand,
@@ -221,6 +221,23 @@ export function classifySerpDomain(
         marketRelevance: false,
         category: "PUBLISHER",
         reason: "News media, newspaper, press wire, or editorial publication",
+      };
+    }
+
+    // Semantic Business Model: Travel Booking & Flight/Hotel Marketplaces vs Non-Travel Target
+    const isTargetTravel = /\b(travel|hotel|accommodation|vacation|lodging|booking|flight|resort|airline|homestay)\b/i.test(serpEvidence?.targetOffering || "") || /\b(booking|expedia|agoda|airbnb)\b/i.test(cleanTarget);
+    if (
+      !isTargetTravel &&
+      /\b(book flights?|hotel booking|flight deals?|airfare|holiday packages|tourist attractions|things to do in|airline tickets|vacation rentals|resort booking|travel booking|travel agency|makemytrip|tripadvisor)\b/i.test(text)
+    ) {
+      return {
+        domain: cleanCand,
+        isTarget: false,
+        isBusiness: true,
+        competingOffering: false,
+        marketRelevance: true,
+        category: "IRRELEVANT_BUSINESS",
+        reason: "Travel booking / flight / hotel marketplace business model mismatch for non-travel target",
       };
     }
 
@@ -602,7 +619,7 @@ export function evaluateMultiQueryCompetitors(
       const compName = compStem.charAt(0).toUpperCase() + compStem.slice(1);
       const compMarket = targetLocation === "in" ? "India" : targetLocation === "uk" ? "United Kingdom" : "United States";
 
-      verifiedList.push({
+      const candidateItem: VerifiedCompetitorItem = {
         domain: candDomain,
         name: compName,
         market: compMarket,
@@ -659,7 +676,25 @@ export function evaluateMultiQueryCompetitors(
           websiteEvidence: `Discovered from search queries: "${Array.from(evidence.queries).join('", "')}"`,
           reason: classification.reason,
         },
-      });
+      };
+
+      // DATA INTEGRITY ASSERTION: Verify ALL required conditions before pushing to verified list
+      const isTargetDomainMatch = isDomainMatch(cleanTarget, candDomain);
+      const isAssertionPassed =
+        !isTargetDomainMatch &&
+        candidateItem.category === "GENUINE_COMPETITOR" &&
+        candidateItem.classification === "GENUINE_COMPETITOR" &&
+        candidateItem.commercialSubstitution === "YES" &&
+        candidateItem.offeringOverlap === true &&
+        candidateItem.customerOverlap === true &&
+        candidateItem.useCaseOverlap === true &&
+        candidateItem.businessModelCompatibility === true &&
+        candidateItem.marketCompatibility === true &&
+        candidateItem.evidence.intentOverlap === true;
+
+      if (isAssertionPassed) {
+        verifiedList.push(candidateItem);
+      }
     }
   }
 

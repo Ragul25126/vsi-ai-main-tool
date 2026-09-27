@@ -113,6 +113,15 @@ export default function NewProjectPage() {
         selected: false,
       }));
 
+      if (process.env.NODE_ENV !== "production") {
+        console.log(`[COMPETITOR_UI_SOURCE]`);
+        console.log(`targetDomain: ${extracted.domain}`);
+        console.log(`apiEndpoint: /api/analyze-website`);
+        console.log(`rawCandidates: ${extracted.suggestedCompetitors ? extracted.suggestedCompetitors.length : 0}`);
+        console.log(`verifiedCompetitors: ${mappedCompetitors.map((c: any) => c.domain).join(", ")}`);
+        console.log(`renderedCompetitors: ${mappedCompetitors.map((c: any) => c.domain).join(", ")}`);
+      }
+
       setCompetitors(mappedCompetitors);
       setKeywords(extracted.suggestedKeywords || []);
       setGeoTopics(extracted.geoTopics || []);
