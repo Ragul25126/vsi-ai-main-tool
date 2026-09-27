@@ -854,7 +854,7 @@ function extractPrimaryCategoryQuery(domain: string, title: string, description:
 
   for (const o of offerings) {
     const cleanO = sanitize(o);
-    if (cleanO && cleanO.length <= 45 && /\b(api|platform|software|marketplace|store|rentals|booking|services|gateway|infrastructure|solutions|automation|crm|builder|streaming)\b/i.test(cleanO)) {
+    if (cleanO && cleanO.length >= 4 && cleanO.length <= 45) {
       const oLow = cleanO.toLowerCase();
       if (!oLow.includes(brand.toLowerCase()) && !oLow.includes(targetStem)) {
         return { category: cleanO, semanticTokens };
@@ -862,15 +862,20 @@ function extractPrimaryCategoryQuery(domain: string, title: string, description:
     }
   }
 
-  // Dynamic category inference using core business noun tokens in combinedRaw
-  const extractedNounTokens = Array.from(semanticTokens).filter(t => t.length >= 3 && !GENERIC_NON_OFFERING_WORDS.has(t));
-  if (extractedNounTokens.length >= 2) {
-    const top2 = extractedNounTokens.slice(0, 2).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+  // Dynamic commercial business category tokens (commercial business domain terms)
+  const commercialTokens = Array.from(semanticTokens).filter(t => 
+    t.length >= 4 && 
+    !GENERIC_NON_OFFERING_WORDS.has(t) &&
+    /\b(payments?|financial|infrastructure|music|streaming|audio|podcasts?|travel|booking|hotels?|rentals?|vacation|design|graphics?|templates?|courses?|learning|education|cloud|hosting|software|platform|games?|gaming|consoles?|analytics|security|automation|marketing|sales|crm|ecommerce|marketplace)\b/i.test(t)
+  );
+
+  if (commercialTokens.length >= 2) {
+    const top2 = commercialTokens.slice(0, 2).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
     return { category: `${top2} Platform`, semanticTokens };
-  } else if (extractedNounTokens.length === 1) {
-    const tok = extractedNounTokens[0];
+  } else if (commercialTokens.length === 1) {
+    const tok = commercialTokens[0];
     const formatted = tok.charAt(0).toUpperCase() + tok.slice(1).toLowerCase();
-    return { category: `${formatted} Services`, semanticTokens };
+    return { category: `${formatted} Platform`, semanticTokens };
   }
 
   const fallbackCategory = cleanTitle ? cleanTitle.slice(0, 45) : cleanDesc ? cleanDesc.slice(0, 45) : `${brand} Services`;
@@ -936,7 +941,7 @@ export async function POST(req: NextRequest) {
 
     const brand = extractBrandFromDomain(parsed.domain);
 
-    // STEP 1: Crawl actual website to analyze business profile
+    // STEP 1: WEBSITE ANALYSIS (Website First)
     let crawlData: any = null;
     try {
       crawlData = await crawlWebsite(urlWithProto);
@@ -948,6 +953,26 @@ export async function POST(req: NextRequest) {
     let initialSiteDesc = decodeEntities(crawlData?.mainPage?.description || "");
     const locInfo = detectDomainLocation(parsed.domain, `${initialSiteTitle} ${initialSiteDesc}`);
 
+    // If website title or description is sparse/missing from direct crawl, fetch site metadata via site: query FIRST
+    if (!initialSiteTitle || !initialSiteDesc || initialSiteTitle.toLowerCase().includes("redirect")) {
+      try {
+        const siteSerp = await searchSerpApi(`site:${parsed.domain}`, { gl: locInfo.locationCode });
+        if (siteSerp?.results?.length) {
+          const sitePage = siteSerp.results.find((r) => r.link?.toLowerCase().includes(parsed.domain.toLowerCase())) || siteSerp.results[0];
+          if (sitePage) {
+            if (!initialSiteTitle || initialSiteTitle.toLowerCase().includes("redirect")) {
+              initialSiteTitle = decodeEntities(sitePage.title || "");
+            }
+            if (!initialSiteDesc) {
+              initialSiteDesc = decodeEntities(sitePage.snippet || "");
+            }
+          }
+        }
+      } catch {
+        // Fall back to brand defaults if site query fails
+      }
+    }
+
     const initialProfile = buildWebsiteBusinessProfile(parsed.domain, crawlData, []);
 
     const { category: dynamicCoreOffering, semanticTokens } = extractPrimaryCategoryQuery(
@@ -957,16 +982,53 @@ export async function POST(req: NextRequest) {
       initialProfile.coreOfferings
     );
 
-    // Generate 2-3 relevant high-intent commercial searches
+    const crawlHeadings: string[] = [];
+    if (crawlData?.mainPage?.markdown) {
+      const matches = crawlData.mainPage.markdown.match(/(?:^|\n)#+\s+(.+)/g);
+      if (matches) {
+        for (const m of matches) {
+          const h = m.replace(/^(?:\r?\n)?#+\s+/, "").trim();
+          if (h && !h.toLowerCase().includes("javascript is disabled")) {
+            crawlHeadings.push(decodeEntities(h));
+          }
+        }
+      }
+    }
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`========== WEBSITE ANALYSIS ==========`);
+      console.log(`URL: ${urlWithProto}`);
+      console.log(`TITLE: ${initialSiteTitle}`);
+      console.log(`META: ${initialSiteDesc}`);
+      console.log(`H1/HEADINGS: ${crawlHeadings.slice(0, 5).join(" | ")}`);
+      console.log(`MAIN CONTENT SUMMARY: ${crawlData?.mainPage?.markdown ? crawlData.mainPage.markdown.slice(0, 200).replace(/\s+/g, " ") : "Crawl snippet captured"}`);
+      console.log(`=======================================\n`);
+
+      console.log(`========== BUSINESS PROFILE ==========`);
+      console.log(`BRAND: ${brand}`);
+      console.log(`BUSINESS TYPE: ${dynamicCoreOffering}`);
+      console.log(`PRIMARY OFFERINGS: ${initialProfile.coreOfferings.slice(0, 5).join(", ")}`);
+      console.log(`CATEGORIES: ${initialProfile.productServiceCategories.slice(0, 5).join(", ")}`);
+      console.log(`=======================================\n`);
+    }
+
+    // STEP 2: DYNAMIC SEARCH QUERY GENERATION (From Verified Business Profile)
     const commercialQueries = buildCommercialQueries(dynamicCoreOffering, brand, locInfo.locationCode);
     const searchesToRun = [
       `site:${parsed.domain}`,
       ...commercialQueries.slice(0, 2)
     ];
 
-    // Execute 2-3 SerpAPI searches IN PARALLEL for maximum speed
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`========== SERPAPI ===================`);
+      console.log(`TARGET WEBSITE: ${parsed.domain}`);
+      console.log(`QUERIES: ${searchesToRun.join(" | ")}`);
+      console.log(`=======================================\n`);
+    }
+
+    // STEP 3: LIVE SERPAPI SEARCH FOR EVIDENCE GATHERING
     const serpSettled = await Promise.allSettled(
-      searchesToRun.map(query => searchSerpApi(query, { gl: locInfo.locationCode }))
+      searchesToRun.map((query) => searchSerpApi(query, { gl: locInfo.locationCode }))
     );
 
     const queryBatches: SerpQueryResultBatch[] = [];
@@ -988,23 +1050,10 @@ export async function POST(req: NextRequest) {
         if (serpData.query && !serpData.query.startsWith("site:")) {
           queryBatches.push({ query: serpData.query, results: serpData.results });
         }
-
-        // If site metadata was missing from crawl, extract from site: query result
-        if (serpData.query.startsWith("site:")) {
-          const sitePage = serpData.results.find(r => r.link?.toLowerCase().includes(parsed.domain.toLowerCase())) || serpData.results[0];
-          if (sitePage) {
-            if (!initialSiteTitle || initialSiteTitle.toLowerCase().includes("redirect")) {
-              initialSiteTitle = decodeEntities(sitePage.title || "");
-            }
-            if (!initialSiteDesc) {
-              initialSiteDesc = decodeEntities(sitePage.snippet || "");
-            }
-          }
-        }
       }
     }
 
-    // Re-evaluate core business category with enriched metadata from site: query and Knowledge Graph
+    // Re-evaluate core business category with enriched metadata from Knowledge Graph if present
     const enrichedOffering = extractPrimaryCategoryQuery(
       parsed.domain,
       initialSiteTitle,
@@ -1027,7 +1076,6 @@ export async function POST(req: NextRequest) {
       finalSemanticTokens
     );
 
-    // If finalCoreOffering is generic (e.g. "Airbnb Services"), refine using top synthesized topic from website & SERP evidence
     if (
       (!finalCoreOffering || finalCoreOffering.toLowerCase().endsWith("services") || finalCoreOffering.toLowerCase().endsWith("official site")) &&
       synthesizedData?.suggestedTopics &&
@@ -1039,13 +1087,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Run additional targeted commercial search intent queries for thorough candidate discovery
+    // Run additional targeted commercial search intent queries for competitor discovery if needed
     const targetedQueries = buildCommercialQueries(finalCoreOffering, brand, locInfo.locationCode);
-    const extraQueriesToRun = targetedQueries.filter(q => !searchesToRun.includes(q)).slice(0, 2);
+    const extraQueriesToRun = targetedQueries.filter((q) => !searchesToRun.includes(q)).slice(0, 2);
 
     if (extraQueriesToRun.length > 0) {
       const extraSettled = await Promise.allSettled(
-        extraQueriesToRun.map(q => searchSerpApi(q, { gl: locInfo.locationCode }))
+        extraQueriesToRun.map((q) => searchSerpApi(q, { gl: locInfo.locationCode }))
       );
 
       for (const res of extraSettled) {
@@ -1056,7 +1104,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Multi-query SERP evidence evaluation & competitor verification
+    // STEP 5: Candidate Verification & Results Assembly
     const verifiedCompetitors = evaluateMultiQueryCompetitors(
       parsed.domain,
       finalCoreOffering,
@@ -1096,6 +1144,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`========== TOPICS ====================`);
+      console.log(`CANDIDATES: ${(synthesizedData?.suggestedTopics || []).join(", ")}`);
+      console.log(`VERIFIED: ${finalTopics.join(", ")}`);
+      console.log(`=======================================\n`);
+
+      console.log(`========== KEYWORDS ==================`);
+      console.log(`CANDIDATES: ${finalKeywords.map((k) => k.keyword).join(", ")}`);
+      console.log(`VERIFIED: ${finalKeywords.map((k) => k.keyword).join(", ")}`);
+      console.log(`=======================================\n`);
+
+      console.log(`========== COMPETITORS ===============`);
+      console.log(`CANDIDATES: ${queryBatches.map((b) => b.results.map((r) => r.link)).flat().filter(Boolean).slice(0, 10).join(", ")}`);
+      console.log(`VERIFIED: ${verifiedCompetitors.map((c) => c.domain).join(", ")}`);
+      console.log(`=======================================\n`);
+    }
+
     const topicDetails = finalTopics.slice(0, 10).map((topic, idx) => ({
       topic,
       relevanceScore: Math.max(98 - idx * 3, 75),
@@ -1128,19 +1193,6 @@ export async function POST(req: NextRequest) {
       suggestedCompetitors: verifiedCompetitors,
       geoTopics: geoTopicsList,
     };
-
-    if (process.env.NODE_ENV !== "production") {
-      console.log(`========== VSI ANALYSIS ==========`);
-      console.log(`TARGET: ${parsed.domain}`);
-      console.log(`BRAND: ${brand}`);
-      console.log(`BUSINESS PROFILE: ${finalCoreOffering}`);
-      console.log(`TOPIC QUERIES: site:${parsed.domain}`);
-      console.log(`VERIFIED TOPICS: ${finalTopics.join(", ")}`);
-      console.log(`KEYWORD CANDIDATES: ${finalKeywords.map((k) => k.keyword).join(", ")}`);
-      console.log(`COMPETITOR QUERIES: ${queryBatches.map((b) => b.query).join(", ")}`);
-      console.log(`VERIFIED COMPETITORS: ${verifiedCompetitors.map((c) => c.domain).join(", ")}`);
-      console.log(`=================================\n`);
-    }
 
     return NextResponse.json({ success: true, data: finalData });
   } catch (err) {
