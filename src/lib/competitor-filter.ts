@@ -6,7 +6,9 @@ export const GENERIC_NON_OFFERING_WORDS = new Set([
   "online", "global", "group", "inc", "ltd", "llc", "corp", "corporation", "platform",
   "platforms", "software", "page", "details", "info", "portal", "system", "systems", "provider",
   "providers", "one", "get", "for", "and", "the", "with", "your", "build", "manage", "update", "issue",
-  "latest", "user", "fast", "from", "more", "into", "over", "under", "team", "teams", "work", "tool", "tools"
+  "latest", "user", "fast", "from", "more", "into", "over", "under", "team", "teams", "work", "tool", "tools",
+  "infrastructure", "management", "development", "technology", "technologies", "innovation", "advisory",
+  "operations", "architecture", "integration", "suite", "enterprise", "digital", "network", "networks"
 ]);
 
 export function extractCoreCapabilityTokens(targetOffering: string, brandName?: string): string[] {
@@ -241,6 +243,53 @@ export function classifySerpDomain(
       };
     }
 
+    // Semantic Business Model: Consulting / Audit / Advisory / Professional Services Firms
+    if (
+      /\b(consulting|advisory|auditing|tax services|management consulting|accounting firm|strategy consulting|professional services firm|business advisory|corporate advisory|financial advisory|auditing firm|audit advisory)\b/i.test(text)
+    ) {
+      return {
+        domain: cleanCand,
+        isTarget: false,
+        isBusiness: true,
+        competingOffering: false,
+        marketRelevance: true,
+        category: "IRRELEVANT_BUSINESS",
+        reason: "Consulting firm / professional services advisory / accounting firm business model mismatch for product target",
+      };
+    }
+
+    // Semantic Business Model: DevOps / Cloud Infrastructure Automation / Caching Utilities vs Non-DevOps Target
+    const isTargetDevOps = /\b(terraform|devops|kubernetes|ci\/cd|cloud infrastructure|container|caching engine)\b/i.test(serpEvidence?.targetOffering || "");
+    if (
+      !isTargetDevOps &&
+      /\b(terraform|ci\/cd|devops platform|kubernetes|cloud infrastructure automation|redis cache|caching engine|database cache|docker container|infrastructure delivery platform|infrastructure as code|cache infrastructure)\b/i.test(text)
+    ) {
+      return {
+        domain: cleanCand,
+        isTarget: false,
+        isBusiness: true,
+        competingOffering: false,
+        marketRelevance: true,
+        category: "IRRELEVANT_BUSINESS",
+        reason: "DevOps / infrastructure automation tool / caching utility mismatch for commercial product target",
+      };
+    }
+
+    // Semantic Business Model: Crypto / Blockchain News & Media Publications
+    if (
+      /\b(crypto news|blockchain news|web3 news|bitcoin news|cryptocurrency news|coin news|crypto portal|beincrypto)\b/i.test(text)
+    ) {
+      return {
+        domain: cleanCand,
+        isTarget: false,
+        isBusiness: false,
+        competingOffering: false,
+        marketRelevance: false,
+        category: "PUBLISHER",
+        reason: "Cryptocurrency / blockchain news publication or media portal",
+      };
+    }
+
     // Semantic Business Model: Company Intelligence / Market Research / Financial Data
     if (
       /\b(company profile|company report|financial report|annual revenue|market intelligence|investor database|funding rounds|company database|database of companies|valuation|market cap|stock analysis|ticker|historical market data|share price|shareholders|market research report|who is the competitor|biggest competitor of|revenue analysis|market capitalization|investor relations|key statistics|company overview|employee count|financial summary)\b/i.test(text)
@@ -407,6 +456,7 @@ export interface VerifiedCompetitorItem {
   classification: "GENUINE_COMPETITOR";
   selected: boolean;
   confidence: number;
+  primaryOfferingMatch: "YES" | "NO" | "UNCERTAIN";
   targetProfile: {
     businessType: string;
     primaryOffering: string;
@@ -433,6 +483,12 @@ export interface VerifiedCompetitorItem {
   businessModelCompatibility: boolean;
   commercialSubstitution: "YES" | "NO" | "UNCERTAIN";
   marketCompatibility: boolean;
+  competitiveSubstitutionEvidence: {
+    targetNeed: string;
+    candidateSolution: string;
+    substitutionReason: string;
+    candidateWebsiteEvidence: string[];
+  };
   discoveryQueries: string[];
   serpEvidence: {
     positions: number[];
@@ -627,6 +683,7 @@ export function evaluateMultiQueryCompetitors(
         classification: "GENUINE_COMPETITOR",
         selected: false, // Default to false (Unselected) until user manually checks it
         confidence: compositeScore,
+        primaryOfferingMatch: "YES",
         targetProfile: {
           businessType: effectiveOffering,
           primaryOffering: targetOffering || effectiveOffering,
@@ -653,6 +710,12 @@ export function evaluateMultiQueryCompetitors(
         businessModelCompatibility: classification.isBusiness,
         commercialSubstitution: "YES",
         marketCompatibility: classification.marketRelevance,
+        competitiveSubstitutionEvidence: {
+          targetNeed: targetOffering || effectiveOffering,
+          candidateSolution: combinedSnippet.slice(0, 200),
+          substitutionReason: `Candidate operates a commercially substitutable ${effectiveOffering} product/platform meeting the same core customer requirement`,
+          candidateWebsiteEvidence: [combinedTitle, combinedSnippet],
+        },
         discoveryQueries: Array.from(evidence.queries),
         serpEvidence: {
           positions: evidence.positions,
@@ -685,6 +748,7 @@ export function evaluateMultiQueryCompetitors(
         candidateItem.category === "GENUINE_COMPETITOR" &&
         candidateItem.classification === "GENUINE_COMPETITOR" &&
         candidateItem.commercialSubstitution === "YES" &&
+        candidateItem.primaryOfferingMatch === "YES" &&
         candidateItem.offeringOverlap === true &&
         candidateItem.customerOverlap === true &&
         candidateItem.useCaseOverlap === true &&

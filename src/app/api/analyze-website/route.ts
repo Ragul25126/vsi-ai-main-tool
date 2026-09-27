@@ -138,7 +138,7 @@ const FORBIDDEN_EXACT_TOPICS = new Set([
 ]);
 
 const FORBIDDEN_WORDS = new Set([
-  "http", "https", "www", "com", "org", "net", "io", "co", "app",
+  "http", "https", "www", "com", "org", "net", "io", "co", "app", "about", "official", "welcome", "discover", "explore",
   "click", "here", "read", "more", "view", "download", "login", "signup",
   "signin", "subscribe", "copyright", "terms", "privacy", "policy", "cookie", "cookies", "javascript",
   "faq", "forum", "wiki", "reddit", "twitter", "facebook", "instagram", "linkedin",
