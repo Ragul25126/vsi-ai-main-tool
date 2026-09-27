@@ -828,7 +828,7 @@ function extractPrimaryCategoryQuery(domain: string, title: string, description:
   const cleanTitle = sTitle
     .replace(new RegExp(`\\b${brand}\\b`, "gi"), "")
     .replace(new RegExp(`\\b${targetStem}\\b`, "gi"), "")
-    .replace(/\b(official site|official website|home page|web player|welcome to|home|apply|careers|jobs|hiring)\b/gi, "")
+    .replace(/\b(official site|official website|home page|homepage|home-page|main page|main-page|web player|welcome to|welcome|home|apply|careers|jobs|hiring)\b/gi, "")
     .replace(/^[\s\|–\-\:\;]+|[\s\|–\-\:\;]+$/g, "")
     .trim();
 
