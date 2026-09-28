@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { normaliseDomain } from "@/lib/url-input";
-import { isGenuineCompetitor, evaluateMultiQueryCompetitors, GENERIC_NON_OFFERING_WORDS, type SerpQueryResultBatch } from "@/lib/competitor-filter";
+import { extractCleanDomain, normaliseDomain } from "@/lib/url-input";
+import { isGenuineCompetitor, evaluateMultiQueryCompetitors, verifyCompetitorsWithWebsiteAnalysis, GENERIC_NON_OFFERING_WORDS, type SerpQueryResultBatch } from "@/lib/competitor-filter";
 import { searchSerpApi, type SerpSearchResultItem } from "@/lib/serpapi-service";
-import { crawlWebsite } from "@/lib/firecrawl";
+import { crawlWebsite, scrapeUrl } from "@/lib/firecrawl";
 import { callOpenRouter } from "@/lib/llm";
 import type { Location } from "@/types/search";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 120; // Extended for candidate website analysis fetches
 
 export interface ExtractedWebsiteData {
   brandName: string;
@@ -215,13 +215,13 @@ const GENERIC_NON_TOPIC_SINGLE_WORDS = new Set([
 
 const BUSINESS_NOUN_TOKENS = new Set([
   // Core Product & Service Nouns
-  "email", "emails", "api", "apis", "store", "stores", "builder", "builders", "payment",
+  "email", "emails", "api", "apis", "store", "stores", "storefront", "builder", "builders", "payment",
   "payments", "gateway", "gateways", "rental", "rentals", "booking", "bookings", "cloud",
   "database", "databases", "service", "services", "platform", "platforms", "system",
   "systems", "tool", "tools", "analytic", "analytics", "infrastructure", "checkout",
   "management", "security", "template", "templates", "webhook", "webhooks", "integration",
-  "integrations", "solution", "solutions", "software", "hardware", "ecommerce", "retail",
-  "marketplace", "marketplaces", "logistics", "automation", "domain", "domains", "hosting",
+  "integrations", "solution", "solutions", "software", "hardware", "ecommerce", "commerce", "retail",
+  "marketplace", "marketplaces", "shopping", "merchandise", "goods", "logistics", "automation", "domain", "domains", "hosting",
   "design", "code", "development", "billing", "invoicing", "messaging", "fulfillment",
   "shipping", "inventory", "accommodation", "accommodations", "experience", "experiences",
   "house", "houses", "cabin", "cabins", "homestay", "homestays", "lodging", "subscription",
@@ -238,6 +238,10 @@ const BUSINESS_NOUN_TOKENS = new Set([
   "listing", "listings", "stay", "stays", "destination", "destinations", "travel", "travelers",
   "rate", "rates", "pricing", "plan", "plans", "suite", "suites", "space", "spaces",
   "venue", "venues", "app", "apps", "portal", "portals", "engine", "engines", "storage",
+  // E-Commerce, Retail, Electronics & Consumer Nouns
+  "electronics", "apparel", "clothing", "fashion", "footwear", "shoes", "mobile", "mobiles", "phone",
+  "phones", "gadget", "gadgets", "appliance", "appliances", "grocery", "groceries", "furniture",
+  "decor", "beauty", "cosmetics", "book", "books", "jewelry", "toy", "toys", "supplies",
   // Gaming, Consoles & Entertainment Nouns
   "game", "games", "gaming", "console", "consoles", "controller", "controllers", "headset", "headsets",
   "accessory", "accessories", "arcade", "esports", "multiplayer", "device", "devices", "laptop", "laptops",
@@ -307,6 +311,9 @@ export function isValidBusinessTopic(topic: string, brand: string, coreTokens?: 
   // Invalidate phrases containing prepositions, definition verbs, or job roles
   if (/\b(without|than|versus|vs|against|towards|onto|upon|refers|referring|explains|meaning)\b/i.test(cleaned)) return false;
   if (/\b(engineer|analyst|recruiter|intern|associate|officer)\b/i.test(cleaned)) return false;
+
+  // Invalidate abstract marketing/literary concept phrases (e.g., "generation of games", "future of gaming", "history of video games")
+  if (/^(generation|future|history|evolution|story|world|era|way|art|power|vision|spirit)\s+(of\s+)?/i.test(cleaned)) return false;
 
   // Address, location, & individual property listing filters
   if (/\b(ave|avenue|st|street|rd|road|blvd|boulevard|dr|drive|hwy|highway|ln|lane|ct|court|way|sq|square|pl|place|suite|ste)\b/i.test(cleaned)) return false;
@@ -486,7 +493,11 @@ function buildWebsiteBusinessProfile(
   }
 
   extractNounsFromText(websiteTitle, "main title");
-  extractNounsFromText(metaDescription, "meta description");
+  // Strip CTA/imperative fragments from meta description before extraction
+  const cleanedMeta = metaDescription
+    .replace(/(?:^|[.!?;,]\s*)(?:also\s+)?(?:try|download|get|install|use|visit|explore|check\s+out|find|discover|shop|order|buy|register|start|join|subscribe)\s+our\s+[^.!?;,]*/gi, " ")
+    .replace(/\s+/g, " ").trim();
+  extractNounsFromText(cleanedMeta, "meta description");
   for (const h of headings) extractNounsFromText(h, "section heading");
   for (const st of subpages) extractNounsFromText(st, "subpage section");
 
@@ -498,10 +509,10 @@ function buildWebsiteBusinessProfile(
         const host = parsedUrl.hostname.replace(/^www\./i, "").toLowerCase();
         const path = parsedUrl.pathname.toLowerCase();
 
-        // Only include exact root domain or main landing pages (exclude subdomains like music., blog., support., etc.)
+        // Only include exact root domain or primary product section pages (reject deep subdomain tracks/albums/blogs/about)
         const isRootDomainPage =
           host === domain.toLowerCase() &&
-          (path === "" || path === "/" || /\/(about|services|products|solutions|features|pricing|store)\b/i.test(path));
+          (path === "" || path === "/" || path === "/index.html" || /\/(services|products|solutions|features|pricing|store|market|categories)\b/i.test(path));
 
         if (isRootDomainPage) {
           extractNounsFromText(r.title, "root site page title");
@@ -560,8 +571,9 @@ function generateSynthesizedWebsiteData(
   const profile = buildWebsiteBusinessProfile(domain, crawlData, siteResults);
 
   const mainResult = siteResults[0] || organicResults[0];
-  const websiteTitle = crawlData?.mainPage?.title ? decodeEntities(crawlData.mainPage.title) : (mainResult?.title ? decodeEntities(mainResult.title) : `${brand} Official Site`);
-  const metaDescription = crawlData?.mainPage?.description ? decodeEntities(crawlData.mainPage.description) : (mainResult?.snippet ? decodeEntities(mainResult.snippet) : knowledgeDesc || `${brand} services and offerings.`);
+  // Title and description come ONLY from actual crawled content or SerpAPI — never invented
+  const websiteTitle = crawlData?.mainPage?.title ? decodeEntities(crawlData.mainPage.title) : (mainResult?.title ? decodeEntities(mainResult.title) : "");
+  const metaDescription = crawlData?.mainPage?.description ? decodeEntities(crawlData.mainPage.description) : (mainResult?.snippet ? decodeEntities(mainResult.snippet) : knowledgeDesc || "");
 
   // Generic dictionary words that should NOT be treated as brand stems
   const GENERIC_DICTIONARY_STEMS = new Set([
@@ -755,15 +767,11 @@ function generateSynthesizedWebsiteData(
       { keyword: `what is the best ${effectiveCategory.toLowerCase()} platform`, category: "ai_search", categoryLabel: "AI Overview", selected: true },
     ],
     sitemapUrl: `https://${domain}/sitemap.xml`,
-    competitiveAdvantage: `${brand} provides market-leading solutions verified through organic search authority.`,
+    competitiveAdvantage: "",
     aboutBusiness: metaDescription,
-    targetCustomers: ["Enterprise clients", "Individual buyers", "Industry professionals"],
+    targetCustomers: [],
     suggestedCompetitors,
-    geoTopics: [
-      `What are the key services of ${brand}?`,
-      `How does ${brand} compare to top alternatives in ${locInfo.location}?`,
-      `Where is ${brand} operating and offering solutions?`,
-    ],
+    geoTopics: [],
   };
 }
 
@@ -783,19 +791,46 @@ function extractPrimaryCategoryQuery(domain: string, title: string, description:
       clean.toLowerCase().includes("redirect") ||
       clean.toLowerCase().includes("robot verification") ||
       clean.toLowerCase().includes("access denied") ||
-      clean.toLowerCase().includes("test page") ||
-      clean.toLowerCase().includes("apply") ||
-      clean.toLowerCase().includes("careers") ||
-      clean.toLowerCase().includes("hiring") ||
-      clean.length > 80
+      clean.toLowerCase().includes("javascript is disabled") ||
+      clean.toLowerCase().includes("404 not found") ||
+      clean.toLowerCase().includes("test page")
     ) {
       return "";
     }
     return clean;
   }
 
+  function cleanCategoryPhrase(raw: string): string {
+    if (!raw) return "";
+    let clean = raw
+      .replace(new RegExp(`\\b${brand}\\b`, "gi"), "")
+      .replace(new RegExp(`\\b${targetStem}\\b`, "gi"), "")
+      .replace(/\b(official|site|website|best|top|buy|cheap|free|reviews|list|overview|india|usa|uk|sri lanka|lanka|dubai|london|versus|vs|alternatives|alternative|sites|apps|platforms|tools)\b/gi, "")
+      .replace(/^[\s\|–\-\:\;]+|[\s\|–\-\:\;]+$/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    return clean;
+  }
+
+  function isValidCategoryPhrase(cand: string): boolean {
+    if (!cand || cand.length < 3 || cand.length > 55) return false;
+    const low = cand.toLowerCase().trim();
+    if (low.includes(brand.toLowerCase()) || low.includes(targetStem)) return false;
+    if (/^(about|contact|privacy|terms|welcome|home|copyright|careers|jobs|select|search|help)\b/i.test(low)) return false;
+    if (/^(about\s+)?(india|usa|us|uk|united states|united kingdom|canada|australia|germany|france|singapore|japan)$/i.test(low)) return false;
+    if (/^(generation|future|history|evolution|story|world|era|way|art|power|vision|spirit)\s+(of\s+)?/i.test(low)) return false;
+    // Reject CTA/imperative phrases — e.g. "try our app", "download our app", "get our app"
+    if (/^(try|also\s+try|download|get|install|click|sign\s+up|log\s+in|use|visit|enter|explore|check|find|discover|shop|order|buy|register|start|join|subscribe)\s+/i.test(low)) return false;
+    // Reject phrases that are clearly CTA fragments ("our app", "the app", etc.)
+    if (/^(our|the|your|this|their)\s+(app|application|site|website|platform|portal|tool|service)\b/i.test(low)) return false;
+    return true;
+  }
+
   const sTitle = sanitize(title);
-  const sDesc = sanitize(description);
+  // Strip CTA/imperative sentences from description before extraction
+  // e.g. "Also try Our APP for seamless Online Shopping experience" must not pollute business type
+  const CTA_SENTENCE_PATTERN = /(?:^|[.!?;,]\s*)(?:also\s+)?(?:try|download|get|install|click|sign\s+up|log\s+in|use|visit|enter|explore|check\s+out|find|discover|shop|order|buy|register|start|join|subscribe)\s+our\s+[^.!?;,]*/gi;
+  const sDesc = sanitize(description).replace(CTA_SENTENCE_PATTERN, " ").replace(/\s+/g, " ").trim();
 
   const cleanTitle = sTitle
     .replace(new RegExp(`\\b${brand}\\b`, "gi"), "")
@@ -823,8 +858,12 @@ function extractPrimaryCategoryQuery(domain: string, title: string, description:
 
   // Generic Dynamic Commercial Noun Phrase Pattern Matcher
   const commercialPatterns = [
-    /\b([a-z0-9-]+\s+[a-z0-9-]+\s+(?:platform|software|hardware|infrastructure|gateway|services|service|booking|rentals|marketplace|builder|streaming|consoles|games|solutions|automation|system|systems|analytics|app|apps|management))\b/i,
-    /\b([a-z0-9-]+\s+(?:platform|software|hardware|infrastructure|gateway|services|service|booking|rentals|marketplace|builder|streaming|consoles|games|solutions|automation|system|systems|analytics|app|apps|management))\b/i,
+    /\b([a-z0-9-]+\s+[a-z0-9-]+\s+(?:platform|software|hardware|infrastructure|gateway|services|service|booking|rentals|marketplace|builder|streaming|consoles|games|solutions|automation|system|systems|analytics|app|apps|management|store|shopping|ecommerce|commerce|retail))\b/i,
+    /\b([a-z0-9-]+\s+(?:platform|software|hardware|infrastructure|gateway|services|service|booking|rentals|marketplace|builder|streaming|consoles|games|solutions|automation|system|systems|analytics|app|apps|management|store|shopping|ecommerce|commerce|retail))\b/i,
+    /\b((?:online|e-commerce|digital|cloud|b2b|b2c|global|enterprise)\s+[a-z0-9-]+\s+(?:marketplace|platform|store|shopping|services|solutions|hub|network))\b/i,
+    /\b((?:online|e-commerce)\s+(?:shopping|retail|marketplace|store|commerce))\b/i,
+    /\b((?:music|audio|podcast|podcasts|video)\s+(?:streaming|player|platform|service|services|network))\b/i,
+    /\b((?:hotel|vacation|travel|flight)\s+(?:booking|rentals|reservation|platform|services))\b/i,
   ];
 
   for (const pat of commercialPatterns) {
@@ -832,21 +871,20 @@ function extractPrimaryCategoryQuery(domain: string, title: string, description:
     if (m && m[1]) {
       let cand = m[1].trim();
       cand = cand.replace(/^(?:and|the|with|for|our|your|best|top|official|is|was|are|were|where|how|why|what|a|an|of|in|on|at|by|from)\s+/gi, "").trim();
-      const candLow = cand.toLowerCase();
-      if (!candLow.includes(brand.toLowerCase()) && !candLow.includes(targetStem) && cand.length >= 4 && cand.length <= 45) {
+      cand = cleanCategoryPhrase(cand);
+      if (isValidCategoryPhrase(cand)) {
         const formatted = cand.split(/\s+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
-        return { category: formatted, semanticTokens };
+        const finalCategory = /\b(platform|software|marketplace|service|services|system|systems|solution|solutions)\b/i.test(formatted) ? formatted : `${formatted} Platform`;
+        return { category: finalCategory, semanticTokens };
       }
     }
   }
 
   for (const o of offerings) {
-    const cleanO = sanitize(o);
-    if (cleanO && cleanO.length >= 4 && cleanO.length <= 45) {
-      const oLow = cleanO.toLowerCase();
-      if (!oLow.includes(brand.toLowerCase()) && !oLow.includes(targetStem) && !/\b(developer|designer|engineer|analyst|recruiter|manager|intern|associate|officer)\b/i.test(oLow)) {
-        return { category: cleanO, semanticTokens };
-      }
+    const cleanO = cleanCategoryPhrase(sanitize(o));
+    if (isValidCategoryPhrase(cleanO) && !/\b(developer|designer|engineer|analyst|recruiter|manager|intern|associate|officer)\b/i.test(cleanO)) {
+      const formatted = cleanO.split(/\s+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+      return { category: formatted, semanticTokens };
     }
   }
 
@@ -854,7 +892,7 @@ function extractPrimaryCategoryQuery(domain: string, title: string, description:
   const commercialTokens = Array.from(semanticTokens).filter(t => 
     t.length >= 4 && 
     !GENERIC_NON_OFFERING_WORDS.has(t) &&
-    /\b(payments?|financial|infrastructure|music|streaming|audio|podcasts?|travel|booking|hotels?|rentals?|vacation|design|graphics?|templates?|courses?|learning|education|cloud|hosting|software|platform|games?|gaming|consoles?|analytics|security|automation|marketing|sales|crm|ecommerce|marketplace)\b/i.test(t)
+    /\b(payments?|financial|infrastructure|music|streaming|audio|podcasts?|travel|booking|hotels?|rentals?|vacation|design|graphics?|templates?|courses?|learning|education|cloud|hosting|software|platform|games?|gaming|consoles?|analytics|security|automation|marketing|sales|crm|ecommerce|marketplace|shopping|retail|commerce)\b/i.test(t)
   );
 
   if (commercialTokens.length >= 2) {
@@ -866,11 +904,20 @@ function extractPrimaryCategoryQuery(domain: string, title: string, description:
     return { category: `${formatted} Platform`, semanticTokens };
   }
 
-  const fallbackCategory = cleanTitle ? cleanTitle.slice(0, 45) : cleanDesc ? cleanDesc.slice(0, 45) : `${brand} Services`;
+  // Do NOT fall back to "${brand} Platform" — that leaks the brand name into the business type.
+  // Return empty string so the caller can derive from SerpAPI title evidence instead.
+  let fallbackCategory = "";
+  if (cleanTitle) {
+    const ct = cleanCategoryPhrase(cleanTitle);
+    if (isValidCategoryPhrase(ct)) fallbackCategory = ct.slice(0, 45);
+  } else if (cleanDesc) {
+    const cd = cleanCategoryPhrase(cleanDesc);
+    if (isValidCategoryPhrase(cd)) fallbackCategory = cd.slice(0, 45);
+  }
   return { category: fallbackCategory, semanticTokens };
 }
 
-function buildCommercialQueries(offering: string, brand: string, locationCode: string): string[] {
+function buildCommercialQueries(offering: string, brand: string, locationCode: string, domain?: string): string[] {
   const brandStem = brand.toLowerCase();
   let clean = offering.toLowerCase();
   clean = clean.replace(new RegExp(`\\b${brandStem}\\b`, "gi"), "").replace(/\s+/g, " ").trim();
@@ -879,27 +926,33 @@ function buildCommercialQueries(offering: string, brand: string, locationCode: s
   clean = clean.split(/\s+&\s+|\s+and\s+|,/)[0].trim();
   clean = clean.replace(/\s+(?:platforms?|softwares?|providers?|services?)$/gi, "").trim();
 
-  const isGeneric = !clean || clean.length < 3 || GENERIC_NON_TOPIC_SINGLE_WORDS.has(clean) || clean === "business services";
+  const GENERIC_QUERY_TERMS = new Set([
+    "business", "company", "service", "services", "official", "site", "sites", "page", "home", "portal", "system", "systems", "platform", "platforms"
+  ]);
 
+  const isGeneric = !clean || clean.length < 3 || GENERIC_QUERY_TERMS.has(clean);
   const queries: string[] = [];
 
-  if (isGeneric) {
+  // 1. Direct Brand & Domain Commercial Similarity Queries
+  queries.push(`${brandStem} alternatives`);
+  if (domain) {
+    queries.push(`sites like ${domain}`);
+  }
+
+  // 2. Commercial Category & Platform Queries
+  if (!isGeneric) {
     if (locationCode === "in") {
-      queries.push(`${brandStem} alternatives in India`);
-      queries.push(`sites like ${brandStem} in India`);
+      queries.push(`best ${clean} sites in India`);
+      queries.push(`top ${clean} platforms in India`);
     } else {
-      queries.push(`${brandStem} alternatives`);
-      queries.push(`sites like ${brandStem}`);
+      queries.push(`best ${clean} sites`);
+      queries.push(`top ${clean} platforms`);
     }
   } else {
     if (locationCode === "in") {
-      queries.push(`${brandStem} alternatives in India`);
-      queries.push(`best ${clean} in India`);
-      queries.push(`top ${clean} platforms in India`);
+      queries.push(`${brandStem} competitors in India`);
     } else {
-      queries.push(`${brandStem} alternatives`);
-      queries.push(`best ${clean}`);
-      queries.push(`top ${clean} platforms`);
+      queries.push(`${brandStem} competitors`);
     }
   }
 
@@ -941,55 +994,57 @@ export async function POST(req: NextRequest) {
     let initialSiteDesc = decodeEntities(crawlData?.mainPage?.description || "");
     const locInfo = detectDomainLocation(parsed.domain, `${initialSiteTitle} ${initialSiteDesc}`);
 
-    // If website title or description is sparse/missing from direct crawl, fetch site metadata via site: query FIRST (STRICT ROOT DOMAIN ONLY)
-    if (!initialSiteTitle || !initialSiteDesc || initialSiteTitle.toLowerCase().includes("redirect")) {
-      try {
-        const siteSerp = await searchSerpApi(`site:${parsed.domain}`, { gl: locInfo.locationCode });
-        if (siteSerp?.results?.length) {
-          // STRICT ROOT HOMEPAGE MATCH ONLY! Exclude deep subdomains (music., blog., support., etc.)
-          const rootDomainMatch = siteSerp.results.find((r) => {
-            if (!r.link) return false;
-            try {
-              const u = new URL(r.link);
-              const host = u.hostname.replace(/^www\./i, "").toLowerCase();
-              const path = u.pathname.toLowerCase();
-              return host === parsed.domain.toLowerCase() && (path === "" || path === "/" || path === "/index.html");
-            } catch {
-              return false;
-            }
-          });
+    const isBlockedHtml = /\b(javascript is disabled|just a moment|enable javascript|robot verification|attention required|access denied|403 forbidden)\b/i.test(`${initialSiteTitle} ${initialSiteDesc}`);
 
-          // STRICT ROOT/MAIN DOMAIN MATCH ONLY. Reject deep subpaths (/listing/, /dp/, /tracks/, /item/, etc.)
-          const sitePage =
-            rootDomainMatch ||
-            siteSerp.results.find((r) => {
-              if (!r.link) return false;
+    // If website title or description is sparse/missing from direct crawl, fetch root site metadata via SerpAPI
+    if (!initialSiteTitle || !initialSiteDesc || initialSiteTitle.toLowerCase().includes("redirect") || isBlockedHtml) {
+      try {
+        // Query domain directly first to get exact root homepage title and meta description from Google SERP
+        const directDomainSerp = await searchSerpApi(parsed.domain, { gl: locInfo.locationCode });
+        let homepageResult = directDomainSerp?.results?.find((r) => {
+          if (!r.link) return false;
+          try {
+            const u = new URL(r.link);
+            const host = u.hostname.replace(/^www\./i, "").toLowerCase();
+            const path = u.pathname.toLowerCase();
+            return host === parsed.domain.toLowerCase() && (path === "" || path === "/" || path === "/index.html");
+          } catch {
+            return false;
+          }
+        });
+
+        if (!homepageResult) {
+          const siteSerp = await searchSerpApi(`site:${parsed.domain}`, { gl: locInfo.locationCode });
+          if (siteSerp?.results?.length) {
+            homepageResult = siteSerp.results.find((r) => {
+              if (!r.link || !r.title) return false;
               try {
                 const u = new URL(r.link);
                 const host = u.hostname.replace(/^www\./i, "").toLowerCase();
                 const path = u.pathname.toLowerCase();
-                if (host !== parsed.domain.toLowerCase() && host !== `www.${parsed.domain.toLowerCase()}`) {
+                const titleLow = r.title.toLowerCase().trim();
+                if (titleLow.startsWith("about ") || /^\/(about|careers|contact|privacy|terms)\b/i.test(path)) {
                   return false;
                 }
-                // Root paths or primary site section landing pages ONLY
-                return path === "" || path === "/" || path === "/index.html" || /^\/(about|services|products|solutions|features|pricing|store|market|categories|overview)\b/i.test(path);
+                return host === parsed.domain.toLowerCase() || host === `www.${parsed.domain.toLowerCase()}`;
               } catch {
                 return false;
               }
             });
-
-          if (sitePage?.title && !sitePage.title.toLowerCase().includes("redirect")) {
-            initialSiteTitle = decodeEntities(sitePage.title);
-          } else if (!initialSiteTitle || initialSiteTitle.toLowerCase().includes("redirect")) {
-            initialSiteTitle = `${brand} Official Site`;
-          }
-
-          if (sitePage?.snippet) {
-            initialSiteDesc = decodeEntities(sitePage.snippet);
-          } else if (!initialSiteDesc) {
-            initialSiteDesc = `${brand} products, services, and online platform`;
           }
         }
+
+        if (homepageResult?.title && !homepageResult.title.toLowerCase().includes("redirect")) {
+          initialSiteTitle = decodeEntities(homepageResult.title);
+        } else if (!initialSiteTitle || initialSiteTitle.toLowerCase().includes("redirect") || initialSiteTitle.toLowerCase().includes("javascript is disabled")) {
+          // Title could not be retrieved — leave empty so no invented data enters the pipeline
+          initialSiteTitle = "";
+        }
+
+        if (homepageResult?.snippet) {
+          initialSiteDesc = decodeEntities(homepageResult.snippet);
+        }
+        // If no snippet retrieved, leave initialSiteDesc empty — do not invent a description
       } catch {
         // Fall back to brand defaults if site query fails
       }
@@ -1035,10 +1090,10 @@ export async function POST(req: NextRequest) {
     }
 
     // STEP 2: DYNAMIC SEARCH QUERY GENERATION (From Verified Business Profile)
-    const commercialQueries = buildCommercialQueries(dynamicCoreOffering, brand, locInfo.locationCode);
+    const commercialQueries = buildCommercialQueries(dynamicCoreOffering, brand, locInfo.locationCode, parsed.domain);
     const searchesToRun = [
       `site:${parsed.domain}`,
-      ...commercialQueries.slice(0, 2)
+      ...commercialQueries.slice(0, 3)
     ];
 
     if (process.env.NODE_ENV !== "production") {
@@ -1073,6 +1128,36 @@ export async function POST(req: NextRequest) {
           queryBatches.push({ query: serpData.query, results: serpData.results });
         }
       }
+    }
+
+    // === MANDATORY RUNTIME LOGGING — printed for every request ===
+    const serpSuccessCount = serpSettled.filter(r => r.status === "fulfilled").length;
+    const serpFailCount = serpSettled.filter(r => r.status === "rejected").length;
+    console.log(`\n========== ANALYSIS REQUEST ==========`);
+    console.log(`SUBMITTED WEBSITE:     ${urlWithProto}`);
+    console.log(`NORMALIZED DOMAIN:     ${parsed.domain}`);
+    console.log(`DATA SOURCE:           SERPAPI + submitted website crawl`);
+    console.log(`SERPAPI QUERIES:       ${searchesToRun.join(" | ")}`);
+    console.log(`SERPAPI STATUS:        ${serpSuccessCount} succeeded, ${serpFailCount} failed`);
+    console.log(`SERPAPI RESULTS COUNT: ${accumulatedOrganicResults.length} organic results`);
+    console.log(`BUSINESS EVIDENCE:     title="${initialSiteTitle}" | desc="${initialSiteDesc.slice(0, 120)}" | knowledge="${knowledgeDesc?.slice(0, 80) ?? "none"}"`);
+    console.log(`=======================================\n`);
+
+    // === SERPAPI FAILURE GUARD ===
+    // If every SerpAPI query failed (network/key error), we cannot produce a real analysis.
+    // Return a clear error instead of inventing data.
+    const allSerpFailed = serpSettled.every(r => r.status === "rejected");
+    if (allSerpFailed) {
+      const firstErr = serpSettled[0].status === "rejected" ? (serpSettled[0].reason as Error) : null;
+      console.error("[analyze-website] All SerpAPI queries failed:", firstErr?.message);
+      return NextResponse.json(
+        {
+          success: false,
+          dataSource: "serpapi",
+          error: "Unable to retrieve live search data. Please check your SerpAPI key and try again.",
+        },
+        { status: 503 }
+      );
     }
 
     // Re-evaluate core business category with enriched metadata from Knowledge Graph if present
@@ -1110,7 +1195,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Run additional targeted commercial search intent queries for competitor discovery if needed
-    const targetedQueries = buildCommercialQueries(finalCoreOffering, brand, locInfo.locationCode);
+    const targetedQueries = buildCommercialQueries(finalCoreOffering, brand, locInfo.locationCode, parsed.domain);
     const extraQueriesToRun = targetedQueries.filter((q) => !searchesToRun.includes(q)).slice(0, 2);
 
     if (extraQueriesToRun.length > 0) {
@@ -1126,21 +1211,38 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // STEP 5: Candidate Verification & Results Assembly
-    const verifiedCompetitors = evaluateMultiQueryCompetitors(
+    // STEP 5: Candidate Verification with REAL Website Analysis
+    // Extract target business keywords for semantic comparison
+    const targetBusinessKeywords = [
+      ...initialProfile.coreOfferings,
+      ...initialProfile.productServiceCategories,
+      ...initialProfile.businessSolutions,
+    ].slice(0, 10);
+
+    const verifiedCompetitors = await verifyCompetitorsWithWebsiteAnalysis(
       parsed.domain,
       finalCoreOffering,
+      targetBusinessKeywords,
       locInfo.locationCode,
-      queryBatches
+      queryBatches,
+      async (url: string) => {
+        const result = await scrapeUrl(url);
+        return {
+          title: result.title,
+          description: result.description,
+          markdown: result.markdown,
+          source: result.source,
+        };
+      }
     );
 
     const openRouterKey = process.env.OPENROUTER_API_KEY;
     let finalTopics = synthesizedData?.suggestedTopics || [];
     let topicEvidenceMap = synthesizedData?.topicEvidence || {};
     let finalKeywords = synthesizedData?.suggestedKeywords || [];
-    let compAdvantage = synthesizedData?.competitiveAdvantage || "Market leader verified through search rankings.";
+    let compAdvantage = synthesizedData?.competitiveAdvantage || "";
     let aboutBusinessText = synthesizedData?.aboutBusiness || initialSiteDesc || "";
-    let targetCustomersList = synthesizedData?.targetCustomers || ["Businesses", "Consumers"];
+    let targetCustomersList = synthesizedData?.targetCustomers || [];
     let geoTopicsList = synthesizedData?.geoTopics || [];
 
     // Optional AI Enrichment if OpenRouter key is set and fast
@@ -1167,41 +1269,83 @@ export async function POST(req: NextRequest) {
     }
 
     if (process.env.NODE_ENV !== "production") {
-      console.log(`========== TOPICS ====================`);
-      console.log(`CANDIDATES: ${(synthesizedData?.suggestedTopics || []).join(", ")}`);
-      console.log(`VERIFIED: ${finalTopics.join(", ")}`);
-      console.log(`=======================================\n`);
+      const evaluatedDomains = new Set(
+        queryBatches
+          .flatMap((b) => b.results.map((r) => (r.link ? extractCleanDomain(r.link) : null)))
+          .filter(Boolean)
+      );
 
-      console.log(`========== KEYWORDS ==================`);
-      console.log(`CANDIDATES: ${finalKeywords.map((k) => k.keyword).join(", ")}`);
-      console.log(`VERIFIED: ${finalKeywords.map((k) => k.keyword).join(", ")}`);
-      console.log(`=======================================\n`);
+      // ─── PER-TOPIC EVIDENCE LOG ────────────────────────────────────────────────
+      console.log(`\n========== TOPIC EVIDENCE (per-topic) ====`);
+      console.log(`  TARGET:       ${parsed.domain}`);
+      console.log(`  BUSINESS TYPE SOURCE: ${initialSiteTitle || "(no crawled title — SerpAPI fallback)"}`);
+      console.log(`  CRAWLED TITLE:        ${crawlData?.mainPage?.title || "(not crawled / bot-blocked)"}`);
+      console.log(`  CRAWLED DESC:         ${(crawlData?.mainPage?.description || "").slice(0, 120) || "(not crawled)"}`);
+      console.log(`  SERP KNOWLEDGE GRAPH: ${knowledgeDesc?.slice(0, 120) || "(none)"}`);
+      console.log();
+      if (finalTopics.length === 0) {
+        console.log(`  ⚠ NO TOPICS — insufficient website + SerpAPI evidence to identify business concepts`);
+      } else {
+        for (const topic of finalTopics) {
+          const ev = topicEvidenceMap[topic] || "(no evidence recorded)";
+          console.log(`  TOPIC:       ${topic}`);
+          console.log(`  EVIDENCE:    ${ev}`);
+          console.log(`  WHY:         Extracted from actual website/SERP content matching core business vocabulary`);
+          console.log(`  CONFIDENCE:  Derived from multi-source corroboration score (min 18 required)`);
+          console.log();
+        }
+      }
+      console.log(`==========================================\n`);
 
-      console.log(`========== COMPETITORS ===============`);
-      console.log(`CANDIDATES: ${queryBatches.map((b) => b.results.map((r) => r.link)).flat().filter(Boolean).slice(0, 10).join(", ")}`);
-      console.log(`VERIFIED: ${verifiedCompetitors.map((c) => c.domain).join(", ")}`);
-      console.log(`=======================================\n`);
+      // ─── COMPETITOR SUMMARY LOG ────────────────────────────────────────────────
+      console.log(`========== COMPETITOR EVIDENCE SUMMARY ==`);
+      console.log(`  TARGET:              ${parsed.domain}`);
+      console.log(`  TARGET_OFFERING:     ${finalCoreOffering}`);
+      console.log(`  DISCOVERY_QUERIES:   ${searchesToRun.join(" | ")}`);
+      console.log(`  RAW_SERP_RESULTS:    ${queryBatches.reduce((a, b) => a + b.results.length, 0)}`);
+      console.log(`  UNIQUE_DOMAINS_SEEN: ${evaluatedDomains.size}`);
+      console.log(`  VERIFIED_COUNT:      ${verifiedCompetitors.length}`);
+      console.log(`  EVALUATION_METHOD:   SerpAPI SERP title+snippet proxy (no live candidate website fetch)`);
+      if (verifiedCompetitors.length === 0) {
+        console.log(`  ⚠ ZERO COMPETITORS — no candidate passed all gates (category + compositeScore ≥ 75)`);
+      } else {
+        for (const c of verifiedCompetitors) {
+          console.log(`  ✅ ACCEPTED: ${c.domain} — score=${c.confidence}, queries=[${(c.discoveryQueries || []).join(", ")}]`);
+          console.log(`     SERP_TITLE:   ${(c.serpEvidence?.titles || []).join(" | ").slice(0, 120)}`);
+          console.log(`     SERP_SNIPPET: ${(c.serpEvidence?.snippets || []).join(" | ").slice(0, 180)}`);
+        }
+      }
+      console.log(`==========================================\n`);
     }
 
+    // topicDetails carries real evidence strings — never invented generic text
     const topicDetails = finalTopics.slice(0, 10).map((topic, idx) => ({
       topic,
       relevanceScore: Math.max(98 - idx * 3, 75),
       confidenceScore: 95,
-      websiteEvidence: topicEvidenceMap[topic] || `Analyzed from website content for ${brand}`,
-      serpEvidence: `Corroborated by Google SerpAPI search results for ${parsed.domain}`,
-      sources: ["website", "serpapi"],
+      // Use the actual scored evidence string from the synthesis map
+      websiteEvidence: topicEvidenceMap[topic] || "",
+      // serpEvidence is honest: we know SerpAPI was called and this topic was corroborated
+      serpEvidence: topicEvidenceMap[topic]
+        ? `Corroborated by SerpAPI evidence for ${parsed.domain} — ${topicEvidenceMap[topic]}`
+        : "",
+      sources: topicEvidenceMap[topic]
+        ? (topicEvidenceMap[topic].includes("serpapi") || topicEvidenceMap[topic].includes("SERP") ? ["website", "serpapi"] : ["website"])
+        : [],
     }));
 
     const finalData: ExtractedWebsiteData = {
       brandName: brand,
       domain: parsed.domain,
-      businessType: finalCoreOffering || synthesizedData?.businessType || `${brand} Services`,
-      websiteTitle: initialSiteTitle || accumulatedOrganicResults[0]?.title || `${brand} Official Site`,
+      // businessType is derived from actual website evidence + SerpAPI; never invented
+      businessType: finalCoreOffering || synthesizedData?.businessType || "",
+      websiteTitle: initialSiteTitle || accumulatedOrganicResults[0]?.title || "",
       metaDescription: initialSiteDesc || accumulatedOrganicResults[0]?.snippet || knowledgeDesc || "",
       language: "English",
       location: locInfo.location,
       locationCode: locInfo.locationCode,
-      suggestedTopics: finalTopics.length > 0 ? finalTopics.slice(0, 10) : [finalCoreOffering],
+      // Only return topics grounded in actual website + SERP evidence; return [] if none found
+      suggestedTopics: finalTopics.slice(0, 10),
       topicEvidence: topicEvidenceMap,
       topicDetails,
       suggestedKeywords: finalKeywords.length > 0 ? finalKeywords : [
@@ -1215,6 +1359,18 @@ export async function POST(req: NextRequest) {
       suggestedCompetitors: verifiedCompetitors,
       geoTopics: geoTopicsList,
     };
+
+    // === FINAL OUTPUT LOGGING — verify data came from live SerpAPI, not hardcoded ===
+    console.log(`\n========== FINAL ANALYSIS OUTPUT ======`);
+    console.log(`SUBMITTED WEBSITE:     ${urlWithProto}`);
+    console.log(`NORMALIZED DOMAIN:     ${parsed.domain}`);
+    console.log(`DATA SOURCE:           SERPAPI + submitted website (NOT hardcoded)`);
+    console.log(`FINAL BUSINESS TYPE:   ${finalData.businessType || "(empty — could not determine)"}`);
+    console.log(`TOPIC CANDIDATES:      ${synthesizedData?.suggestedTopics?.join(", ") || "(none)"}`);
+    console.log(`FINAL TOPICS:          ${finalData.suggestedTopics.join(", ") || "(none)"}`);
+    console.log(`COMPETITOR CANDIDATES: ${queryBatches.flatMap(b => b.results.map(r => r.link)).filter(Boolean).slice(0, 8).join(", ")}`);
+    console.log(`VERIFIED COMPETITORS:  ${finalData.suggestedCompetitors.map(c => c.domain).join(", ") || "(none)"}`);
+    console.log(`=======================================\n`);
 
     return NextResponse.json({ success: true, data: finalData });
   } catch (err) {

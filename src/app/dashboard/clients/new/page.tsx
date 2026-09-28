@@ -33,11 +33,11 @@ export default function NewProjectPage() {
   const [isProgressShowing, setIsProgressShowing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
-  // Business summary data state
+  // Business summary data state — all fields start empty; only populated from the live API response
   const [businessData, setBusinessData] = useState<BusinessData>({
     brandName: "",
     domain: "",
-    businessType: "E-commerce & Services",
+    businessType: "",
     websiteTitle: "",
     metaDescription: "",
     language: "English",
@@ -114,12 +114,13 @@ export default function NewProjectPage() {
       }));
 
       if (process.env.NODE_ENV !== "production") {
-        console.log(`[COMPETITOR_UI_SOURCE]`);
+        console.log(`[COMPETITOR_RUNTIME_TRACE]`);
         console.log(`targetDomain: ${extracted.domain}`);
-        console.log(`apiEndpoint: /api/analyze-website`);
-        console.log(`rawCandidates: ${extracted.suggestedCompetitors ? extracted.suggestedCompetitors.length : 0}`);
-        console.log(`verifiedCompetitors: ${mappedCompetitors.map((c: any) => c.domain).join(", ")}`);
-        console.log(`renderedCompetitors: ${mappedCompetitors.map((c: any) => c.domain).join(", ")}`);
+        console.log(`businessType: ${extracted.businessType}`);
+        console.log(`apiResponseCompetitorCount: ${extracted.suggestedCompetitors ? extracted.suggestedCompetitors.length : 0}`);
+        console.log(`frontendInitialCompetitorCount: ${mappedCompetitors.length}`);
+        console.log(`renderedCompetitorCount: ${mappedCompetitors.length}`);
+        console.log(`verifiedCompetitorDomains: ${mappedCompetitors.map((c: any) => c.domain).join(", ")}`);
       }
 
       setCompetitors(mappedCompetitors);
